@@ -3,6 +3,14 @@
 #include "global_define.h"
 #include "stdio.h"
 #include "FontSmooth.h"
+#include "menu_typedef.h"
+#include "global_typedef.h"
+#include "stdio.h"
+
+#include "generator.h"
+extern GENERATOR Gen;
+
+extern void PAGE_Menu(menu_typedef * menu , item_typedef * item, int NUM);
 
 //static int temp;
 static item_typedef   * temp_item;
@@ -143,7 +151,7 @@ void postPageSelectModulation(void){
 
     } //if (index)
 
-   tft.needUpdate = 1;
+   tft.driver.needUpdate = 1;
 }
 
 

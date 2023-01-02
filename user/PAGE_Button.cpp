@@ -3,161 +3,21 @@
 
 #include "stdio.h"
 
-#include "TFT_Wiget_Animated_Rectagle.h"
+//#include "TFT_Wiget_Animated_Rectagle.h"
 
-#include "TFT_gif.h"
+#include "Gif.h"
 
 extern Bitmap bmpBackground240240;
 
-extern void BLE_Task(void);
+#include "menu_typedef.h"
+#include "Button.h"
+#include "scripting.h"
 
-#include "gfxfont.h"
-#include "gfx_fonts_includes.h"
-//
-//extern GFXFONT gfxfont;
+extern button_typedef button;
+extern Scripting script;
 
-//extern GFXFONT gfxfontVdd;
-
-
-//#define maxString 32 // ограничиваем строку шириной экрана
-char target[32 + 1] CCMRAM= "";
-
-char* utf8rus2(char *source) {
-	int i, j, k;
-	unsigned char n;
-	char m[2] = { '0', '\0' };
-	strcpy(target, "");
-	k = strlen(source);
-	i = j = 0;
-	while (i < k) {
-		n = source[i];
-		i++;
-
-		if (n >= 127) {
-			switch (n) {
-			case 208: {
-				n = source[i];
-				i++;
-				if (n == 129) {
-					n = 192;
-					break;
-				} // перекодируем букву Ё
-				break;
-			}
-			case 209: {
-				n = source[i];
-				i++;
-				if (n == 145) {
-					n = 193;
-					break;
-				} // перекодируем букву ё
-				break;
-			}
-			}
-		}
-
-		m[0] = n;
-		strcat(target, m);
-		j++;
-		if (j >= 32)
-			break;
-	}
-	return target;
-}
-
-void PAGE_Button(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-		uint16_t select, char *str) {
-
-	if (select) {
-		tft.RectangleFilled(x, y, w, h, palitra[2]);
-		tft.LineH(y, x, x + w, palitra[3]);
-		tft.LineV(x, y, y + h, palitra[3]);
-
-		tft.LineH(y + h, x + 1, x + w - 1, palitra[4]);
-		tft.LineV(x + w, y + 1, y + h, palitra[4]);
-
-		tft.LineH(y + h + 1, x + 1, x + w + 1, palitra[15]);
-		tft.LineV(x + w + 1, y + 1, y + h + 1, palitra[15]);
-	} else {
-		tft.RectangleFilled(x, y, w, h, palitra[1]);
-		tft.LineH(y, x, x + w, palitra[5]);
-		tft.LineV(x, y, y + h, palitra[5]);
-
-		tft.LineH(y + h, x + 1, x + w - 1, palitra[6]);
-		tft.LineV(x + w, y + 1, y + h, palitra[6]);
-
-		tft.LineH(y + h + 1, x + 1, x + w + 1, palitra[15]);
-		tft.LineV(x + w + 1, y + 1, y + h + 1, palitra[15]);
-	}
-
-	//gfxfont.set_delta_x(2);
-	//gfxfont.Puts(x + 15, y + 20, str);
-
-	//u8g_SetFont(u8g_font_profont29);
-	//uTFT_SetFontColor(BLACK, WHITE);
-	//u8g_DrawStr(x + 15, y + (h+u8g.font_ref_ascent)/2, str );
-}
-
-//Нажатая кнопка
-void PAGE_Button_Pressed(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
-		char *str) {
-
-	tft.RectangleFilled(x, y, w, h, 2); // Светлый фон выбранной кнопки
-
-	tft.LineH(y, x, x + w, 6);      // Темная часть окантовки темной кнопки
-	tft.LineH(y + 1, x, x + w, 6);  // Темная часть окантовки темной кнопки
-
-	tft.LineV(x, y, y + h, 6);      // Темная часть окантовки темной кнопки
-	tft.LineV(x + 1, y, y + h, 6);  // Темная часть окантовки темной кнопки
-
-	tft.LineH(y + h, x + 1, x + w - 1, 5); // Светлая часть окантовки темной кнопки
-	tft.LineH(y + h - 1, x + 2, x + w - 1, 5); // Светлая часть окантовки темной кнопки
-
-	tft.LineV(x + w, y + 1, y + h, 5);  // Светлая часть окантовки темной кнопки
-	tft.LineV(x + w - 1, y + 2, y + h, 5); // Светлая часть окантовки темной кнопки
-
-	tft.GotoXY(x + 15, 20);
-	//gfxfont.set_delta_x(2);
-	//gfxfont.Puts(str);
-
-	//u8g_SetFont(u8g_font_profont29);
-	//uTFT_SetFontColor(BLACK, WHITE);
-	//u8g_DrawStr(x + 15, y + (h+u8g.font_ref_ascent)/2, str );
-}
-
-//Создание звднего фона
-void PAGE_Background_Board(void) {
-	//
-
-	//SEGGER_SYSVIEW_Warn("Fill(0)");
-	tft.Fill16(palitra[0]); //Окантовка
-
-	//SEGGER_SYSVIEW_Warn("RectangleFilled");
-	//tft.RectangleFilled(5, 5, 229, 229, 1); //Основной фон
-	tft.RectangleFilled(5, 5, 229, 229, palitra[15]); //Основной фон
-
-	//Темное
-	//SEGGER_SYSVIEW_Warn("LineH");
-	tft.LineH(5, 5, 234, palitra[7]);
-	//SEGGER_SYSVIEW_Warn("LineH");
-	tft.LineH(6, 5, 234, palitra[7]);
-
-	//SEGGER_SYSVIEW_Warn("LineV");
-	tft.LineV(5, 5, 234, palitra[7]);
-	//SEGGER_SYSVIEW_Warn("LineV");
-	tft.LineV(6, 5, 234, palitra[7]);
-
-	//Светлое
-	//SEGGER_SYSVIEW_Warn("LineH");
-	tft.LineH(234, 5, 234, palitra[9]);
-	//SEGGER_SYSVIEW_Warn("LineH");
-	tft.LineH(233, 6, 234, palitra[9]);
-
-	//SEGGER_SYSVIEW_Warn("LineV");
-	tft.LineV(233, 6, 234, palitra[9]);
-	//SEGGER_SYSVIEW_Warn("LineV");
-	tft.LineV(234, 5, 234, palitra[9]); //uTFT_VLine(234 , 5, 234, RGB565(186,207,178));
-}
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
 
 void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 
@@ -180,7 +40,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 	uint32_t H = menu->item_height;
 	uint32_t StartY = menu->item_start_y;
 
-	tft.needUpdate = 1;
+	tft.driver.needUpdate = 1;
 
 	//* ┌ ┐ └ ┘├ ┤ ┬ ┴ ┼ ─ │
 	//──────────────────────────────────┬──────────────────┐
@@ -191,7 +51,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 	}                                                    //│
 	//─────────────────────────────────────────────────────┘
 
-	TFT_gif gif1[gif_count];
+	Gif gif1[gif_count];
 	//Bitmap  bmp [gif_count];
 	int8_t id;
 
@@ -332,7 +192,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 			func_name();
 		}
 
-		if ((menu->field.needUpdate) || (tft.needUpdate)) {
+		if ((menu->field.needUpdate) || (tft.driver.needUpdate)) {
 			menu->field.needUpdate = 0;
 
 		    rtt.println("MENU I ST7789_UpdateDMA16bitV3");
@@ -344,7 +204,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 			if (item[index].callBackFunc_isHolded) {
 				func_name = item[index].callBackFunc_isHolded;
 				func_name();
-				tft.needUpdate = 1;
+				tft.driver.needUpdate = 1;
 			}
 		}
 
@@ -352,7 +212,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 			if (item[index].callBackFunc_isDouble) {
 				func_name = item[index].callBackFunc_isDouble;
 				func_name();
-				tft.needUpdate = 1;
+				tft.driver.needUpdate = 1;
 			}
 		}
 
@@ -372,7 +232,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 
 			if (item[index].field.exit)
 			{
-				tft.needUpdate = 1; //При выходе из события обновляем экран
+				tft.driver.needUpdate = 1; //При выходе из события обновляем экран
 				return;
 			}
 		}

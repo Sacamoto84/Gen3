@@ -1,7 +1,7 @@
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
-
+#include "menu_typedef.h"
 
 void PAGE_generator_CH1_CH_EN_switch(void){
 	if (Gen.CH1.CH_EN)

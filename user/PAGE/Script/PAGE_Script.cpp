@@ -1,13 +1,20 @@
+#include "TFT_convert.h"
+#include "TFT_color.h"
 #include "Page.h"
 
 #include "global_define.h"
 #include "stdio.h"
-
 #include "mString.h"
-
 #include "FontSmooth.h"
+#include "fatfs.h"
+#include "scripting.h"
+#include "global_typedef.h"
+#include "Button.h"
 
-#include "uTFT_convert.h"
+
+extern Encoder_typedef Encoder;
+extern Scripting       script;
+extern button_typedef  button;
 
 typedef struct {
 	char text[20];

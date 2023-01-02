@@ -1,13 +1,23 @@
+#include "TFT_convert.h"
 #include "Page.h"
-
+#include "global_typedef.h"
 #include "global_define.h"
 #include "stdio.h"
-
 #include "mString.h"
-
 #include "FontSmooth.h"
+#include "fatfs.h"
+#include "logUART.h"
+#include "Generator.h"
+#include "TFT_color.h"
+#include "scripting.h"
+#include "button.h"
 
-#include "uTFT_convert.h"
+extern classLog  rtt;
+extern TFT       tft;
+extern GENERATOR Gen;
+extern Scripting script;
+extern button_typedef button;
+extern Encoder_typedef Encoder;
 
 #define APPLICATION_ADDRESS    0x08040000
 

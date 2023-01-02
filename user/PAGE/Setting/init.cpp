@@ -1,9 +1,17 @@
 #include "Page.h"
 #include "global_define.h"
-
 #include "stdio.h"
-
 #include "define.h"
+
+#include "menu_typedef.h"
+
+extern menu_typedef menu_generator;
+extern menu_typedef menu_setting;
+
+extern item_typedef item_setting[];
+extern item_typedef item_generator[];
+
+extern void PAGE_Menu(menu_typedef * menu , item_typedef * item, int NUM);
 
 void PAGE_Setting(void)
 {

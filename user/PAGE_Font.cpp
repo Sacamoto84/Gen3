@@ -1,6 +1,12 @@
 #include "Page.h"
-//#include "global_define.h"
 #include "stdio.h"
+#include "Button.h"
+#include "TFT_color.h"
+#include "global_define.h"
+#include "TFT.h"
+
+extern button_typedef button;
+extern TFT tft;
 
 void PAGE_Font(void)
 {
@@ -12,7 +18,7 @@ void PAGE_Font(void)
 		if (button.isRelease())
 					return;
 
-				tft.ST7789_UpdateDMA16bitV2();
+				tft.driver.ST7789_UpdateDMA16bitV2();
 
 	}
 }

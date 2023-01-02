@@ -1,7 +1,7 @@
 #include "main.h"
 #include "stm32f4xx_it.h"
 
-volatile int U3_DMA_TX_Complete;
+extern int * U3_DMA_TX_Complete;
 
  struct
  {
@@ -47,5 +47,5 @@ void USART3_IRQHandler(void)
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART3)
-  { U3_DMA_TX_Complete = 1; }
+  { *U3_DMA_TX_Complete = 1; }
 }

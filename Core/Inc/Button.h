@@ -119,10 +119,6 @@ typedef struct{
 
 #endif
 
-
-
-
-
 	//установка времени антидребезга (по умолчанию 80 мс)
 	void setDebounce(uint16_t debounce) {
 		_debounce = debounce;

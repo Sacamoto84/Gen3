@@ -2,6 +2,19 @@
 #include "global_define.h"
 #include "FontSmooth.h"
 
+#include "menu_typedef.h"
+
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
+
+#include "Button.h"
+extern button_typedef button;
+
+#include "scripting.h"
+extern Scripting script;
+
+void PAGE_Menu2(menu_typedef * menu , item_typedef * item, int NUM);
+
 void PAGE_Generator()
 {
   PAGE_Menu2( &menu_generator,  &item_generator[0], NUM_ITEM_GENERETOR);
@@ -30,7 +43,7 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 
 	void (*func_name)(void); //объявляем указатель на функцию
 
-	tft.needUpdate = 1;
+	tft.driver.needUpdate = 1;
 
 	menu->field.needUpdate = 1;
 	menu->field.needRender = 1;
@@ -96,19 +109,20 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 	    	}
 		}
 
-		if ((menu->field.needUpdate) || (tft.needUpdate)) {
+		if ((menu->field.needUpdate) || (tft.driver.needUpdate)) {
 			menu->field.needUpdate = 0;
-			tft.needUpdate = 0;
+			tft.driver.needUpdate = 0;
 		    //LOG((char*)"MENU2",'I',(char*)"ST7789_UpdateDMA16bitV3");
-			tft.ST7789_UpdateDMA16bitV3(); //DMA8bitV2();
+			tft.driver.ST7789_UpdateDMA16bitV3(); //DMA8bitV2();
 		}
 
 		if (button.isHolded()) {
-			LOG((char*)"MENU2",'I',(char*)"KEY.isHolded()");
+			rtt.info((char*)"MENU2 KEY.isHolded()");
+
 			if (item[index].callBackFunc_isHolded) {
 				func_name = item[index].callBackFunc_isHolded;
 				func_name();
-				tft.needUpdate = 1;
+				tft.driver.needUpdate = 1;
 				menu->field.needRender  = 1;
 				Font_Smooth_Load(menu->font);
 			}
@@ -124,7 +138,7 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 					menu->field.needUpdate = 1; //При выходе из события обновляем экран
 				}
 			}
-			tft.needUpdate = 1; //При выходе из события обновляем экран
+			tft.driver.needUpdate = 1; //При выходе из события обновляем экран
 			menu->field.needRender  = 1;
 		}
 

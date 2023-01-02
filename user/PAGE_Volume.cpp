@@ -1,11 +1,13 @@
-#include <TFT_Wiget_Animated_Rectagle.h>
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
-#include "TFT_gif.h"
+#include "Gif.h"
 
+#include "button.h"
+extern button_typedef button;
 
-TFT_gif gifw;
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
 
 void PAGE_Volume(void)
 {
@@ -13,7 +15,7 @@ void PAGE_Volume(void)
 
     rtt.print("Wiget\n");
 
-    TFT_gif gif;
+    Gif gif;
     gif.init(&tft);
     gif.setName((char *)"tA");
 
@@ -23,19 +25,18 @@ void PAGE_Volume(void)
 
     gif.trigger = HOVER;
 
-    TFT_gif gif2;
+    Gif gif2;
     gif2.init(&tft);
     gif2.setName((char *)"tA");
 
     gif2.setDelay(0);
-
 
     gif2.setXY(100, 10);
 
     gif2.trigger = LOOP;
 
 
-    TFT_gif gif3;
+    Gif gif3;
     gif3.init(&tft);
     gif3.setName((char *)"tA");
 
@@ -46,7 +47,7 @@ void PAGE_Volume(void)
 
     gif3.trigger = MORPH;
 
-    TFT_gif gif4;
+    Gif gif4;
     gif4.init(&tft);
     gif4.setName((char *)"tA");
 
@@ -104,13 +105,6 @@ void PAGE_Volume(void)
 		tft.driver.ST7789_Update(gif2.info());
 		tft.driver.ST7789_Update(gif3.info());
 		tft.driver.ST7789_Update(gif4.info());
-
-
-
-
-
-
-
 
 		//tft.ST7789_UpdateDMA16bitV3();
 

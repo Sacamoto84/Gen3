@@ -50,7 +50,7 @@ extern "C" void PAGE_HardFault (stack_ptr * SP)
 	//sprintf(str,"psr:0x%08X",(unsigned int)SP->psr);
 	//gfxfont.Puts(0, 180, str, WHITE);
 
-	tft.ST7789_Update();
+	tft.driver.ST7789_Update();
 }
 
 

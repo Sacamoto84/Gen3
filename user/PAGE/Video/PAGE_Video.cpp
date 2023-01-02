@@ -1,13 +1,19 @@
+#include "TFT_convert.h"
+#include "TFT_color.h"
 #include "Page.h"
-
 #include "global_define.h"
 #include "stdio.h"
 #include "string.h"
 
-
-#include "uTFT_convert.h"
-
 #include "video.h"
+
+#include "button.h"
+extern button_typedef button;
+
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
+
+#include "FontSmooth.h"
 
  typedef struct
  {
@@ -126,7 +132,7 @@ void PAGE_Video(void) {
 		}
 		//──────────────────────────────────────────────────────┘
 
-		    tft.ST7789_UpdateDMA16bitV3();
+		    tft.driver.ST7789_UpdateDMA16bitV3();
 
 		}
 

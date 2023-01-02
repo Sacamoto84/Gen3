@@ -1,4 +1,5 @@
-#include "global_define.h"
+#include "tim.h"
+#include "global_typedef.h"
 
 Encoder_typedef Encoder;
 

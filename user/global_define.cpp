@@ -1,6 +1,8 @@
 #include "global_define.h"
-
 #include "menu_typedef.h"
+#include "generator.h"
+#include "global_typedef.h"
+#include "Button.h"
 
 menu_typedef menu_generator;
 menu_typedef menu_setting;
@@ -8,7 +10,7 @@ menu_typedef menu_setting;
 item_typedef   item_generator[NUM_ITEM_GENERETOR] CCMRAM;
 item_typedef   item_setting[8] CCMRAM;
 
-GButton KEY(ENTER_GPIO_Port, ENTER_Pin);
+//GButton KEY(ENTER_GPIO_Port, ENTER_Pin);
 button_typedef button;
 
 uint8_t  u8Volume;

@@ -2,10 +2,16 @@
 #include "global_define.h"
 #include "stdio.h"
 #include "main.h"
-
 #include "bitmap.h"
+#include "FontSmooth.h"
 
-//#include "TFT_gif.h"
+#include "Generator.h"
+extern GENERATOR Gen;
+
+#include "Resource/resource.h"
+
+#include "button.h"
+extern button_typedef button;
 
 void PAGE_BT_Audio(void) {
 

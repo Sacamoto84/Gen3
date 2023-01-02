@@ -16,7 +16,6 @@ void SystemClock_Config(void);
 
 uint16_t res;
 
-
 #define APPLICATION_ADDRESS    0x08040000
 static void Go_To_User_App(void)
 {

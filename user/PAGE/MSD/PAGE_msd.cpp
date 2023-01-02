@@ -1,13 +1,14 @@
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
-
 #include "ff.h"
 #include "fatfs.h"
-
 #include "bitmap.h"
-
 #include "FontSmooth.h"
+#include "generator.h"
+#include "resource.h"
+
+extern GENERATOR Gen CCMRAM;
 
 #define APPLICATION_ADDRESS    0x08004000
 

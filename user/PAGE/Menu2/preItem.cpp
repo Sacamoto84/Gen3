@@ -4,6 +4,12 @@
 
 #include "menu_typedef.h"
 
+#include "Generator.h"
+extern GENERATOR Gen;
+
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
+
 float utils_fr_decrement_fr(float in)
 {
 	if (in >= 200.0F){

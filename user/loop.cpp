@@ -1,19 +1,36 @@
 #include <Page.h>
 #include "main.h"
-
 #include "stdio.h"
+#include "tim.h"
 
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
 #include "global_define.h"
-
-//#include "TimesNRCyr16.h"
-
 #include "logUART.h"
 #include "button.h"
 extern button_typedef button;
 
-extern int U3_DMA_TX_Complete;
+#include "HiSpeedDWT.h"
+extern HiSpeedDWT TimerDWT;
+extern HiSpeedDWT TimerT5;
+
+extern TFT tft;
+
+#include "generator.h"
+extern GENERATOR Gen;
+
+#include "scripting.h"
+extern Scripting script;
+
+extern uint32_t DMA_Sum_Tick;
+extern uint32_t DMA_Sum_us;
+extern float    DMA_zagruzka;
+extern uint32_t DMA_Run_Tick;
+extern uint32_t Other_Run_Tick;
+
+extern uTFT_LCD_t LCD_0;
+
+#include "resource.h"
 
 void illegal_instruction_execution(void) {
 	void (*func_name) (void);
@@ -21,15 +38,17 @@ void illegal_instruction_execution(void) {
 	func_name();
 }
 
+int * U3_DMA_TX_Complete;
+
 void setup(void) {
 
 	TimerDWT.init();
 	TimerT5.init(&htim5);
 
 	rtt.init(&huart3);
-	rtt.dma_completed  = &U3_DMA_TX_Complete;
+	rtt.dma_completed  = U3_DMA_TX_Complete;
 	*rtt.dma_completed = 1;
-	rtt.useDMA = true;
+	rtt.useDMA = false;
 
 	button.init(ENTER_GPIO_Port, ENTER_Pin);
 
@@ -45,7 +64,7 @@ void setup(void) {
     SPI1->CR1 &= ~(0x1UL << (5U));
     __HAL_SPI_ENABLE(&hspi1);
 
-	tft.ST77XX_Update_MADCTL();
+	tft.driver.ST77XX_Update_MADCTL();
 
 	//tft.video_play((char*)"intro.raw", 20);
 	//tft.video_play((char*)"intro.raw", 20);

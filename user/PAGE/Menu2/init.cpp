@@ -1,6 +1,7 @@
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
+#include "menu_typedef.h"
 
 void PAGE_init_struct_generator(void)
 {

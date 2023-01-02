@@ -2,13 +2,17 @@
 #ifndef INC_MENU_TYPEDEF_H_
 #define INC_MENU_TYPEDEF_H_
 
-#include <resourceID.h>
 #include "TFT.h"
 #include "bitmap.h"
 #include "resource.h"
 #include "FontSmooth.h"
 
+#include "Gif.h"
+
 extern TFT tft CCMRAM;
+
+#include "generator.h"
+extern GENERATOR Gen;
 
 //───────────────────────────────────────────────┬───────────────────────────┐
  typedef struct                                //│ Item                      │
@@ -22,7 +26,7 @@ extern TFT tft CCMRAM;
    	   	   	   	   	   	   	   	   	   	   	   //│                           │
    //──── gif ───────────────────────┬───────────┴───────────────────────────┤
    char *     nameGif  = 0;        //│ Имя гифки                             │  ┌ В двустроковом варианте gif_init_state
-   TFT_gif *  gif  = 0;            //│ Указатель на гифку                    │  │ если 1 то отображаем resid_first
+   Gif *  gif  = 0;                //│ Указатель на гифку                    │  │ если 1 то отображаем resid_first
    int8_t  resid_first =-1;        //│ Номер картинки ресурса первый кадр    │<-┤ если 0 то отображаем resid_last
    int8_t  resid_last  =-1;        //│ Номер картинки ресурса последний кадр │<-┤
    ANIMATION_TRIGGERS gif_trigger; //│ Тип анимации                          │  │  item_setting[1].nameGif = (char*)"save";
