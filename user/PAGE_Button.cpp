@@ -7,13 +7,20 @@
 
 #include "TFT_gif.h"
 
-
 extern Bitmap bmpBackground240240;
 
 extern void BLE_Task(void);
 
-#define maxString 32 // ограничиваем строку шириной экрана
-char target[maxString + 1] CCMRAM= "";
+#include "gfxfont.h"
+#include "gfx_fonts_includes.h"
+//
+//extern GFXFONT gfxfont;
+
+//extern GFXFONT gfxfontVdd;
+
+
+//#define maxString 32 // ограничиваем строку шириной экрана
+char target[32 + 1] CCMRAM= "";
 
 char* utf8rus2(char *source) {
 	int i, j, k;
@@ -52,7 +59,7 @@ char* utf8rus2(char *source) {
 		m[0] = n;
 		strcat(target, m);
 		j++;
-		if (j >= maxString)
+		if (j >= 32)
 			break;
 	}
 	return target;
@@ -83,8 +90,8 @@ void PAGE_Button(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 		tft.LineV(x + w + 1, y + 1, y + h + 1, palitra[15]);
 	}
 
-	gfxfont.set_delta_x(2);
-	gfxfont.Puts(x + 15, y + 20, str);
+	//gfxfont.set_delta_x(2);
+	//gfxfont.Puts(x + 15, y + 20, str);
 
 	//u8g_SetFont(u8g_font_profont29);
 	//uTFT_SetFontColor(BLACK, WHITE);
@@ -111,7 +118,7 @@ void PAGE_Button_Pressed(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
 
 	tft.GotoXY(x + 15, 20);
 	//gfxfont.set_delta_x(2);
-	gfxfont.Puts(str);
+	//gfxfont.Puts(str);
 
 	//u8g_SetFont(u8g_font_profont29);
 	//uTFT_SetFontColor(BLACK, WHITE);
@@ -154,7 +161,7 @@ void PAGE_Background_Board(void) {
 
 void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 
-	tft.Font_Smooth_Load(menu->font);
+	Font_Smooth_Load(menu->font);
 
 	volatile uint8_t i;
 
@@ -198,7 +205,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 				item[i].gif->init(&tft);
 				item[i].gif->setName(item[i].nameGif);
                 id = item[i].resid_first;
-				item[i].gif->bmpStop = tft.getResBitmapID(id);
+				item[i].gif->bmpStop = getResBitmapID(id);
 				item[i].gif->setDelay(0);
 				item[i].gif->setX(item[i].gif_x);
 				item[i].gif->trigger = item[i].gif_trigger;
@@ -213,12 +220,9 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 	}
 	//─────────────────────────────────────────────────────┘
 
-
 	//item[1].gif->field.bit32 = 0;
 
-
-
-	char str[64];
+	//char str[64];
 
 	menu->field.needUpdate = 1;
 	tft.uTFT.GetColor = 1;
@@ -311,7 +315,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 	    //└───────────────────────────────────────────────────────────────────────┤
 		if (menu->field.verticalScroll) {                                       //│
 			tft.RectangleFilled(230, menu->item_start_y, 14,                    //│
-					menu->item_count * menu->item_height, tft.RGB565(0, 0, 0)); //│
+					menu->item_count * menu->item_height, RGB565(0, 0, 0));     //│
 			int H = (menu->item_count * menu->item_height) - 4;                 //│ Общая высота области в которой идет рисование
 			float Hw = H * ((float) (menu->item_count)                          //│
 									/ (float) (menu->max_item + 1));            //│ Размер самого ползунка
@@ -319,7 +323,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 					/ (float) (menu->max_item + 1 - menu->item_count);          //│
 			tft.RectangleFilled(222 + 5 + 5,                                    //│
 					menu->item_start_y + 2 + delta * (menu->window_start),      //│
-					10 - 5, Hw, tft.RGB565(205, 205, 205));                     //│
+					10 - 5, Hw, RGB565(205, 205, 205));                         //│
 		}                                                                       //│
 		//────────────────────────────────────────────────────────────────────────┘
 
@@ -333,7 +337,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 
 		    rtt.println("MENU I ST7789_UpdateDMA16bitV3");
 
-			tft.ST7789_UpdateDMA16bitV3(); //DMA8bitV2();
+			tft.driver.ST7789_UpdateDMA16bitV3(); //DMA8bitV2();
 		}
 
 		if (button.isHolded()) {

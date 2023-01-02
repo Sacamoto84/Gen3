@@ -60,7 +60,7 @@ void PAGE_Volume(void)
 
     tft.Fill16(COLOR_DARKBLUE);
 
-    tft.ST7789_UpdateDMA16bitV3();
+    tft.driver.ST7789_UpdateDMA16bitV3();
 
 	while (1) {
 		button.tick();
@@ -98,12 +98,12 @@ void PAGE_Volume(void)
 		gif4.run();
 
 		TimerT5.Start();
-		tft.ST7789_Update(gif.info());
+		tft.driver.ST7789_Update(gif.info());
 		TimerT5.Loger((char*)"tft.ST7789_Update");
 
-		tft.ST7789_Update(gif2.info());
-		tft.ST7789_Update(gif3.info());
-		tft.ST7789_Update(gif4.info());
+		tft.driver.ST7789_Update(gif2.info());
+		tft.driver.ST7789_Update(gif3.info());
+		tft.driver.ST7789_Update(gif4.info());
 
 
 

@@ -1,5 +1,6 @@
 #include "Page.h"
 #include "global_define.h"
+#include "FontSmooth.h"
 
 void PAGE_Generator()
 {
@@ -13,7 +14,7 @@ uint8_t render;
 //└──────────────────────────────────────────────────┬────────────────┤
 void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 
-	tft.Font_Smooth_Load(menu->font);
+	Font_Smooth_Load(menu->font);
 
 	volatile uint8_t i;
 
@@ -109,7 +110,7 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 				func_name();
 				tft.needUpdate = 1;
 				menu->field.needRender  = 1;
-				tft.Font_Smooth_Load(menu->font);
+				Font_Smooth_Load(menu->font);
 			}
 		}
 

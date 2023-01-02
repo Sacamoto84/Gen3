@@ -5,20 +5,14 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
 
-
-
 #include "TFT.h"
 
 extern TFT tft;
 
-#include "gfxfont.h"
-#include "gfx_fonts_includes.h"
-
-extern GFXFONT gfxfont;
-extern GFXFONT gfxfontVdd;
-
 #include "global_define.h"
 #include "generator.h"
+
+#include "menu_typedef.h"
 
 extern GENERATOR Gen CCMRAM;
 extern uint16_t palitra_0[16];

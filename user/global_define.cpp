@@ -1,5 +1,6 @@
 #include "global_define.h"
 
+#include "menu_typedef.h"
 
 menu_typedef menu_generator;
 menu_typedef menu_setting;
@@ -10,7 +11,7 @@ item_typedef   item_setting[8] CCMRAM;
 GButton KEY(ENTER_GPIO_Port, ENTER_Pin);
 button_typedef button;
 
-uint8_t u8Volume;
+uint8_t  u8Volume;
 float    fVolume;
 
 //Dir_File_Info_Array Dir_File_Info[32] CCMRAM; //Массив всех файлов в папке
@@ -19,7 +20,7 @@ TFT tft CCMRAM;
 
 GENERATOR Gen CCMRAM;
 
-GFXFONT gfxfont CCMRAM;
+//GFXFONT gfxfont CCMRAM;
 
 HiSpeedDWT TimerDWT;
 HiSpeedDWT TimerT5;

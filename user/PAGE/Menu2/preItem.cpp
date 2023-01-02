@@ -2,6 +2,8 @@
 #include "global_define.h"
 #include "stdio.h"
 
+#include "menu_typedef.h"
+
 float utils_fr_decrement_fr(float in)
 {
 	if (in >= 200.0F){

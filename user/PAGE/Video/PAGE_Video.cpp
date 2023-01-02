@@ -4,6 +4,11 @@
 #include "stdio.h"
 #include "string.h"
 
+
+#include "uTFT_convert.h"
+
+#include "video.h"
+
  typedef struct
  {
    char text [20];
@@ -16,7 +21,7 @@
 	 button.tick();
 	 if (button.isRelease())
 	 {
-		tft.video_stop = 1; //Передать user прекратить повторный запуск видео
+		video_stop = 1; //Передать user прекратить повторный запуск видео
 		return 1;           // -> 1 остановить воспроизведение
 	 }
 	 return 0;
@@ -64,7 +69,7 @@ void PAGE_Video(void) {
 	uint32_t StartY = 0;
 
 	tft.uTFT.GetColor = 1;
-	tft.videoCallBackFunc = &callback_video_stop;
+	videoCallBackFunc = &callback_video_stop;
 
 	int needRender = 1;
 
@@ -111,12 +116,12 @@ void PAGE_Video(void) {
 		for (int i = window_start; i <= window_end; i++) {
 			if (i == index)	tft.RectangleFilled(0, StartY + H * (ii % 6), 239, H, COLOR_RECTAGLE);
 			sprintf(str, "%s", Dir_File_Info[i].Name);
-			tft.ConvertStringDosTo1251 ( str );
+			ConvertStringDosTo1251 ( str );
 
 			char strUTF8[48];
-			tft.ConvertString1251ToUTF8(str, strUTF8);
+			ConvertString1251ToUTF8(str, strUTF8);
 			rtt.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\n", i,  strUTF8);
-			tft.Font_Smooth_drawStr1251(10, 8 + 40 * (ii % 6), str , (i == index)? tft.RGB565(8, 8, 8) : tft.RGB565(128, 128, 128));
+			Font_Smooth_drawStr1251(&tft, 10, 8 + 40 * (ii % 6), str , (i == index)? RGB565(8, 8, 8) : RGB565(128, 128, 128));
 			ii++;
 		}
 		//──────────────────────────────────────────────────────┘
@@ -142,11 +147,11 @@ void PAGE_Video(void) {
              f_close(&SDFile);
 
               sprintf(str, "/video/%s.raw",  Dir_File_Info[index].Name);
-              tft.video_stop = 0;
+              video_stop = 0;
 
-              while(tft.video_stop == 0)   //Пока tft.video_stop == 0, ->1 callback
+              while(video_stop == 0)   //Пока tft.video_stop == 0, ->1 callback
               {
-            	tft.video_play(str, time); //Запускаем видео (path, время кадра)
+            	video_play(&tft, str, time); //Запускаем видео (path, время кадра)
               }
 
               needRender = 1;

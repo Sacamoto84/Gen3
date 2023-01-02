@@ -1,6 +1,11 @@
-#include "Page.h"
-#include "global_define.h"
-#include "stdio.h"
+//#include "Page.h"
+//#include "global_define.h"
+//#include "stdio.h"
+
+#include "TFT.h"
+#include "TFT_color.h"
+
+extern TFT tft CCMRAM;
 
 	 typedef struct
 	  {
@@ -17,7 +22,7 @@
 extern "C" void PAGE_HardFault (stack_ptr * SP)
 {
 	//char str[32];
-	tft.Fill16(tft.RGB565(255,0,0));
+	tft.Fill16(RGB565(255,0,0));
 
 	//gfxfont.Puts(20, 20, (char *)"HardFault", tft.RGB565(0,0,0));
 

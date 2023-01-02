@@ -5,6 +5,10 @@
 
 #include "mString.h"
 
+#include "FontSmooth.h"
+
+#include "uTFT_convert.h"
+
 #define APPLICATION_ADDRESS    0x08040000
 
 static void Go_To_User_App(void)
@@ -27,18 +31,16 @@ typedef struct {
 	char text[20];
 } item_files;
 
-
-
-
-
 void PAGE_Player(void) {
 	Gen.pause();
-	tft.Fill16(BLUE);
 
-	tft.Font_Smooth_Load(Roboto_Medium_en_ru_30);
-	tft.Font_Smooth_drawStr(90, 100, "Player");
-	tft.ST7789_Update();
-    HAL_Delay(1000);
+	tft.Fill16(BLACK);
+	//tft.Font_Smooth_Load(Roboto_Medium_en_ru_30);
+	//tft.Font_Smooth_drawStr(90, 100, "Player");
+	//tft.BMP_From_File(0, 0, (char*)"/Config/mp3.bmp");
+
+	tft.driver.ST7789_Update();
+    //HAL_Delay(1000);
 
     __disable_irq();
     for(int i = 0; i< 81; i++)
@@ -133,23 +135,23 @@ void PAGE_Player(void) {
 							COLOR_RECTAGLE);
 
 				sprintf(str, "%s", sFiles[i].buf);
-				tft.ConvertStringDosTo1251(str);
+				ConvertStringDosTo1251(str);
 
 				char strUTF8[48];
-				tft.ConvertString1251ToUTF8(str, strUTF8);
+				ConvertString1251ToUTF8(str, strUTF8);
 
 				rtt.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\r\n", i,
 						strUTF8);
 
-				tft.Font_Smooth_drawStr1251(10, 8 + 40 * (ii % 6), str,
+				Font_Smooth_drawStr1251(&tft, 10, 8 + 40 * (ii % 6), str,
 						(i == index) ?
-								tft.RGB565(8, 8, 8) :
-								tft.RGB565(128, 128, 128));
+								RGB565(8, 8, 8) :
+								RGB565(128, 128, 128));
 				ii++;
 			}
 			//──────────────────────────────────────────────────────┘
 
-			tft.ST7789_UpdateDMA16bitV3();
+			tft.driver.ST7789_UpdateDMA16bitV3();
 
 		}
 

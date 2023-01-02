@@ -5,6 +5,10 @@
 
 #include "mString.h"
 
+#include "FontSmooth.h"
+
+#include "uTFT_convert.h"
+
 typedef struct {
 	char text[20];
 } item_files;
@@ -93,22 +97,22 @@ void PAGE_Script(void) {
 							COLOR_RECTAGLE);
 
 				sprintf(str, "%s", sFiles[i].buf);
-				tft.ConvertStringDosTo1251(str);
+				ConvertStringDosTo1251(str);
 
 				char strUTF8[48];
-				tft.ConvertString1251ToUTF8(str, strUTF8);
+				ConvertString1251ToUTF8(str, strUTF8);
 
 				rtt.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\r\n", i, strUTF8);
 
-				tft.Font_Smooth_drawStr1251(10, 8 + 40 * (ii % 6), str,
+				Font_Smooth_drawStr1251(&tft, 10, 8 + 40 * (ii % 6), str,
 						(i == index) ?
-								tft.RGB565(8, 8, 8) :
-								tft.RGB565(128, 128, 128));
+								RGB565(8, 8, 8) :
+								RGB565(128, 128, 128));
 				ii++;
 			}
 			//──────────────────────────────────────────────────────┘
 
-			tft.ST7789_UpdateDMA16bitV3();
+			tft.driver.ST7789_UpdateDMA16bitV3();
 
 		}
 

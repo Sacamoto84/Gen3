@@ -1,6 +1,8 @@
+#include <TFT_color.h>
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
+#include "FontSmooth.h"
 
 //static int temp;
 static item_typedef   * temp_item;
@@ -31,7 +33,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH1.Carrier_mod,"%s", temp_item[index].text);
         Gen.Create_Carrier(&Gen.CH1);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 
 	if (i == INDEX_CH1_AM_MOD) //AM mod
@@ -39,7 +41,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH1.AM_mod,"%s", temp_item[index].text);
         Gen.Create_AM_Modulation(&Gen.CH1);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 
 	if (i == INDEX_CH1_FM_MOD) //AM mod
@@ -47,7 +49,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH1.FM_mod,"%s", temp_item[index].text);
         Gen.Create_FM_Modulation(&Gen.CH1);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 
 	if (i == INDEX_CH2_CR) //Carrier
@@ -55,7 +57,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH2.Carrier_mod,"%s", temp_item[index].text);
         Gen.Create_Carrier(&Gen.CH2);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 
 	if (i == INDEX_CH2_AM_MOD) //AM mod
@@ -63,7 +65,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH2.AM_mod,"%s", temp_item[index].text);
         Gen.Create_AM_Modulation(&Gen.CH2);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 
 	if (i == INDEX_CH2_FM_MOD) //AM mod
@@ -71,7 +73,7 @@ void PageSelectModulation_onClick(void)
 		sprintf(Gen.CH2.FM_mod,"%s", temp_item[index].text);
         Gen.Create_FM_Modulation(&Gen.CH2);
         temp_item[index].field.exit = 1; //Для выхода
-        tft.Font_Smooth_Load(menu_generator.font);
+        Font_Smooth_Load(menu_generator.font);
 	}
 }
 
@@ -204,7 +206,7 @@ void PAGE_generator_select_modulation(void)
     //menu.title = NULL;
     menu.postCallBackFunc = &postPageSelectModulation; //Рисовалка
     menu.count_item = Dir_File_Info[0].maxFileCount+1;
-    menu.ColorBackground = tft.RGB565(8, 8, 8);
+    menu.ColorBackground = RGB565(8, 8, 8);
 
     menu.field.verticalScroll = 1;
 
@@ -216,7 +218,7 @@ void PAGE_generator_select_modulation(void)
 
     PAGE_Menu( &menu,  &item[0], Dir_File_Info[0].maxFileCount+1);
 
-    tft.Font_Smooth_Load(menu_generator.font);
+    Font_Smooth_Load(menu_generator.font);
 
 }
 

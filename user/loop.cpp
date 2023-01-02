@@ -6,7 +6,9 @@
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
 #include "global_define.h"
-#include "TimesNRCyr16.h"
+
+//#include "TimesNRCyr16.h"
+
 #include "logUART.h"
 #include "button.h"
 extern button_typedef button;
@@ -58,9 +60,9 @@ void setup(void) {
 	Gen.Init();//Инициализация генератора
 #endif
 
-	gfxfont.init(&tft);
+	//gfxfont.init(&tft);
 
-	tft.setResStartAdress(0x08020000); //Установим начало ресурсов
+	setResStartAdress(0x08020000); //Установим начало ресурсов
 
 	//gfxfont.setFont(&FreeMonoBold12pt7b);
 	//gfxfont.setFont(&FreeSansBold12pt7b);

@@ -24,8 +24,7 @@ const char log_d_s4[] = "\x1B[24;40m";          //RTT_CTRL_BG_BLACK //Фон Т�
 void LOG_init(void)
 {
 	//strcat(log_str, log_i_s1); // 14
-	strcat(log_str, log_i_sq); //22
-
+	strcat(log_str, log_i_sq);   //22
 }
 
 void LOG(char * tag, char TYPE, char * text)
