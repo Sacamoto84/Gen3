@@ -37,20 +37,10 @@ void PAGE_MSD(void)
 	BMPFromFile(&tft, 0, 0, (char*)"/Config/MSD2.bmp");
 
 	Font_Smooth_Load(Roboto_Medium_en_ru_30);
-	//tft.Font_Smooth_drawStr(90, 100, "MSD");
 	Font_Smooth_drawStr(&tft, 18, 195, "Press to Reset");
 
-	//tft.Bitmap_From_Flash_Background_16bit(&bmpBackground240240);
-
-
-    //tft.BMP_From_File(0, 0, (char*)"/Config/MSD.bmp");
-
-
-	//SEGGER_SYSVIEW_Warn("END tft.BMP_From_File(0, 0, /Config/MSD.bmp)");
-//	gfxfont.Puts(120, 30, (char *)"MSD");
-//	SEGGER_RTT_WriteString(0, "2\n");
 	tft.driver.ST7789_Update();
-    HAL_Delay(1000);
+    //HAL_Delay(1000);
 
     __disable_irq();
     for(int i = 0; i< 81; i++)

@@ -79,7 +79,6 @@ void Error_Handler(void);
 #define ESP_OFF HAL_GPIO_WritePin(ESP8266_EN_GPIO_Port, ESP8266_EN_Pin, GPIO_PIN_RESET);
 
 
-
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

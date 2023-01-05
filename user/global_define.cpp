@@ -4,14 +4,17 @@
 #include "global_typedef.h"
 #include "Button.h"
 
+
+
 menu_typedef menu_generator;
 menu_typedef menu_setting;
 
 item_typedef   item_generator[NUM_ITEM_GENERETOR] CCMRAM;
 item_typedef   item_setting[8] CCMRAM;
 
-//GButton KEY(ENTER_GPIO_Port, ENTER_Pin);
-button_typedef button;
+#include "GyverButton.h"
+GButton button(ENTER_GPIO_Port, ENTER_Pin);
+GButton buttonF(BT_EN_GPIO_Port, BT_EN_Pin);
 
 uint8_t  u8Volume;
 float    fVolume;
@@ -44,8 +47,6 @@ float    DMA_zagruzka;
 //ST7789 135 240 16 bit
 uint16_t LCD_Buffer16[240 * 240];
 //uint16_t LCD_Buffer16_0[1];
-
-
 
 uTFT_LCD_t LCD_0 = {
 		240,     // Ширина экрана

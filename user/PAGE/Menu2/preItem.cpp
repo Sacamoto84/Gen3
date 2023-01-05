@@ -55,8 +55,6 @@ void generator_pre_CH1_FR(uint32_t index) {
 		if (index == INDEX_CH1_FR) //CH1 Carrier Fr
 		{
 
-			rtt.println("index == INDEX_CH1_FR");
-
 			temp = Gen.CH1.Carrier_fr;
 			if (Encoder.Left) {
 				Encoder.Left = 0;
@@ -64,8 +62,6 @@ void generator_pre_CH1_FR(uint32_t index) {
 				if (temp < 200)
 					temp = 200;
 				Gen.CH1.Carrier_fr = temp;
-				rtt.println("Left");
-
 			}
 
 			if (Encoder.Right) {
@@ -74,11 +70,9 @@ void generator_pre_CH1_FR(uint32_t index) {
 				if (temp > 10000)
 					temp = 10000;
 				Gen.CH1.Carrier_fr = temp;
-				rtt.println("Right");
 			}
 			sprintf(item_generator[INDEX_CH1_FR].text, "* %d *",
 					Gen.CH1.Carrier_fr);
-
 		}
 
 	} else {
