@@ -1,0 +1,109 @@
+#ifndef _GUI_WIGETS
+#define _GUI_WIGETS
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "stm32f4xx_hal.h"
+#include "stm32f4xx.h"
+#include "stm32f4xx_it.h"
+
+#include "fonts.h"
+
+extern __IO uint32_t uwTick;
+
+//Структура для квадрата на и строки
+typedef struct
+{
+   uint16_t x;
+	 uint16_t y;
+   uint16_t dx; //Ширина
+	 uint16_t dy; //Высота
+	 char strU[10];
+	 char strD[10];
+   char strL[10];
+   char strR[10];
+	 uint8_t stateU; 
+	 uint8_t stateD;
+   uint8_t stateL;
+	 uint8_t stateR;
+	 uint8_t strU_PixelLen; //Длинна строки в пикселях
+	 uint8_t strD_PixelLen;
+	 uint8_t strL_PixelLen;
+	 uint8_t strR_PixelLen;
+	 uint8_t strU_CorrectionX;
+	 uint8_t strU_CorrectionY;
+	 uint8_t strD_CorrectionX;
+	 uint8_t strD_CorrectionY;
+	 uint8_t strR_CorrectionX;
+	 uint8_t strR_CorrectionY;
+	 uint8_t strL_CorrectionX;
+	 uint8_t strL_CorrectionY;
+}WigetJostick_Rectagle_HandleTypeDef;
+
+//Структура для экрана со строками
+typedef struct
+{
+	 char item0_str[10];
+	 char item1_str[10];
+   char item2_str[10];
+   char item3_str[10];
+   char item4_str[10];
+   char item5_str[10];
+   char item6_str[10];
+   char item7_str[10];
+	
+	 uint8_t str0_PixelLen; //Длинна строки в пикселях
+	 uint8_t str1_PixelLen; //Длинна строки в пикселях
+	 uint8_t str2_PixelLen; //Длинна строки в пикселях
+	 uint8_t str3_PixelLen; //Длинна строки в пикселях
+	 uint8_t str4_PixelLen; //Длинна строки в пикселях
+	 uint8_t str5_PixelLen; //Длинна строки в пикселях
+	 uint8_t str6_PixelLen; //Длинна строки в пикселях
+	 uint8_t str7_PixelLen; //Длинна строки в пикселях
+	
+	 uint8_t str0_Y;
+	 uint8_t str1_Y; 
+	 uint8_t str2_Y; 
+	 uint8_t str3_Y; 
+	 uint8_t str4_Y; 
+	 uint8_t str5_Y; 
+	 uint8_t str6_Y; 
+	 uint8_t str7_Y; 
+	
+	 uint32_t current_item;
+	 uint8_t  max_item;
+	 
+	 FontDefMicroElectronika_t * wFont; //Шрифт используемый в виджете
+	 uint16_t COLOR_BACK;             //Цвет фона
+	 uint16_t COLOR_Text;             //Цвет Текста
+	 uint16_t COLOR_Text_BACK;        //Цвет Фона текста используется как цвет выбранного элемента
+	 
+	 uint8_t start_y; //Старт Y
+	 uint8_t dy;      //Приращение по Y
+	
+	uint8_t block[7]; //Список блокируемых строк, перескок через них 1=блокировка
+	
+	uint16_t visible; //Признак того чтобы отбработвать экран
+	
+}Wiget_Item_HandleTypeDef;
+
+extern Wiget_Item_HandleTypeDef Wiget_Item_0;
+extern Wiget_Item_HandleTypeDef Wiget_Item_Mux;
+
+
+//Коды событий в Wiget
+#define eLeft   1
+#define eRight  2
+#define eUp     3
+#define eDown   4
+#define eEnter  5
+
+extern uint8_t GUI_Wiget_Index_On; //Признак того что находимся в режиме GUI_Wiget_Index_On
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

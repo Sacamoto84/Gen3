@@ -1,0 +1,8 @@
+--cpu=Cortex-M4.fp.sp
+"stm32f407_sdio\main.o"
+"stm32f407_sdio\startup_stm32f407xx.o"
+"stm32f407_sdio\system_stm32f4xx.o"
+--strict --scatter "STM32F407_SDIO\STM32F407_SDIO.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "STM32F407_SDIO.map" -o STM32F407_SDIO\STM32F407_SDIO.axf
