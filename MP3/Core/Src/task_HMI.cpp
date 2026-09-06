@@ -7,6 +7,8 @@
 #include "main.h"
 #include "global.h"
 
+#include "timber.h"
+
 extern void DAC_DMA_Pause(void);
 extern void DAC_DMA_Play(void);
 extern void DAC_DMA_ClearBuffer(void);
@@ -224,7 +226,7 @@ void UI_List_Mp3()
 		    //Для этого нужно выяснить прошлую директорию
 
 		    globalPach = dirForvard(globalPach); //Получить прошлую директорию
-		    rtt.println("globalPach %s", globalPach.c_str());
+		    timber.println("globalPach %s", globalPach.c_str());
 
 			memset( &list_mp3, 0 , sizeof(Dir_File_Info_Array));
 			readDir((char *) globalPach.c_str(), &list_mp3);

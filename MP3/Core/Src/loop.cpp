@@ -17,6 +17,8 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+#include "timber.h"
+
 extern void init_DAC_DMA(void);
 extern void DAC_DMA_Play(void);
 extern void PAGE_init_palitra(void); //Инициализация палитры
@@ -27,13 +29,12 @@ extern FIL          mp3_file;		    	    // указатель на играем�
 
 void stopError(void);
 
-classLog rtt;
 TFT tft;
 GFXFONT gfxfont;
 
 void loop(){while (1){
 	task_HMI();
-	rtt.info ("Свободно памяти %d", xPortGetFreeHeapSize());
+	timber.info ("Свободно памяти %d", xPortGetFreeHeapSize());
 	osDelay(20000);
 }}
 
@@ -46,12 +47,15 @@ void setup(void) {
 
 	PAGE_init_palitra();
 
-	rtt.init(&huart3);
-	rtt.clear();
+	//rtt.init(&huart3);
 
-	rtt.setBold();
-    rtt.info("MP3 V40");
-    rtt.reset();
+	timber.init();
+
+	timber.clear();
+
+	timber.setBold();
+	timber.info("MP3 V40");
+	timber.reset();
 
 	TimerDWT.init();
 	TimerT5.init(&htim5);
@@ -88,40 +92,40 @@ void setup(void) {
 	tft.RectangleFilled(10, 10, 20, 20, 1);
 	tft.driver.Update();
 
-	rtt.info("Start testing SDCARD");
-	rtt.color(87);
+	timber.info("Start testing SDCARD");
+	timber.color(87);
 	BSP_SD_GetCardInfo(&Card_Info);
-	rtt.print("Block Size      -> 0x%x\n", (int)Card_Info.BlockSize);
-	rtt.print("Capacity blocks -> 0x%x(%uGB)\n", (int)Card_Info.BlockNbr,(int)((((float)Card_Info.BlockNbr/1000)*(float)Card_Info.BlockSize/1000000)+0.5));
-    rtt.reset();
-	rtt.warning("Монтирования диска") ; // ("монтирования диска\n");
+	timber.print("Block Size      -> 0x%x\n", (int)Card_Info.BlockSize);
+	timber.print("Capacity blocks -> 0x%x(%uGB)\n", (int)Card_Info.BlockNbr,(int)((((float)Card_Info.BlockNbr/1000)*(float)Card_Info.BlockSize/1000000)+0.5));
+	timber.reset();
+	timber.warning("Монтирования диска") ; // ("монтирования диска\n");
 
 	// смонтировать диск
 	FRESULT result = f_mount(&SDFatFS, SDPath, 1); //Mount MicroSd
 	if (result != FR_OK)
 	{
-      rtt.error("Ошибка монтирования диска %d", result);
+		timber.error("Ошибка монтирования диска %d", result);
 	  stopError();
 	}
 	else
-	  rtt.successful("Монтирование диска: успешно");
+		timber.successful("Монтирование диска: успешно");
 
 	//Открыть файл 'GIFtoBIN.exe'
 	result = f_open(&SDFile, "GIFtoBIN.exe", FA_READ);
 	if (result == FR_OK)
 	{
-	  rtt.successful("GIFtoBIN.exe..OK");
+		timber.successful("GIFtoBIN.exe..OK");
 	  f_close(&SDFile);
 	}
 	else
-	  rtt.error("GIFtoBIN.exe..Ошибка открытия файла");
+		timber.error("GIFtoBIN.exe..Ошибка открытия файла");
 
 	globalPach = "/music";
 	readDir((char *) globalPach.c_str(), &list_mp3);
 	list_mp3.root =  false;
 	addTreeDot(&list_mp3);
 
-	rtt.info ("Свободно памяти Всего %d", xPortGetFreeHeapSize());
+	timber.info ("Свободно памяти Всего %d", xPortGetFreeHeapSize());
 
 }
 

@@ -128,7 +128,7 @@ extern PlayerInfo playerInfo;
 
 extern uint16_t palitra[];
 extern TFT tft ;
-extern classLog rtt;
+
 extern GFXFONT gfxfont;
 
 extern HiSpeedDWT TimerDWT;

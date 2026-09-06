@@ -57,13 +57,13 @@ void readDir(char * path, Dir_File_Info_Array * list)
 	FRESULT result = f_opendir(&dir, path);
 	if (result != FR_OK)
 	{
-	  rtt.error("Невозможно открыть директорий; ошибка %d\n",(unsigned int)result);
+		timber.error("Невозможно открыть директорий; ошибка %d\n",(unsigned int)result);
 	  stopError();
 	}
 	else
 	{
-	  rtt.successful("Директория %s открыта успешно", path);
-	  rtt.info("..");
+		timber.successful("Директория %s открыта успешно", path);
+		timber.info("..");
 
 	  for (;;)
 		  {
@@ -74,12 +74,12 @@ void readDir(char * path, Dir_File_Info_Array * list)
 		    if (fno.fattrib == 16)
               list->isDirectory[list->maxFileCount] = true;
 
-		    char str[32];
+		    char str[64];
 		    sprintf(str,"%s", fno.fname);
 		    ConvertStringDosTo1251 ( str );
 		    char strUTF8[48];
 		    ConvertString1251ToUTF8(str, strUTF8);
-		    rtt.info(strUTF8);
+		    timber.info(strUTF8);
 		    list->name[list->maxFileCount] = strUTF8;
 
 		    list->size[list->maxFileCount] = fno.fsize;
@@ -93,16 +93,16 @@ void readDir(char * path, Dir_File_Info_Array * list)
 		sort(list_mp3.name, list_mp3.maxFileCount, &list_mp3); //Сортируем массив
 	    for(uint i = 0 ; i < list_mp3.maxFileCount; i++)
 	    {
-	       rtt.warning(list_mp3.name[i].c_str());
+	    	timber.warning(list_mp3.name[i].c_str());
 	    }
 
 }
 
 void stopError(void)
 {
-	rtt.setBold();
-	rtt.setFlash();
-	rtt.error("...stopError...");
+	timber.setBold();
+	timber.setFlash();
+	timber.error("...stopError...");
 	tft.setColorToPalete(15, RGB565(255,255,0));
 	tft.Fill(15);
 	tft.driver.Update();
@@ -141,8 +141,8 @@ mString <64> dirForvard(mString <64> dir)
   else
 	result = "/";
 
-  rtt.info("DirForvard dir %s", dir.c_str());
-  rtt.info("result %s", result.c_str());
+  timber.info("DirForvard dir %s", dir.c_str());
+  timber.info("result %s", result.c_str());
   return result;
 }
 

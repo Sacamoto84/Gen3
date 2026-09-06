@@ -10,9 +10,9 @@
 #include "main.h"
 #include "cmsis_os.h"
 
+#include "timber.h"
+
 #define MP3_GAIN 1.8F
-
-
 
 static bool taskMP3_terminate;
 
@@ -110,28 +110,28 @@ void MP3Task(void);
  ************************************************************************************************/
 void mp3_player_init(void)
 {
-	rtt.info ("Свободно памяти %d", xPortGetFreeHeapSize());
+	timber.info ("Свободно памяти %d", xPortGetFreeHeapSize());
 
 	// выделить память для задачи
 	mp3DecoderState = (mp3DecoderState_t*)malloc(sizeof(mp3DecoderState_t));
 
 	if (mp3DecoderState == NULL)
 	{
-		rtt.print("Ошибка выделения памяти для mp3DecoderState\n");
+		timber.print("Ошибка выделения памяти для mp3DecoderState\n");
 		stopError();
 	}
-	rtt.successful("OK выделения памяти для mp3DecoderState\n");
-	rtt.info ("Свободно памяти %d", xPortGetFreeHeapSize());
+	timber.successful("OK выделения памяти для mp3DecoderState\n");
+	timber.info ("Свободно памяти %d", xPortGetFreeHeapSize());
 
 	// выделить память для декодера
 	mp3DecoderState->hMP3Decoder = MP3InitDecoder();
 	if (mp3DecoderState->hMP3Decoder == NULL)
 	{
-		rtt.print("Ошибка выделения памяти для MP3InitDecoder\n");
+		timber.print("Ошибка выделения памяти для MP3InitDecoder\n");
 		stopError();
 	}
-	rtt.successful("OK выделения памяти для MP3InitDecoder");
-	rtt.info ("Свободно памяти %d", xPortGetFreeHeapSize());
+	timber.successful("OK выделения памяти для MP3InitDecoder");
+	timber.info ("Свободно памяти %d", xPortGetFreeHeapSize());
 
 	//mp3DecoderState->mp3_file = &SDFile;
 
@@ -191,7 +191,7 @@ static read_result_t ReadMP3buff(mp3DecoderState_t * mp3DecoderState)
  ***********************************************************************************************/
 void MP3(char * mp3name)
 {
-	rtt.info("MP3:mp3name %s", mp3name);
+	timber.info("MP3:mp3name %s", mp3name);
 	debug_mode.showDecoderInfo = true;
 	//debug_mode.showFrameDecodeTime = true;
 
@@ -216,16 +216,16 @@ void MP3(char * mp3name)
 	FRESULT result = f_open(&SDFile, fullPath.c_str() , FA_READ);
 	if (result != FR_OK)
 	{
-	  rtt.error("MP3:%s..Ошибка открытия файла", fullPath.c_str());
+		timber.error("MP3:%s..Ошибка открытия файла", fullPath.c_str());
 
 	  f_close(&SDFile);
 	}
 	else
-		rtt.successful("MP3:%s..OK", fullPath.c_str());
+		timber.successful("MP3:%s..OK", fullPath.c_str());
 
 	memset(&playerInfo, 0, sizeof(PlayerInfo));
 	int filesize = f_size(&SDFile);
-	rtt.info("MP3:Размер файла %d", filesize);
+	timber.info("MP3:Размер файла %d", filesize);
 	playerInfo.filesize = filesize;
 
 	//Текущее положение
@@ -249,7 +249,7 @@ void MP3(char * mp3name)
 
 		if(taskMP3_terminate)
 		{
-			rtt.warning("Завершение MP3 по внешнему запросу");
+			timber.warning("Завершение MP3 по внешнему запросу");
 			taskMP3_terminate = false;
 			f_close(&SDFile);
 			DAC_DMA_Pause();
@@ -270,7 +270,7 @@ void MP3(char * mp3name)
 
 		    if(taskMP3_terminate)
 		    {
-		  			rtt.warning("Завершение MP3 по внешнему запросу");
+		    	timber.warning("Завершение MP3 по внешнему запросу");
 		  			taskMP3_terminate = false;
 		  			f_close(&SDFile);
 		  			DAC_DMA_Pause();
@@ -314,18 +314,18 @@ void MP3(char * mp3name)
 
 			if (debug_mode.showDecoderInfo)
 			{
-				rtt.print("Чистое время декодирования файла %u мс\n",(unsigned int)mp3DecoderState->DecodeTime_Ticks);
+				timber.print("Чистое время декодирования файла %u мс\n",(unsigned int)mp3DecoderState->DecodeTime_Ticks);
 				uint32_t temp = mp3DecoderState->summaryDecodeTime_mks/1000;
-				rtt.print("Длительность проигрывания файла %u мс\n",(unsigned int)temp);
+				timber.print("Длительность проигрывания файла %u мс\n",(unsigned int)temp);
 				temp = mp3DecoderState->summaryDecodeTime_mks/10;
 				temp *= mp3DecoderState->DecodeTime_Ticks;
-				rtt.print("Средняя загрузка контроллера %u%%\n",(unsigned int)temp);
+				timber.print("Средняя загрузка контроллера %u%%\n",(unsigned int)temp);
 				// отображается время выполнения только одной процедуры - MP3Decode
 
-				rtt.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
-				rtt.print("Ошибка чтения файла\n");
-				rtt.print("Error in %s line %u\n", (uint8_t *)__FILE__, (unsigned int)__LINE__);
-				rtt.error("Воспроизведение файла завершено по ошибке\n");
+				timber.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
+				timber.print("Ошибка чтения файла\n");
+				timber.print("Error in %s line %u\n", (uint8_t *)__FILE__, (unsigned int)__LINE__);
+				timber.error("Воспроизведение файла завершено по ошибке\n");
 
 				f_close(&SDFile);
 				DAC_DMA_Pause();
@@ -344,16 +344,16 @@ void MP3(char * mp3name)
 			if (debug_mode.showDecoderInfo)
 			{
 				uint32_t temp = mp3DecoderState->summaryDecodeTime_mks/1000;
-				rtt.print("Чистое время декодирования файла %u мс\n",(unsigned int)temp);
-				rtt.print("Полное время проигрывания файла %u мс\n",(unsigned int)mp3DecoderState->DecodeTime_Ticks);
+				timber.print("Чистое время декодирования файла %u мс\n",(unsigned int)temp);
+				timber.print("Полное время проигрывания файла %u мс\n",(unsigned int)mp3DecoderState->DecodeTime_Ticks);
 				temp = mp3DecoderState->summaryDecodeTime_mks/10;
 				temp /= mp3DecoderState->DecodeTime_Ticks;
 
-				rtt.print("Средняя загрузка контроллера %u%%",(unsigned int)temp);
+				timber.print("Средняя загрузка контроллера %u%%",(unsigned int)temp);
 				// отображается время выполнения только одной процедуры - MP3Decode
 
-				rtt.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
-				rtt.info("Воспроизведение файла завершено полностью\n");
+				timber.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
+				timber.info("Воспроизведение файла завершено полностью\n");
 			}
 			stop_decode(SONG_COMPLETE);
 			f_close(&SDFile);
@@ -371,7 +371,7 @@ void MP3(char * mp3name)
 		int offset = MP3FindSyncWord(mp3DecoderState->inputDataPtr, mp3DecoderState->bytes_left);
 		if (offset < 0)
 		{
-			rtt.warning("синхро не найдено 1");
+			timber.warning("синхро не найдено 1");
 			// синхро не найдено, очистить буфер и прочитать из файла следующую порцию
 			mp3DecoderState->bytes_left = 0;
 			StopTimeMeasurement();
@@ -398,7 +398,7 @@ void MP3(char * mp3name)
 			offset = MP3FindSyncWord(mp3DecoderState->inputDataPtr, mp3DecoderState->bytes_left);
 			if (offset < 0)
 			{
-				rtt.warning("синхро не найдено 2");
+				timber.warning("синхро не найдено 2");
 				// следующее синхро не найдено, очистить буфер
 				mp3DecoderState->bytes_left = 0;
 				StopTimeMeasurement();
@@ -442,7 +442,7 @@ void MP3(char * mp3name)
 			playerInfo.error++; //Счетчик ошибок
 
 			if (debug_mode.showDecoderInfo)
-			  rtt.error("Ошибка (%d) декодирования фрейма %u, адрес чтения %u\n", (signed int)err,
+				timber.error("Ошибка (%d) декодирования фрейма %u, адрес чтения %u\n", (signed int)err,
 					  (unsigned int)mp3DecoderState->frameCNT,
 					  (unsigned int)mp3DecoderState->fileAddr);
 
@@ -462,14 +462,14 @@ void MP3(char * mp3name)
 		// обновить частоту дискретизации
 		if (mp3DecoderState->samprate != mp3DecoderState->mp3FrameInfo.samprate)
 		{
-			rtt.info("----------");
-			rtt.info("Битрейт %d", mp3DecoderState->mp3FrameInfo.bitrate);
-			rtt.info("Битность %d", mp3DecoderState->mp3FrameInfo.bitsPerSample);
-			rtt.info("outputSamps %d", mp3DecoderState->mp3FrameInfo.outputSamps);
-			rtt.info("Каналов %d", mp3DecoderState->mp3FrameInfo.nChans);
-			rtt.info("Set SampleRate %d",mp3DecoderState->mp3FrameInfo.samprate);
-			rtt.info("layer %d",mp3DecoderState->mp3FrameInfo.layer);
-			rtt.info("version %d",mp3DecoderState->mp3FrameInfo.version);
+			timber.info("----------");
+			timber.info("Битрейт %d", mp3DecoderState->mp3FrameInfo.bitrate);
+			timber.info("Битность %d", mp3DecoderState->mp3FrameInfo.bitsPerSample);
+			timber.info("outputSamps %d", mp3DecoderState->mp3FrameInfo.outputSamps);
+			timber.info("Каналов %d", mp3DecoderState->mp3FrameInfo.nChans);
+			timber.info("Set SampleRate %d",mp3DecoderState->mp3FrameInfo.samprate);
+			timber.info("layer %d",mp3DecoderState->mp3FrameInfo.layer);
+			timber.info("version %d",mp3DecoderState->mp3FrameInfo.version);
 			DAC_setSampleRate(mp3DecoderState->mp3FrameInfo.samprate);
 			mp3DecoderState->samprate = mp3DecoderState->mp3FrameInfo.samprate;
 		}
@@ -595,7 +595,7 @@ void MP3(char * mp3name)
 		{
 			//printf("%u,%u\r\n", (unsigned int)mp3DecoderState->frameCNT, (unsigned int)time/100);
 			// отобразить реальное время декодирования
-			rtt.print("%u,%u\n", (unsigned int)mp3DecoderState->frameCNT, (unsigned int)temp/100);
+			timber.print("%u,%u\n", (unsigned int)mp3DecoderState->frameCNT, (unsigned int)temp/100);
 		}
 		if (decodeStatistic.minCPUidle_mks > time)			decodeStatistic.minCPUidle_mks = time;
 		if (decodeStatistic.maxCPUidle_mks < time)			decodeStatistic.maxCPUidle_mks = time;
@@ -611,7 +611,7 @@ void MP3(char * mp3name)
 	}
 
 	// аварийное завершение задачи недопустимо
-	rtt.print("Аварийное завершение задачи mp3Task\r\n");
+	timber.print("Аварийное завершение задачи mp3Task\r\n");
 	stopError();
 }
 
@@ -631,7 +631,7 @@ static void MP3_Deinit(void)
 	free(mp3DecoderState);
 	char str[32];
 	sprintf(str,"MP3_Deinit: %d",xPortGetFreeHeapSize());
-	rtt.colorStringln(0, 183, str);
+	timber.colorStringln(0, 183, str);
 
 }
 
@@ -639,7 +639,7 @@ static void MP3_Deinit(void)
 void StartTaskMP3(void *argument)
 {
   //Получаем имя запускаемого файла
-  rtt.successful("!!!Таска MP4 Запуск");
+	timber.successful("!!!Таска MP4 Запуск");
   MP3((char*)argument);
   for(;;)
   {
@@ -652,8 +652,8 @@ void StartTaskMP3(void *argument)
 
 void play(char * name)
 {
-	rtt.info("play %s", name);
-	rtt.info ("Свободно памяти play %d", xPortGetFreeHeapSize());
+	timber.info("play %s", name);
+	timber.info ("Свободно памяти play %d", xPortGetFreeHeapSize());
 
 	if (myTaskMP3Handle == NULL)
 	{
@@ -666,15 +666,15 @@ void play(char * name)
 
 		osThreadState_t state = osThreadGetState (myTaskMP3Handle);
 	    switch(state){
-	      case osThreadInactive : rtt.warning("state osThreadInactive"); break;
-	      case osThreadReady : rtt.warning("state osThreadReady"); break;
-	      case osThreadRunning : rtt.warning("state osThreadRunning"); break;
-	      case osThreadBlocked : rtt.warning("state osThreadBlocked"); break;
-	      case osThreadTerminated : rtt.warning("state osThreadTerminated"); break;
-	      case osThreadError : rtt.warning("state osThreadError"); break;
-	      case osThreadReserved : rtt.warning("state osThreadReserved"); break;
+	      case osThreadInactive : timber.warning("state osThreadInactive"); break;
+	      case osThreadReady : timber.warning("state osThreadReady"); break;
+	      case osThreadRunning : timber.warning("state osThreadRunning"); break;
+	      case osThreadBlocked : timber.warning("state osThreadBlocked"); break;
+	      case osThreadTerminated : timber.warning("state osThreadTerminated"); break;
+	      case osThreadError : timber.warning("state osThreadError"); break;
+	      case osThreadReserved : timber.warning("state osThreadReserved"); break;
 	    }
-		rtt.info("play state %d", state);
+	    timber.info("play state %d", state);
 
 		//Ждем завершения
 		taskMP3_terminate = true;
@@ -683,7 +683,7 @@ void play(char * name)
 
 		osDelay(50);
 		myTaskMP3Handle = osThreadNew(StartTaskMP3, (char *)name, &myTaskMP3_attributes);
-		rtt.info ("Свободно play запуск потока %d", xPortGetFreeHeapSize());
+		timber.info ("Свободно play запуск потока %d", xPortGetFreeHeapSize());
 	}
 
 
