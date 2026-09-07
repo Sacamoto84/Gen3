@@ -14,7 +14,13 @@ uint32_t OUTPUT[OUTPUTSAMPLES];
 #define DAC_BUFFER_SIZE		(1152*2)
 int16_t   outBuff[2][1152*2] RAM_16; // буфер выходного потока
 
-volatile uint32_t DMA_Buffer_Current;
+//Счётчик завершённых DMA-передач (один буфер = одна передача).
+//Пишется в ISR, читается задачей декодера -> volatile.
+volatile uint32_t dma_tc_sequence = 0;
+//Индекс буфера (0/1), который завершился последним (поле публикуется ДО seq).
+volatile uint32_t dma_just_completed = 0;
+//Число потерянных (underrun) периодов, посчитанное декодером.
+volatile uint32_t dac_underruns = 0;
 
 void init_MP3_DAC_DMA(void)
 {
@@ -27,13 +33,22 @@ void init_MP3_DAC_DMA(void)
 	DMA1_Stream5->NDTR = 1152;
 	DMA1_Stream5->PAR  = 0x40007420; //DAC 12R
 
-	DMA1_Stream5->M0AR = (uint32_t) &outBuff[1][0]; //(int)pOUTPUT;
-	DMA1_Stream5->M1AR = (uint32_t) &outBuff[0][0]; //(int)pOUTPUT;
+	//Двойной буфер: M0AR=outBuff[0], M1AR=outBuff[1].
+	//CT=0 -> читается outBuff[0]; по завершении DMA переключается на outBuff[1].
+	DMA1_Stream5->M0AR = (uint32_t) &outBuff[0][0];
+	DMA1_Stream5->M1AR = (uint32_t) &outBuff[1][0];
 
 	//DMA1_Stream5->CR |=  DMA_SxCR_CIRC;// | DMA_SxCR_HTIE;
 	////DMA1_Stream5->CR &= ~DMA_SxCR_TCIE;
 	// DMA_SxCR_HTIE; //Прерывание | Циклический режим | //Двойной буффер
 	DMA1_Stream5->CR |= DMA_SxCR_TCIE | DMA_SxCR_CIRC | DMA_SxCR_DBM;
+
+	//Сбросить возможные флаги прошлого сеанса и синхронизировать декодер
+	DMA1->HIFCR |= DMA_HIFCR_CTCIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTEIF5 |
+	               DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CFEIF5;
+	dma_tc_sequence = 0;
+	dma_just_completed = 0;
+
 	DMA1_Stream5->CR |= DMA_SxCR_EN;
 
 	//HAL_TIM_Base_Start(&htim6);  //Запуск таймера6 для DAC
@@ -80,14 +95,20 @@ extern "C" void DMA1_Stream5_IRQHandler(void)
 {
 
 	vTraceStoreISRBegin(Timer1Handle);
+	//По завершении передачи DMA уже переключился на противоположный буфер (CT
+	//обновлён). Завершился тот буфер, на который CT теперь НЕ указывает:
+	//CT=1 (читается outBuff[1]) -> завершился outBuff[0]; CT=0 -> outBuff[1].
+	//Сначала публикуем поле буфера, затем seq (порядок volatile-записей важен:
+	//декодер увидит новое seq только после нового поля).
 	if (DMA1_Stream5->CR & DMA_SxCR_CT)
 	{
-		DMA_Buffer_Current = 1;
+		dma_just_completed = 0;
 	}
 	else
 	{
-		DMA_Buffer_Current = 2;
+		dma_just_completed = 1;
 	}
+	dma_tc_sequence++;
 
 	HAL_DMA_IRQHandler(&hdma_dac1);
 	vTraceStoreISREnd(0);

@@ -17,7 +17,9 @@
 static volatile bool taskMP3_terminate;
 
 
-extern volatile uint32_t DMA_Buffer_Current;
+extern volatile uint32_t dma_tc_sequence;
+extern volatile uint32_t dma_just_completed;
+extern volatile uint32_t dac_underruns;
 
 static void stop_decode(cmd_t player_cmd);
 
@@ -253,9 +255,9 @@ void MP3(char * mp3name)
 	playerInfo.filename = mp3name;
 	playerInfo.filename.truncate(4);
 
-	DMA_Buffer_Current = 0;
-
 	taskMP3_terminate =  false;
+
+	uint32_t last_seq = 0;	// последний обработанный dma_tc_sequence
 
 	for(;;)
 	{
@@ -272,8 +274,8 @@ void MP3(char * mp3name)
 
 		if (init == false )
 		{
-		  //Ждем запроса от DMA
-		  while(DMA_Buffer_Current == 0){osDelay(2);
+		  //Ждём завершения очередного DMA-буфера (сравнение по счётчику, а не по флагу)
+		  while(dma_tc_sequence == last_seq){osDelay(2);
 
 			playerInfo.flseekcurrent = f_tell(&SDFile);
 			playerInfo.calculatePersent(); //Расчет процента
@@ -286,7 +288,16 @@ void MP3(char * mp3name)
 		    }
 
 		  }
-		  DMA_Buffer_Current = 0;
+		  //Сколько передач прошло с нашей последней обработки
+		  uint32_t missed = dma_tc_sequence - last_seq;
+		  last_seq = dma_tc_sequence;
+		  if (missed > 1)
+		  {
+			  dac_underruns++;
+			  if ((dac_underruns % 100) == 1)
+				  timber.warning("DAC underrun: пропущено %u буферов, всего %u",
+						  (unsigned)(missed - 1), (unsigned)dac_underruns);
+		  }
 		}
 		else
 		  init_count++;
@@ -417,8 +428,8 @@ void MP3(char * mp3name)
 
 		if (init == false)
 		{
-			mp3DecoderState->outBuffPtr = DMA1_Stream5->CR & DMA_SxCR_CT ? 1: 0;
-			outbuf = outBuff[mp3DecoderState->outBuffPtr];
+			//Декодируем в буфер, который только что завершился (его уже не читает DMA)
+			outbuf = outBuff[dma_just_completed];
 		}
 		else
 		{
