@@ -700,6 +700,7 @@ static void MP3_Deinit(void)
 	char str[64];
 	sprintf(str,"MP3_Deinit: FreeRTOS %d, newlib %d",xPortGetFreeHeapSize(), (int)get_newlib_heap_free());
 	timber.colorStringln(0, 183, str);
+	timber.info("MP3 task stack HWM %d", (int)uxTaskGetStackHighWaterMark(NULL));
 
 }
 

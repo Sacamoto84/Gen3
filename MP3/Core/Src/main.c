@@ -78,9 +78,12 @@ int main(void)
 	__disable_irq(); //????????? ??????????
 	//SCB->VTOR = 0x8060000;
 
+	//Обнулить только CCM-буферы (.my_ccmram), не трогая стековую область у 0x10010000,
+	//где в этот момент работает сам main (SP указывает в CCM).
+	extern uint8_t _smy_ccmram, _emy_ccmram;
 	uint32_t *p;
-	p = (uint32_t *)(0x10000000);
-	int count = 16384;
+	p = (uint32_t *)&_smy_ccmram;
+	int count = ((uint32_t)&_emy_ccmram - (uint32_t)&_smy_ccmram) / sizeof(uint32_t);
 	while(count--)
 		*p++ = 0;
 

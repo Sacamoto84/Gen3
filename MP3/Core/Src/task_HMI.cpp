@@ -5,6 +5,8 @@
 #include "playerTask.h"
 #include "debugTask.h"
 #include "main.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #include "timber.h"
 
@@ -84,6 +86,14 @@ void task_HMI(void)
 	tft.SetColor(14);
 	sprintf(str, "%s",  playerInfo.filename.c_str());
 	gfxfont.Puts(10, 178, gfxfont.utf8rus2(str), 16);
+
+	//Периодический контроль стека HMI (раз в ~1000 кадров)
+	static uint16_t hwm_cnt = 0;
+	if (++hwm_cnt == 1000)
+	{
+		hwm_cnt = 0;
+		timber.info("HMI task stack HWM %d", (int)uxTaskGetStackHighWaterMark(NULL));
+	}
 
 	//Перемотка
 	if (mp3_config)
