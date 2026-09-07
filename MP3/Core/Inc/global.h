@@ -141,7 +141,7 @@ extern void PAGE_init_palitra(void);
 extern void task_HMI(void);
 
 // utiletes.cpp
-extern void sort(mString <64> *S, int N);
+extern void sort(mString <64> *S, int N, Dir_File_Info_Array * list);
 extern void readDir(char * path, Dir_File_Info_Array * list);
 extern void stopError(void);
 extern mString <64> dirForvard(mString <64> dir);

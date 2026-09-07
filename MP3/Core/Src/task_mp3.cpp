@@ -178,12 +178,13 @@ static read_result_t ReadMP3buff(mp3DecoderState_t * mp3DecoderState)
 							bytes_to_read,
 							(UINT*)&bytes_read);
 
-	mp3DecoderState->fileAddr += bytes_to_read;
-
 	if (result != FR_OK)
 	{
 		return READ_ERROR;
 	}
+
+	//Реальная позиция в файле (не "запрошено", а "прочитано")
+	mp3DecoderState->fileAddr = f_tell(&SDFile);
 
 	mp3DecoderState->inputDataPtr = mp3DecoderState->inputBuf;
 	mp3DecoderState->bytes_left += bytes_read;
@@ -265,7 +266,7 @@ void MP3(char * mp3name)
 	else
 		timber.successful("MP3:%s..OK", fullPath.c_str());
 
-	memset(&playerInfo, 0, sizeof(PlayerInfo));
+	playerInfo = PlayerInfo{};
 	int filesize = f_size(&SDFile);
 	timber.info("MP3:Размер файла %d", filesize);
 	playerInfo.filesize = filesize;

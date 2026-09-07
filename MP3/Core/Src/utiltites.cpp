@@ -22,6 +22,10 @@ void sort(mString <64> *S, int N, Dir_File_Info_Array * list)
 					bool tempb = list->isDirectory[i];
 					list->isDirectory[i] = list->isDirectory[j];
 					list->isDirectory[j] = tempb;
+
+					int tempi = list->size[i];
+					list->size[i] = list->size[j];
+					list->size[j] = tempi;
 				}
 	}
 
@@ -77,23 +81,29 @@ void readDir(char * path, Dir_File_Info_Array * list)
 	      break;
 	    }
 
-	    //list_mp3.name[list_mp3.maxFileCount] = fno.fname;
+	    list->isDirectory[list->maxFileCount] = (fno.fattrib & AM_DIR) != 0;
 
-	    if (fno.fattrib == 16)
-	      list->isDirectory[list->maxFileCount] = true;
+	    //fno.fname несёт LFN (до _MAX_LFN=64 символов) - используем буферы по размеру
+	    char str[_MAX_LFN + 1];
+	    sprintf(str,"%s", fno.fname);
+	    ConvertStringDosTo1251 ( str );
+	    char strUTF8[_MAX_LFN * 2 + 2];
+	    ConvertString1251ToUTF8(str, strUTF8);
 
-		    char str[64];
-		    sprintf(str,"%s", fno.fname);
-		    ConvertStringDosTo1251 ( str );
-		    char strUTF8[48];
-		    ConvertString1251ToUTF8(str, strUTF8);
-		    timber.info(strUTF8);
-		    list->name[list->maxFileCount] = strUTF8;
+	    //Имя, не влезающее в mString<64>, пропускаем (добавление молча игнорировалось бы)
+	    if (strlen(strUTF8) >= 64)
+	    {
+	      timber.warning("Имя слишком длинное, запись пропущена");
+	      continue;
+	    }
 
-		    list->size[list->maxFileCount] = fno.fsize;
+	    timber.info(strUTF8);
+	    list->name[list->maxFileCount] = strUTF8;
 
-		    list->maxFileCount++;
-		  }
+	    list->size[list->maxFileCount] = fno.fsize;
+
+	    list->maxFileCount++;
+	  }
 		  f_closedir(&dir);
 		}
 

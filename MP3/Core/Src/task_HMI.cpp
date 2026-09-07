@@ -228,7 +228,7 @@ void UI_List_Mp3()
 		    globalPach = dirForvard(globalPach); //Получить прошлую директорию
 		    timber.println("globalPach %s", globalPach.c_str());
 
-			memset( &list_mp3, 0 , sizeof(Dir_File_Info_Array));
+			list_mp3 = Dir_File_Info_Array{};
 			readDir((char *) globalPach.c_str(), &list_mp3);
 			selectIndex = 0;
 			window_start = 0;
@@ -248,7 +248,7 @@ void UI_List_Mp3()
 	  {
 		    globalPach += "/";
 			globalPach += list_mp3.name[selectIndex].c_str();
-			memset( &list_mp3, 0 , sizeof(Dir_File_Info_Array));
+			list_mp3 = Dir_File_Info_Array{};
 			readDir((char *) globalPach.c_str(), &list_mp3);
 			addTreeDot(&list_mp3);
 			selectIndex = 0;
