@@ -65,14 +65,22 @@ void readDir(char * path, Dir_File_Info_Array * list)
 		timber.successful("Директория %s открыта успешно", path);
 		timber.info("..");
 
-	  for (;;)
-		  {
+  for (;;)
+	  {
 			result = f_readdir(&dir, &fno);                   /* Read a directory item */
-		    if (result != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-		    //list_mp3.name[list_mp3.maxFileCount] = fno.fname;
+	    if (result != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
 
-		    if (fno.fattrib == 16)
-              list->isDirectory[list->maxFileCount] = true;
+	    //Один слот резервируем под "<-Back" (addTreeDot), поэтому лимит на 1 меньше размера массива
+	    if (list->maxFileCount >= (32 - 1))
+	    {
+	      timber.warning("Достигнут лимит %d записей в каталоге, остальные пропущены", 32 - 1);
+	      break;
+	    }
+
+	    //list_mp3.name[list_mp3.maxFileCount] = fno.fname;
+
+	    if (fno.fattrib == 16)
+	      list->isDirectory[list->maxFileCount] = true;
 
 		    char str[64];
 		    sprintf(str,"%s", fno.fname);
