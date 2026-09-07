@@ -101,18 +101,21 @@ void task_HMI(void)
 		char * text = (char*)"< перемотка >";
 		Button(20 ,100 , 200, 30 , 1, gfxfont.utf8rus2(text));
 		int step = f_size(&SDFile)/4096/50;
-		if (mp3_config) {
+		if (step == 0) step = 1;	// очень маленький файл: хотя бы один шаг
+		uint pos = f_tell(&SDFile);
+		uint fsize = f_size(&SDFile);
 
-		  if (Encoder.Left) {
-		    Encoder.Left = 0;
-		    uint offset = f_tell(&SDFile) - (4096 * step);
-		    f_lseek (&SDFile , offset );
-		  }
-		  if (Encoder.Right) {
-		    Encoder.Right = 0;
-		    uint offset = f_tell(&SDFile) + (4096 * step);
-		    f_lseek (&SDFile , offset );
-		  }
+		if (Encoder.Left) {
+			Encoder.Left = 0;
+			//Защита от переполнения uint при отмотке в начало
+			uint offset = (pos > (uint)(4096 * step)) ? pos - (uint)(4096 * step) : 0;
+			f_lseek (&SDFile , offset );
+		}
+		if (Encoder.Right) {
+			Encoder.Right = 0;
+			uint target = pos + (uint)(4096 * step);
+			if (target > fsize) target = fsize;	// не уходить за конец файла
+			f_lseek (&SDFile , target );
 		}
 	}
 	tft.driver.ST7789_UpdateDMA4bitV2();

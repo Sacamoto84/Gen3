@@ -23,13 +23,7 @@ extern volatile uint32_t dma_tc_sequence;
 extern volatile uint32_t dma_just_completed;
 extern volatile uint32_t dac_underruns;
 
-static void stop_decode(cmd_t player_cmd);
-
-#define E_OK                0
-
-#define MP3_TASK_STK_SIZE	512			// размер стека задачи 2кб
 #define MP3_FILEBUFF_SIZE	4096		// размер файлового буфера
-#define DAC_BUFFER_SIZE		(1152*2)	// размер выходного буфера (16-битных слов) для одного фрейма *2 канала
 
 #define MONO_SUPPORT
 
@@ -389,14 +383,12 @@ void MP3(char * mp3name)
 				// отображается время выполнения только одной процедуры - MP3Decode
 
 				timber.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
-				timber.print("Ошибка чтения файла\n");
-				timber.print("Error in %s line %u\n", (uint8_t *)__FILE__, (unsigned int)__LINE__);
-				timber.error("Воспроизведение файла завершено по ошибке\n");
-
-				mp3TaskExit();
 			}
-			stop_decode(DECODE_ERROR);
-			continue;
+
+			//Ошибка чтения файла (не конец данных!) - завершаем задачу в любом случае,
+			//иначе при выключенном debug был бы бесконечный цикл декодирования
+			timber.error("Ошибка чтения файла, воспроизведение завершено\n");
+			mp3TaskExit();
 		}
 		////
 
@@ -418,7 +410,6 @@ void MP3(char * mp3name)
 				timber.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
 				timber.info("Воспроизведение файла завершено полностью\n");
 			}
-			stop_decode(SONG_COMPLETE);
 			mp3TaskExit();
 			continue;
 		}
@@ -680,16 +671,6 @@ void MP3(char * mp3name)
 	// аварийное завершение задачи недопустимо
 	timber.print("Аварийное завершение задачи mp3Task\r\n");
 	stopError();
-}
-
-static void stop_decode(cmd_t player_cmd)
-{
-	// остановить ЦАП
-	//mp3DecoderState->DAC_interface->Cmd(DAC_STOP);
-
-	// команда проигрывателю
-	player_cmd = player_cmd;
-	//CoPostMail(player_CmdMailBox, &player_cmd);
 }
 
 static void MP3_Deinit(void)

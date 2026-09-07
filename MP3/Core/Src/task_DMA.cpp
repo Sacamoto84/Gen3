@@ -7,11 +7,6 @@
 
 extern DMA_HandleTypeDef hdma_dac1;
 
-#define OUTPUTSAMPLES 1
-
-uint32_t OUTPUT[OUTPUTSAMPLES];
-
-#define DAC_BUFFER_SIZE		(1152*2)
 int16_t   outBuff[2][1152*2] RAM_16; // буфер выходного потока
 
 //Счётчик завершённых DMA-передач (один буфер = одна передача).
@@ -28,19 +23,15 @@ void init_MP3_DAC_DMA(void)
 	 *  DMA DAC
 	 **************************/
 	DAC1->CR |= DAC_CR_DMAEN1 | DAC_CR_EN1 | DAC_CR_DMAEN2 | DAC_CR_EN2;
-	//HAL_DMA_Start_IT(&hdma_dac1, 0x2001C000, 0x40007420, 4096);
 	DMA1_Stream5->CR &= ~DMA_SxCR_EN; //Выключаем DMA
 	DMA1_Stream5->NDTR = 1152;
-	DMA1_Stream5->PAR  = 0x40007420; //DAC 12R
+	DMA1_Stream5->PAR  = (uint32_t)&DAC->DHR12RD;	// 12-бит прав., двойной канал (CH1|CH2)
 
 	//Двойной буфер: M0AR=outBuff[0], M1AR=outBuff[1].
 	//CT=0 -> читается outBuff[0]; по завершении DMA переключается на outBuff[1].
 	DMA1_Stream5->M0AR = (uint32_t) &outBuff[0][0];
 	DMA1_Stream5->M1AR = (uint32_t) &outBuff[1][0];
 
-	//DMA1_Stream5->CR |=  DMA_SxCR_CIRC;// | DMA_SxCR_HTIE;
-	////DMA1_Stream5->CR &= ~DMA_SxCR_TCIE;
-	// DMA_SxCR_HTIE; //Прерывание | Циклический режим | //Двойной буффер
 	DMA1_Stream5->CR |= DMA_SxCR_TCIE | DMA_SxCR_CIRC | DMA_SxCR_DBM;
 
 	//Сбросить возможные флаги прошлого сеанса и синхронизировать декодер
