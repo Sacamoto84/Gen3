@@ -263,8 +263,7 @@ void MP3(char * mp3name)
 	if (result != FR_OK)
 	{
 		timber.error("MP3:%s..Ошибка открытия файла", fullPath.c_str());
-
-	  f_close(&SDFile);
+		mp3TaskExit();   // сигнал play() + освобождение ресурсов, без бесконечного декодирования
 	}
 	else
 		timber.successful("MP3:%s..OK", fullPath.c_str());
