@@ -9,9 +9,8 @@
 
 #include "timber.h"
 
-extern void DAC_DMA_Pause(void);
-extern void DAC_DMA_Play(void);
-extern void DAC_DMA_ClearBuffer(void);
+extern volatile bool    mp3_paused;    // фактическое состояние паузы (владелец - задача декодера)
+extern volatile uint8_t mp3_cmd_pause; // запрос переключения паузы для задачи декодера
 
 void Background_Board(void);
 void Button(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t select, char *str);
@@ -28,7 +27,6 @@ int window_end;
 int NUM;
 
 bool mp3_config; //Режим управления перемоткой
-bool pause;
 
 void task_HMI(void)
 {
@@ -71,7 +69,7 @@ void task_HMI(void)
 	//Процент и пауза
 	tft.RectangleFilled(191, 187, 40 , 20, 15);
 	gfxfont.setFont(&DejaVu_Sans_Mono_12);
-	if(pause == false){
+	if(mp3_paused == false){
 	  tft.SetColor(3);
 	  sprintf(str, "%4d",  (int)(playerInfo.fpersent*9999));
 	  gfxfont.Puts(195, 201, str, 16);
@@ -261,7 +259,6 @@ void UI_List_Mp3()
 	  }
 	  else
 	  {
-		   pause = false;
 		   //Запуск файла
 		   play((char *)list_mp3.name[selectIndex].c_str());
 
@@ -270,17 +267,8 @@ void UI_List_Mp3()
 	}
 	if (KEY.isDouble())
 	{
-		if (pause == false){
-			DAC_DMA_Pause();
-		    DAC_DMA_ClearBuffer(); //Очистить выходной буффер
-			pause = true;
-		}
-		else
-		{
-		    DAC_DMA_ClearBuffer(); //Очистить выходной буффер
-			DAC_DMA_Play();
-			pause = false;
-		}
+		//Запрос паузы/продолжения. DAC/DMA трогает только задача декодера.
+		mp3_cmd_pause = 1;
 	}
 }
 

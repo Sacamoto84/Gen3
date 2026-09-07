@@ -50,6 +50,11 @@ static void MP3_Deinit(void);
 
 static osSemaphoreId_t mp3DoneSem;	// сигнал о завершении задачи-декодера
 
+//Команда переключения паузы от HMI (1 = переключить) и фактическое состояние.
+//Единственный владелец DAC/DMA - задача декодера: HMI только запрашивает.
+volatile bool    mp3_paused = false;
+volatile uint8_t mp3_cmd_pause = 0;
+
 decodeStatistic_t decodeStatistic;
 debug_mode_t      debug_mode;		    // отладочные флаги
 
@@ -205,6 +210,27 @@ static void mp3TaskExit(void)
 	osThreadExit();
 }
 
+//Выполнить запрошенные HMI команды. Вызывается только из контекста задачи-декодера,
+//поэтому управление DAC/DMA не гоняется с декодированием.
+static void serviceMp3Pause(void)
+{
+	if (mp3_cmd_pause)
+	{
+		mp3_cmd_pause = 0;
+		if (mp3_paused)
+		{
+			DAC_DMA_Play();
+			mp3_paused = false;
+		}
+		else
+		{
+			DAC_DMA_Pause();
+			DAC_DMA_ClearBuffer();
+			mp3_paused = true;
+		}
+	}
+}
+
 void MP3(char * mp3name)
 {
 	timber.info("MP3:mp3name %s", mp3name);
@@ -256,6 +282,8 @@ void MP3(char * mp3name)
 	playerInfo.filename.truncate(4);
 
 	taskMP3_terminate =  false;
+	mp3_cmd_pause = 0;   // не переносить команду от "простаивающего" нажатия на новый трек
+	mp3_paused = false;
 
 	uint32_t last_seq = 0;	// последний обработанный dma_tc_sequence
 
@@ -270,12 +298,28 @@ void MP3(char * mp3name)
 			mp3TaskExit();
 		}
 
+		//Командный гейт: пауза применяется до декодирования следующего фрейма
+		serviceMp3Pause();
+		if (mp3_paused)
+		{
+			osDelay(5);   // на паузе: ждём, пока HMI не запросит снятие
+			continue;
+		}
 
 
 		if (init == false )
 		{
-		  //Ждём завершения очередного DMA-буфера (сравнение по счётчику, а не по флагу)
-		  while(dma_tc_sequence == last_seq){osDelay(2);
+		  //Ждём завершения очередного DMA-буфера (сравнение по счётчику, а не по флагу).
+		  //Ожидание прерывается обработкой команд паузы.
+		  for (;;)
+		  {
+			if (dma_tc_sequence != last_seq)
+				break;
+			osDelay(2);
+
+			serviceMp3Pause();
+			if (mp3_paused)
+				break;   // ушли на паузу
 
 			playerInfo.flseekcurrent = f_tell(&SDFile);
 			playerInfo.calculatePersent(); //Расчет процента
@@ -286,8 +330,10 @@ void MP3(char * mp3name)
 		  			taskMP3_terminate = false;
 		  			mp3TaskExit();
 		    }
-
 		  }
+		  if (mp3_paused)
+			continue;   // на паузу - следующий проход виснет в командном гейте
+
 		  //Сколько передач прошло с нашей последней обработки
 		  uint32_t missed = dma_tc_sequence - last_seq;
 		  last_seq = dma_tc_sequence;
