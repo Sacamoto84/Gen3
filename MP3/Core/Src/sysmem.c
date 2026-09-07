@@ -74,3 +74,16 @@ void *_sbrk(ptrdiff_t incr)
 
   return (void *)prev_heap_end;
 }
+
+/**
+ * @brief  Возвращает количество свободных байт newlib-кучи
+ * @retval свободно байт (0, если куча достигла __HeapLimit)
+ */
+uint32_t get_newlib_heap_free(void)
+{
+  extern uint8_t _end; /* Symbol defined in the linker script */
+  extern uint32_t __HeapLimit; /* Symbol defined in the linker script */
+  const uint8_t *heap_end = (__sbrk_heap_end != NULL) ? __sbrk_heap_end : &_end;
+  const uint8_t *limit = (const uint8_t *)&__HeapLimit;
+  return (heap_end < limit) ? (uint32_t)(limit - heap_end) : 0;
+}

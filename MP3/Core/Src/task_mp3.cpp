@@ -12,6 +12,8 @@
 
 #include "timber.h"
 
+extern "C" uint32_t get_newlib_heap_free(void);	// свободно в newlib-куче (sysmem.c)
+
 #define MP3_GAIN 1.8F
 
 static volatile bool taskMP3_terminate;
@@ -120,6 +122,7 @@ void MP3Task(void);
 void mp3_player_init(void)
 {
 	timber.info ("Свободно памяти %d", xPortGetFreeHeapSize());
+	timber.info ("Свободно newlib heap %d", (int)get_newlib_heap_free());
 
 	// выделить память для задачи
 	mp3DecoderState = (mp3DecoderState_t*)malloc(sizeof(mp3DecoderState_t));
@@ -531,6 +534,9 @@ void MP3(char * mp3name)
 
 
 		// преобразовать данные в формат, понятный ЦАПу
+		//Запомнить усиление до фрейма: если клиппинга не было (gain не менялся),
+		//медленно восстанавливаем его к MP3_GAIN (AGC release).
+		float gainBefore = mp3DecoderState->gain;
 #ifdef MONO_SUPPORT
 		if (mp3DecoderState->mp3FrameInfo.nChans == 2)
 		{
@@ -547,11 +553,11 @@ void MP3(char * mp3name)
 		 		if (sample > 4095)
 		 		{
 		 			sample = 4095;
-		 			mp3DecoderState->gain -= 0.1F;
+		 			if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 		 		}
 		 		if (sample < 0){
 		 			sample = 0;
-		 			mp3DecoderState->gain -= 0.1F;
+		 			if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 		 		}
 		  		outbuf[i] = sample;
 			 }
@@ -567,11 +573,11 @@ void MP3(char * mp3name)
 			 		if (sample > 4095)
 			 		{
 			 		  sample = 4095;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 			 		if (sample < 0){
 			 		  sample = 0;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 			  		outbuf[i]   = sample;
 			  		outbuf[i+1] = sample;
@@ -594,11 +600,11 @@ void MP3(char * mp3name)
 					int16_t sample = 2048 + (int16_t)(2047.0F * mp3DecoderState->gain * f);
 			 		if (sample > 4095) {
 			 		  sample = 4095;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 			 		if (sample < 0) {
 			 		  sample = 0;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 					*dptr-- = sample ;//+ 0x8000;
 					*dptr-- = sample ;//+ 0x8000;
@@ -616,11 +622,11 @@ void MP3(char * mp3name)
 					int16_t sample = 2048 + (int16_t)(2047.0F * mp3DecoderState->gain * f);
 			 		if (sample > 4095) {
 			 		  sample = 4095;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 			 		if (sample < 0) {
 			 		  sample = 0;
-			 		  mp3DecoderState->gain -= 0.1F;
+			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
 					*dptr-- = sample ;//+ 0x8000;
 					*dptr-- = sample ;//+ 0x8000;
@@ -637,6 +643,14 @@ void MP3(char * mp3name)
 			outbuf[i] += 0x8000;	// или проинвертировать старший бит, что то же самое
 		}
 #endif
+
+		//AGC: если в этом фрейме клиппинга не было, плавно вернуть усиление к номиналу
+		if (mp3DecoderState->gain == gainBefore)
+		{
+			mp3DecoderState->gain += 0.002F;
+			if (mp3DecoderState->gain > MP3_GAIN)
+				mp3DecoderState->gain = MP3_GAIN;
+		}
 
 		// отправить message ЦАПу
 		//uint32_t len = mp3FrameInfo.outputSamps / mp3FrameInfo.nChans;	// делим на 2 канала
@@ -683,8 +697,8 @@ static void MP3_Deinit(void)
 {
 	MP3FreeDecoder(mp3DecoderState->hMP3Decoder);
 	free(mp3DecoderState);
-	char str[32];
-	sprintf(str,"MP3_Deinit: %d",xPortGetFreeHeapSize());
+	char str[64];
+	sprintf(str,"MP3_Deinit: FreeRTOS %d, newlib %d",xPortGetFreeHeapSize(), (int)get_newlib_heap_free());
 	timber.colorStringln(0, 183, str);
 
 }
