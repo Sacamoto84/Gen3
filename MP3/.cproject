@@ -39,7 +39,6 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:D:\Dropbox\Actual\Drivers\Utils}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 									<listOptionValue builtIn="false" value="../Core/Inc"/>
 									<listOptionValue builtIn="false" value="../FATFS/Target"/>
 									<listOptionValue builtIn="false" value="../FATFS/App"/>
@@ -51,12 +50,13 @@
 									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/FatFs/src"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32F4xx/Include"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1402975067" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.1082533326" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler">
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.debuglevel.626689237" name="Debug level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.debuglevel" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.debuglevel.value.g3" valueType="enumerated"/>
-								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.optimization.level.2039632560" name="Optimization level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.optimization.level" useByScannerDiscovery="false"/>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.optimization.level.2039632560" name="Optimization level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.optimization.level" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.optimization.level.value.og" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols.150207465" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
@@ -79,14 +79,15 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
 									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;/${ProjName}/Middlewares/Third_Party/TraceRecorder&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.1469330976" name="Language standard" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard" useByScannerDiscovery="true" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.option.languagestandard.value.gnu18" valueType="enumerated"/>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.872452014" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
 							<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.1301581494" name="MCU G++ Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler">
 								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.debuglevel.1015038887" name="Debug level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.debuglevel" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.debuglevel.value.g3" valueType="enumerated"/>
-								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level.1476434821" name="Optimization level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level.value.ofast" valueType="enumerated"/>
+								<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level.1476434821" name="Optimization level" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level" useByScannerDiscovery="false" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.optimization.level.value.og" valueType="enumerated"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.includepaths.489346735" name="Include paths (-I)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.includepaths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="../Core/Inc"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
@@ -106,7 +107,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
 									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;/${ProjName}/Middlewares/Third_Party/TraceRecorder&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.definedsymbols.751303930" name="Define symbols (-D)" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.option.definedsymbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -233,9 +235,6 @@
 					</folderInfo>
 					<fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.622904537.1003678975" name="SEGGER_RTT_ConfDefaults.h" rcbsApplicability="disable" resourcePath="Utils/logUART/RTT/SEGGER_RTT_ConfDefaults.h" toolsToInvoke=""/>
 					<fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.622904537.1613968425" name="SEGGER_RTT.h" rcbsApplicability="disable" resourcePath="Utils/logUART/RTT/SEGGER_RTT.h" toolsToInvoke=""/>
-					<fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.622904537.364658330" name="SEGGER_RTT_ASM_ARMv7M.S" rcbsApplicability="disable" resourcePath="Utils/logUART/RTT/SEGGER_RTT_ASM_ARMv7M.S" toolsToInvoke="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.1413269886.168381085">
-						<tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.1413269886.168381085" name="MCU GCC Assembler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.1413269886"/>
-					</fileInfo>
 					<folderInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.622904537.374384333" name="/" resourcePath="helix_fixpt">
 						<toolChain id="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.exe.debug.824083838" name="MCU ARM GCC" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.toolchain.exe.debug" unusedChildren="">
 							<option id="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_mcu.1759457710.2087966900" name="MCU" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.option.target_mcu.1759457710"/>
@@ -319,6 +318,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1212799544" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -338,6 +338,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1304380600" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -357,6 +358,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.480785241" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -467,6 +469,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.313637298" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -491,6 +494,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.961392311" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -515,6 +519,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.912763493" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -548,6 +553,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.361683345" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -576,6 +582,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1362931113" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -601,6 +608,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.870433226" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -633,6 +641,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.807731556" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -657,6 +666,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1745538607" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -681,6 +691,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.174501825" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -713,6 +724,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.862819914" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -737,6 +749,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1280656399" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -761,6 +774,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1401503118" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -794,6 +808,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.56473426" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -819,6 +835,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1953379309" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -844,6 +862,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1418658246" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -895,6 +915,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1067841880" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -915,6 +937,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1352419600" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1062,6 +1086,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1048741242" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1086,6 +1111,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1479768020" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1110,6 +1136,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1890280957" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1161,6 +1188,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1089045632" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1181,6 +1210,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1658992752" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1214,6 +1245,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1420544572" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1236,6 +1268,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.807896932" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1258,6 +1291,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.886365980" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1587,6 +1621,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.967977208" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1606,6 +1641,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.247750499" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1625,6 +1661,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.349069599" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1728,6 +1765,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1773260052" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1752,6 +1790,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.2110228294" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1776,6 +1815,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1913395046" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1809,6 +1849,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1194044665" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1834,6 +1875,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.587878373" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1859,6 +1901,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1689605198" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1891,6 +1934,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1955863256" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1915,6 +1959,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.2136953101" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -1939,6 +1984,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.355087480" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -1971,6 +2017,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1665588952" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -1995,6 +2042,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1624445834" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2019,6 +2067,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.652863680" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -2052,6 +2101,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer/include}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.622976597" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -2077,6 +2128,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1984673747" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2102,6 +2155,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/include}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/config}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/TraceRecorder/streamports/Jlink_RTT}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.32789065" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -2153,6 +2208,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.692250670" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2173,6 +2230,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1633540804" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -2312,6 +2371,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.283321020" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -2336,6 +2396,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1570499617" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2360,6 +2421,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/uTFT2/Font/gfx_fonts_rus}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/GyverButton}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Utils}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.2000391614" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -2411,6 +2473,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.29893400" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2431,6 +2495,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
+									<listOptionValue builtIn="false" value="../Middlewares/Third_Party/TraceRecorder"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.321369779" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
@@ -2464,6 +2530,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input.1249697965" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.assembler.input"/>
 							</tool>
@@ -2486,6 +2553,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1958876380" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>
@@ -2508,6 +2576,7 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/SW}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Tracealyzer}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/Gen3_MP3/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Middlewares/Third_Party/TraceRecorder}&quot;"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp.1523945109" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.cpp.compiler.input.cpp"/>
 							</tool>
