@@ -46,6 +46,8 @@ osThreadId_t myTaskMP3Handle;
 
 static void MP3_Deinit(void);
 
+static osSemaphoreId_t mp3DoneSem;	// сигнал о завершении задачи-декодера
+
 decodeStatistic_t decodeStatistic;
 debug_mode_t      debug_mode;		    // отладочные флаги
 
@@ -189,6 +191,18 @@ static read_result_t ReadMP3buff(mp3DecoderState_t * mp3DecoderState)
  * @brief	Задача декодера MP3
  * @param	pdata - указатель на данные (не используется)
  ***********************************************************************************************/
+//Завершение задачи-декодера: освобождение ресурсов, сигнал play() и выход
+static void mp3TaskExit(void)
+{
+	f_close(&SDFile);
+	DAC_DMA_Pause();
+	DAC_DMA_ClearBuffer();
+	MP3_Deinit();
+	if (mp3DoneSem != NULL)
+		osSemaphoreRelease(mp3DoneSem);
+	osThreadExit();
+}
+
 void MP3(char * mp3name)
 {
 	timber.info("MP3:mp3name %s", mp3name);
@@ -251,11 +265,7 @@ void MP3(char * mp3name)
 		{
 			timber.warning("Завершение MP3 по внешнему запросу");
 			taskMP3_terminate = false;
-			f_close(&SDFile);
-			DAC_DMA_Pause();
-		    DAC_DMA_ClearBuffer(); //Очистить выходной буффер
-			MP3_Deinit();
-			osThreadExit();
+			mp3TaskExit();
 		}
 
 
@@ -272,11 +282,7 @@ void MP3(char * mp3name)
 		    {
 		    	timber.warning("Завершение MP3 по внешнему запросу");
 		  			taskMP3_terminate = false;
-		  			f_close(&SDFile);
-		  			DAC_DMA_Pause();
-		  		    DAC_DMA_ClearBuffer(); //Очистить выходной буффер
-		  			MP3_Deinit();
-		  			osThreadExit();
+		  			mp3TaskExit();
 		    }
 
 		  }
@@ -327,10 +333,7 @@ void MP3(char * mp3name)
 				timber.print("Error in %s line %u\n", (uint8_t *)__FILE__, (unsigned int)__LINE__);
 				timber.error("Воспроизведение файла завершено по ошибке\n");
 
-				f_close(&SDFile);
-				DAC_DMA_Pause();
-				MP3_Deinit();
-				osThreadExit();
+				mp3TaskExit();
 			}
 			stop_decode(DECODE_ERROR);
 			continue;
@@ -356,14 +359,7 @@ void MP3(char * mp3name)
 				timber.info("Воспроизведение файла завершено полностью\n");
 			}
 			stop_decode(SONG_COMPLETE);
-			f_close(&SDFile);
-			DAC_DMA_Pause();
-
-			//osThreadId id = osThreadGetId ();
-
-			MP3_Deinit();
-			osThreadExit();
-			osDelay(1000000);
+			mp3TaskExit();
 			continue;
 		}
 
@@ -655,6 +651,9 @@ void play(char * name)
 	timber.info("play %s", name);
 	timber.info ("Свободно памяти play %d", xPortGetFreeHeapSize());
 
+	if (mp3DoneSem == NULL)
+		mp3DoneSem = osSemaphoreNew(1, 0, NULL);
+
 	if (myTaskMP3Handle == NULL)
 	{
 		//osThreadState_t state = osThreadGetState (myTaskMP3Handle);
@@ -664,36 +663,20 @@ void play(char * name)
 	else
 	{
 
-		osThreadState_t state = osThreadGetState (myTaskMP3Handle);
-	    switch(state){
-	      case osThreadInactive : timber.warning("state osThreadInactive"); break;
-	      case osThreadReady : timber.warning("state osThreadReady"); break;
-	      case osThreadRunning : timber.warning("state osThreadRunning"); break;
-	      case osThreadBlocked : timber.warning("state osThreadBlocked"); break;
-	      case osThreadTerminated : timber.warning("state osThreadTerminated"); break;
-	      case osThreadError : timber.warning("state osThreadError"); break;
-	      case osThreadReserved : timber.warning("state osThreadReserved"); break;
-	    }
-	    timber.info("play state %d", state);
+		timber.info("Ожидание завершения предыдущей задачи");
 
-		//Ждем завершения
+		//Запросить остановку декодера и дождаться её по семафору.
+		//Поллинг osThreadGetState() по освобождённому TCB не используется.
 		taskMP3_terminate = true;
-		while(osThreadGetState (myTaskMP3Handle) != osThreadTerminated)
-		{osDelay(1);}
+		if (osSemaphoreAcquire(mp3DoneSem, 3000) != osOK)
+		{
+			timber.error("Таймаут ожидания завершения задачи MP3, трек не запущен");
+			return;
+		}
 
 		osDelay(50);
 		myTaskMP3Handle = osThreadNew(StartTaskMP3, (char *)name, &myTaskMP3_attributes);
 		timber.info ("Свободно play запуск потока %d", xPortGetFreeHeapSize());
 	}
-
-
-
-
-
-
-
-	//if (state == 4)
-	//	myTaskMP4Handle = osThreadNew(StartTaskMP4, NULL, &myTaskMP4_attributes);
-
 
 }
