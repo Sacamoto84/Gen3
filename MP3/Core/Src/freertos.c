@@ -53,7 +53,7 @@ extern void KEY_tick(void);
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 1024 * 4,
+  .stack_size = 1536 * 4,	// HMI + readDir (LFN); HWM показывал ~179 слов из 1024
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for myTaskKey */
