@@ -14,7 +14,7 @@ uint32_t OUTPUT[OUTPUTSAMPLES];
 #define DAC_BUFFER_SIZE		(1152*2)
 int16_t   outBuff[2][1152*2] RAM_16; // буфер выходного потока
 
-uint DMA_Buffer_Current;
+volatile uint32_t DMA_Buffer_Current;
 
 void init_MP3_DAC_DMA(void)
 {

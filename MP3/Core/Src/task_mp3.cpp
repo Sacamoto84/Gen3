@@ -14,10 +14,10 @@
 
 #define MP3_GAIN 1.8F
 
-static bool taskMP3_terminate;
+static volatile bool taskMP3_terminate;
 
 
-extern uint DMA_Buffer_Current;
+extern volatile uint32_t DMA_Buffer_Current;
 
 static void stop_decode(cmd_t player_cmd);
 

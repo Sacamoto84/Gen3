@@ -117,8 +117,8 @@ extern Dir_File_Info_Array list_mp3 CCMRAM;
 
 typedef struct
 {
-  uint8_t Left;
-  uint8_t Right;
+  volatile uint8_t Left;
+  volatile uint8_t Right;
 }Encoder_typedef;
 
 extern Encoder_typedef Encoder;
