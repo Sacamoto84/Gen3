@@ -34,7 +34,6 @@
 /* USER CODE BEGIN Includes */
 #include "mp3dec.h"
 extern void main_cpp(void);
-uint16_t res;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

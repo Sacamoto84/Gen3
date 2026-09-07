@@ -5,7 +5,6 @@
 #include "playerTask.h"
 #include "debugTask.h"
 #include "main.h"
-#include "global.h"
 
 #include "timber.h"
 

@@ -4,7 +4,6 @@
 #include "global.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "main.h"
 #include "cmsis_os.h"
 #include "fatfs.h"
 
@@ -12,20 +11,9 @@
 
 #include "mString.h"
 
-#include "FreeRTOS.h"
-#include "task.h"
-#include "main.h"
-#include "cmsis_os.h"
-
 #include "timber.h"
 
-extern void init_DAC_DMA(void);
-extern void DAC_DMA_Play(void);
 extern void PAGE_init_palitra(void); //Инициализация палитры
-
-extern int U3_DMA_TX_Complete;
-extern HMP3Decoder  hMP3Decoder;		// указатель на ОЗУ декодера
-extern FIL          mp3_file;		    	    // указатель на играемый файл
 
 void stopError(void);
 
@@ -40,8 +28,6 @@ void loop(){while (1){
 
 
 HAL_SD_CardInfoTypeDef Card_Info;
-
-volatile FRESULT fres;
 
 void setup(void) {
 
