@@ -18,4 +18,6 @@
 //#define TFT_Driver_ST7735
 //#define TFT_Driver_ST7735S
 
+#define TFT_USE_4BIT
+
 #endif /* INC_TFT_CONFIG_H_ */

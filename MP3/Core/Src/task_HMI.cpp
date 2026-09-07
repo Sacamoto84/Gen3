@@ -39,6 +39,7 @@ void task_HMI(void)
   while(1)
   {
 
+	//Фон
 	Background_Board();
 
 	UI_List_Mp3();
@@ -55,7 +56,7 @@ void task_HMI(void)
 
 	tft.SetColor(3);
 	sprintf(str, "E%d", playerInfo.error);
-	gfxfont.Puts(105, 228, str, 16);
+	gfxfont.Puts(105, 228, str, (int)16);
 
 	tft.LineH(154, 7, 232, 6 );
 	tft.LineH(155, 7, 232, 2 );
@@ -108,6 +109,7 @@ void task_HMI(void)
 		}
 	}
 	tft.driver.ST7789_UpdateDMA4bitV2();
+	osDelay(1);
   }
 }
 

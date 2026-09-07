@@ -120,6 +120,7 @@ void vApplicationMallocFailedHook(void)
   */
 void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
+  xTraceEnable(TRC_START);
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -139,7 +140,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
+  /* add events, ... */
 
   /* USER CODE END RTOS_QUEUES */
 
@@ -156,7 +157,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
-  xTraceEnable(TRC_START);
   /* USER CODE END RTOS_EVENTS */
 
 }

@@ -83,8 +83,8 @@ void setup(void) {
 
 	gfxfont.setFont(&JetBrainsMono_VariableFont_wght12pt8b);
 
-	tft.SetFontColor(4, 14);
-
+	//tft.SetFontColor(4, 14);
+	tft.SetFontColor(14, 15);
     //tft.setColorToPalete(0,tft.RGB565(255,4,6));
     //tft.setColorToPalete(1,tft.RGB565(1,56,33));
 
