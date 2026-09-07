@@ -35,17 +35,17 @@ static uint8_t *__sbrk_heap_end = NULL;
  *
  * @verbatim
  * ############################################################################
- * #  .data  #  .bss  #       newlib heap       #          MSP stack          #
- * #         #        #                         # Reserved by _Min_Stack_Size #
+ * #  .data  #  .bss  #            newlib heap             #     .out         #
+ * #         #        #                                    # (DMA buffers)    #
  * ############################################################################
- * ^-- RAM start      ^-- _end                             _estack, RAM end --^
+ * ^-- RAM start      ^-- _end             __HeapLimit --^
  * @endverbatim
  *
  * This implementation starts allocating at the '_end' linker symbol
- * The '_Min_Stack_Size' linker symbol reserves a memory for the MSP stack
- * The implementation considers '_estack' linker symbol to be RAM end
- * NOTE: If the MSP stack, at any point during execution, grows larger than the
- * reserved size, please increase the '_Min_Stack_Size'.
+ * The '__HeapLimit' linker symbol (defined in the linker script) bounds the
+ * heap. On the flash build _estack points into CCM RAM, which is above/below
+ * the SRAM addresses and therefore useless as a heap bound, so the bound is
+ * set explicitly to the start of the .out region (DMA audio buffers).
  *
  * @param incr Memory size
  * @return Pointer to allocated memory
@@ -53,10 +53,8 @@ static uint8_t *__sbrk_heap_end = NULL;
 void *_sbrk(ptrdiff_t incr)
 {
   extern uint8_t _end; /* Symbol defined in the linker script */
-  extern uint8_t _estack; /* Symbol defined in the linker script */
-  extern uint32_t _Min_Stack_Size; /* Symbol defined in the linker script */
-  const uint32_t stack_limit = (uint32_t)&_estack - (uint32_t)&_Min_Stack_Size;
-  const uint8_t *max_heap = (uint8_t *)stack_limit;
+  extern uint32_t __HeapLimit; /* Symbol defined in the linker script */
+  const uint8_t *max_heap = (const uint8_t *)&__HeapLimit;
   uint8_t *prev_heap_end;
 
   /* Initialize heap end at first call */
@@ -65,7 +63,7 @@ void *_sbrk(ptrdiff_t incr)
     __sbrk_heap_end = &_end;
   }
 
-  /* Protect heap from growing into the reserved MSP stack */
+  /* Protect heap from growing into the reserved regions (.out, stack) */
   if (__sbrk_heap_end + incr > max_heap)
   {
     errno = ENOMEM;    return (void *)-1;

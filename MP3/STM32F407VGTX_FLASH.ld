@@ -44,6 +44,11 @@ MEMORY
   OUT       (xrw)    : ORIGIN = 0x2001DC00,   LENGTH = 9K
 }
 
+/* End of the newlib heap. The heap grows up from _end and must not reach the
+   .out region: it holds the DMA audio buffers (outBuff). _estack points into
+   CCM RAM, so it cannot be used as a heap bound. */
+__HeapLimit = ORIGIN(OUT);
+
 /* Sections */
 SECTIONS
 {

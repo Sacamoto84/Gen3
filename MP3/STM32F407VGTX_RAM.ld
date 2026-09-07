@@ -50,6 +50,10 @@ MEMORY
   FLASH    (rx)    : ORIGIN = 0x8000000,   LENGTH = 1024K
 }
 
+/* End of the newlib heap. The heap grows up from _end and must not reach the
+   MSP stack region reserved at the top of RAM. */
+__HeapLimit = ORIGIN(RAM) + LENGTH(RAM) - _Min_Stack_Size;
+
 /* Sections */
 SECTIONS
 {
