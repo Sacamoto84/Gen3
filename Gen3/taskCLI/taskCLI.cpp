@@ -480,9 +480,14 @@ FRESULT scan_files (
     if (res == FR_OK) {
         for (;;) {
 					res = f_readdir(&dir, &fno);                   /* Read a directory item */
-					if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */                               
-					    sprintf(str1,"%s", fno.fname);										
-						sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", str1);
+					if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+					{
+						//Имя: длинное (LFN), если влезает в Name[16], иначе короткое 8.3 (altname)
+						const char * name = fno.fname;
+						if ((strlen(name) > 15) && (fno.altname[0] != 0)) name = fno.altname;
+						if (Dir_File_Info[0].maxFileCount < 32)
+							sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", name);
+					}
         }
         f_closedir(&dir);
     }

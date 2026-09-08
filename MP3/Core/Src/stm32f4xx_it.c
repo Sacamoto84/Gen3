@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "debugTask.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +53,7 @@ extern volatile unsigned long ulHighFrequencyTimerTicks;
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 extern void TFT_DMA2_Stream5_Complete(void);
+extern debug_mode_t debug_mode;
 
 /* USER CODE END 0 */
 
@@ -283,5 +285,15 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == USART3)
   { U3_DMA_TX_Complete = 1; }
+}
+
+/**
+  * @brief TIM12: счётчик миллисекунд для замеров времени декодирования (debugTask).
+  *        PSC=83 -> тик 1 мкс (APB1-таймер 84 МГц), ARR=1000 -> прерывание раз в 1 мс.
+  */
+void TIM8_BRK_TIM12_IRQHandler(void)
+{
+  TIM12->SR = ~TIM_SR_UIF;   /* снять флаг обновления */
+  debug_mode.timer_ms++;
 }
 /* USER CODE END 1 */

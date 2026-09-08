@@ -105,12 +105,12 @@ void postPageSelectModulation(void){
 
 	//Открывам файл
 	if (f_open(&SDFile, filename, FA_OPEN_EXISTING | FA_READ) == FR_OK) {
-			rtt.print(">Open OK %s\n", filename);
+			timber.print(">Open OK %s\n", filename);
 			f_read(&SDFile, &Gen.buffer_temp, 2048, &testByte);
 			f_close(&SDFile);
 		} else
 		{
-			rtt.print(">Open Error %s\n", filename);
+			timber.print(">Open Error %s\n", filename);
 			return;
 		}
 
@@ -183,9 +183,15 @@ void PAGE_generator_select_modulation(void)
 
     if (res == FR_OK) {
         for (;;) {
-					res = f_readdir(&dir, &fno);                   /* Read a directory item */
-					if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-					sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", fno.fname);
+				res = f_readdir(&dir, &fno);                   /* Read a directory item */
+				if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
+				{
+					//Имя: длинное (LFN), если влезает в Name[16], иначе короткое 8.3 (altname)
+					const char * name = fno.fname;
+					if ((strlen(name) > 15) && (fno.altname[0] != 0)) name = fno.altname;
+					if (Dir_File_Info[0].maxFileCount < 32)
+						sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", name);
+				}
         }
         f_closedir(&dir);
     }

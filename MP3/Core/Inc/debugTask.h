@@ -44,17 +44,23 @@ extern decodeStatistic_t decodeStatistic;
 // функция-маркер начала измеряемого временного интервала
 static inline void StartTimeMeasurement()
 {
+	__disable_irq();	// атомарно: между сбросом timer_ms и CNT не должно влезть IRQ
 	TIM12->CR1 &= (uint16_t)~TIM_CR1_CEN;
 	debug_mode.timer_ms = 0;
 	TIM12->CNT = 0;
+	TIM12->SR = ~TIM_SR_UIF;	// сброс подвешенного UIF, иначе получим +1 мс
 	TIM12->CR1 |= TIM_CR1_CEN;
+	__enable_irq();
 }
 
 // останов таймера и возврат времени с момента вызова StartTimeMeasurement()
 static inline uint32_t StopTimeMeasurement()
 {
 	TIM12->CR1 &= (uint16_t)~TIM_CR1_CEN;
-	return debug_mode.timer_ms*1000 + TIM12->CNT;
+	__disable_irq();	// чтение пары timer_ms/CNT без гонки с IRQ
+	uint32_t temp = debug_mode.timer_ms*1000 + TIM12->CNT;
+	__enable_irq();
+	return temp;
 }
 
 // функция-маркер окончания измеряемого временного интервала

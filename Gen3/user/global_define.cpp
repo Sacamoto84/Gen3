@@ -30,8 +30,6 @@ GENERATOR Gen CCMRAM;
 HiSpeedDWT TimerDWT;
 HiSpeedDWT TimerT5;
 
-classLog rtt;
-
 //Статистика работы DMA1_5
 uint32_t DMA_Run_Tick;
 uint32_t DMA_Run_us;

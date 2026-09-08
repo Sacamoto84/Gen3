@@ -13,8 +13,7 @@ extern GENERATOR Gen;
 #include "button.h"
 extern button_typedef button;
 
-#include "logUART.h"
-extern classLog rtt;
+#include "timber.h"
 
 void PAGE_BT_Audio(void) {
 
@@ -29,7 +28,7 @@ void PAGE_BT_Audio(void) {
 
  tft.driver.ST7789_Update();
 
- rtt.i("BT Audio On");
+ timber.i("BT Audio On");
 
  while (1) {
    //──────────────────────────────────────────────────────┬───────────────────┬─────────────────────┐
@@ -37,7 +36,7 @@ void PAGE_BT_Audio(void) {
    if (button.isClick()){                                //└───────────────────┤                     │
 		HAL_GPIO_WritePin(BT_Audio_GPIO_Port, BT_Audio_Pin, GPIO_PIN_RESET); //│ Отключаем реле      │
 		Gen.start();                                                         //│ Запускаем генератор │
-		rtt.i("BT Audio Off");
+		timber.i("BT Audio Off");
     	return;                                                              //│                     │
    }                                                                         //│                     │
    //──────────────────────────────────────────────────────────────────────────┴─────────────────────┘

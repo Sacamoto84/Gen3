@@ -13,7 +13,7 @@ void PAGE_Volume(void)
 {
 	int i = 0;
 
-    rtt.print("Wiget\n");
+    timber.print("Wiget\n");
 
     Gif gif;
     gif.init(&tft);

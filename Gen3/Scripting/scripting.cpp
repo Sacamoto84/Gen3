@@ -1,8 +1,7 @@
 #include "scripting.h"
 #include "HiSpeedDWT.h"
 
-#include "logUART.h"
-extern classLog rtt;
+#include "timber.h"
 
 Scripting script;
 
@@ -38,7 +37,7 @@ void Scripting::printF(void)
 	char s[127];
 	sprintf(s, "\x1B[0mF 0:%.1f 1:%.1f 2:%.1f 3:%.1f 4:%.1f 5:%.1f 6:%.1f 7:%.1f 8:%.1f 9:%.1f\n",
 			F[0],F[1],F[2],F[3],F[4],F[5],F[6],F[7],F[8],F[9]);
-	rtt.print(s);
+	timber.print(s);
 }
 
 triple_operand Scripting::excretionTripleOperand(mString<CMD_LEN> str){
@@ -312,27 +311,27 @@ void Scripting::load(char *name) {
 	int res = f_open(&SDFile, patch, FA_READ);
 	//Ошибка открытия картинки с microSD
 	if (res != FR_OK) {
-		rtt.print("\033[01;38;05;51mScripting>\033[01;38;05;196mERROR open>\033[01;38;05;46m%s\n", patch);
+		timber.print("\033[01;38;05;51mScripting>\033[01;38;05;196mERROR open>\033[01;38;05;46m%s\n", patch);
 		f_close(&SDFile);
 		return;
 	}
 
 	line = 0;
 
-    rtt.print("*** Скрипт %s***\n", patch);
+    timber.print("*** Скрипт %s***\n", patch);
 	list[line] = name; //Для того чтобы строки начинались с 1
-	rtt.print("%d:%s\n", line, list[line].buf);
+	timber.print("%d:%s\n", line, list[line].buf);
 
 	line++;
 
 	while (f_gets(patch, 32, &SDFile)) {
 		list[line] = patch;
-		rtt.print("%d:%s", line, list[line].buf);
+		timber.print("%d:%s", line, list[line].buf);
 		line++;
 	}
 	f_close(&SDFile);
 
-	rtt.print("\r\n*** Скрипт Конец ***\r\n");
+	timber.print("\r\n*** Скрипт Конец ***\r\n");
 
 	line = 0;
 	Name = name;
@@ -348,8 +347,8 @@ void Scripting::CMD_EXE(void){
 	com = comand;
 	com.truncate(1);
 
-	rtt.print("\x1B[01;38;05;208;48;05;234mScript \x1B[01;38;05;7;48;05;234m:");
-	rtt.print("%d \x1B[01;38;05;10;48;05;234m%s \x1B[0m \n", pc, com.buf);
+	timber.print("\x1B[01;38;05;208;48;05;234mScript \x1B[01;38;05;7;48;05;234m:");
+	timber.print("%d \x1B[01;38;05;10;48;05;234m%s \x1B[0m \n", pc, com.buf);
 
 	char c = comand.buf[0];
 
@@ -380,7 +379,7 @@ void Scripting::CMD_EXE(void){
 		//╰──────────────────────────────────────────────────────────╯ │
 		//╭── END ───────────────────────────────────────────────────╮ │
 		if (comand.indexOf((char*) "END", 0) == 0) {               //│ │
-			rtt.println("Скрипт окончен");                         //│ │
+			timber.println("Скрипт окончен");                         //│ │
 			end = true; return; }                                  //│ │
 		//╰──────────────────────────────────────────────────────────╯ │
 	    break;                                                     //  │
@@ -470,7 +469,7 @@ void Scripting::CMD_EXE(void){
 	//└────────────────────────────────────────────┘
 
 	default:
-		rtt.print("Script:? pc:%d:%s\n", pc, comand.buf);
+		timber.print("Script:? pc:%d:%s\n", pc, comand.buf);
 		pc++;
 		if (pc >= PC_MAX)
 		  end = true;
@@ -547,8 +546,8 @@ void Scripting::command(char * str){
 	mString<CMD_LEN> comand;
 	comand = str;
 
-	rtt.print("\x1B[01;38;05;208;48;05;234mComand \x1B[01;38;05;7;48;05;234m:");
-	rtt.print(" \x1B[01;38;05;10;48;05;234m%s \x1B[0m \n", comand.buf);
+	timber.print("\x1B[01;38;05;208;48;05;234mComand \x1B[01;38;05;7;48;05;234m:");
+	timber.print(" \x1B[01;38;05;10;48;05;234m%s \x1B[0m \n", comand.buf);
 
 
 	char c = comand.buf[0];
@@ -574,7 +573,7 @@ void Scripting::command(char * str){
 		break;                                        //│
 	//╰─────────────────────────────────────────────────╯
 	default:
-		rtt.print("EXE:? %s\n", pc, comand.buf);
+		timber.print("EXE:? %s\n", pc, comand.buf);
 		break;
 	};
 

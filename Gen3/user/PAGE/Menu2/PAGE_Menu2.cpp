@@ -117,7 +117,7 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 		}
 
 		if (button.isHolded()) {
-			rtt.i("MENU2 KEY.isHolded()");
+			timber.i("MENU2 KEY.isHolded()");
 
 			if (item[index].callBackFunc_isHolded) {
 				func_name = item[index].callBackFunc_isHolded;

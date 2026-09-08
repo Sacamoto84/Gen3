@@ -71,9 +71,9 @@ void DAC_DMA_Play(void)
 	HAL_TIM_Base_Start(&htim6);
 }
 
-void DAC_setSampleRate(int sample = 44000)
+void DAC_setSampleRate(int sample = 44100)
 {
-	uint16_t period = 108000000/sample;
+	uint16_t period = 84000000/sample;	// тактирование TIM6: APB1-таймеры = HCLK/2 = 84 МГц
 	period--;
 
 	TIM6->CNT = 0;

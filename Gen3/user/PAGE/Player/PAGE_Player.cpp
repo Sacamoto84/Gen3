@@ -6,13 +6,12 @@
 #include "mString.h"
 #include "FontSmooth.h"
 #include "fatfs.h"
-#include "logUART.h"
+#include "timber.h"
 #include "Generator.h"
 #include "TFT_color.h"
 #include "scripting.h"
 #include "button.h"
 
-extern classLog  rtt;
 extern TFT       tft;
 extern GENERATOR Gen;
 extern Scripting script;

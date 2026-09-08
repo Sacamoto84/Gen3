@@ -109,7 +109,7 @@ void PAGE_Script(void) {
 				char strUTF8[48];
 				ConvertString1251ToUTF8(str, strUTF8);
 
-				rtt.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\r\n", i, strUTF8);
+				timber.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\r\n", i, strUTF8);
 
 				Font_Smooth_drawStr1251(&tft, 10, 8 + 40 * (ii % 6), str,
 						(i == index) ?

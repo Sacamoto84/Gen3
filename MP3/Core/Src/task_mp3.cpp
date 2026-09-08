@@ -28,7 +28,7 @@ extern volatile uint32_t dac_underruns;
 #define MONO_SUPPORT
 
 extern void stopError(void);
-extern void DAC_setSampleRate(int sample = 44000);
+extern void DAC_setSampleRate(int sample = 44100);
 extern void DAC_DMA_Pause(void);
 extern void init_MP3_DAC_DMA(void);
 extern void DAC_DMA_Play(void);
@@ -160,9 +160,11 @@ static read_result_t ReadMP3buff(mp3DecoderState_t * mp3DecoderState)
 		return READ_OK;
 
 	// если в файловом буфере остались данные, переместить их в начало буфера
+	// (inputDataPtr указывает внутрь inputBuf - области перекрываются,
+	// memmove корректен при перекрытии, memcpy - UB)
 	if (mp3DecoderState->bytes_left > 0)
 	{
-		memcpy(mp3DecoderState->inputBuf, mp3DecoderState->inputDataPtr, mp3DecoderState->bytes_left);
+		memmove(mp3DecoderState->inputBuf, mp3DecoderState->inputDataPtr, mp3DecoderState->bytes_left);
 	}
 	assert_param(mp3DecoderState->bytes_left >= 0 && mp3DecoderState->bytes_left <= MP3_FILEBUFF_SIZE);
 
@@ -375,11 +377,11 @@ void MP3(char * mp3name)
 			if (debug_mode.showDecoderInfo)
 			{
 				timber.print("Чистое время декодирования файла %u мс\n",(unsigned int)mp3DecoderState->DecodeTime_Ticks);
-				uint32_t temp = mp3DecoderState->summaryDecodeTime_mks/1000;
-				timber.print("Длительность проигрывания файла %u мс\n",(unsigned int)temp);
-				temp = mp3DecoderState->summaryDecodeTime_mks/10;
-				temp *= mp3DecoderState->DecodeTime_Ticks;
-				timber.print("Средняя загрузка контроллера %u%%\n",(unsigned int)temp);
+			uint32_t temp = mp3DecoderState->summaryDecodeTime_mks/1000;
+			timber.print("Длительность проигрывания файла %u мс\n",(unsigned int)temp);
+			temp = mp3DecoderState->summaryDecodeTime_mks/10;
+			temp /= mp3DecoderState->DecodeTime_Ticks;
+			timber.print("Средняя загрузка контроллера %u%%\n",(unsigned int)temp);
 				// отображается время выполнения только одной процедуры - MP3Decode
 
 				timber.print("Декодировано %u фреймов\n", (unsigned int)mp3DecoderState->frameCNT);
@@ -507,18 +509,23 @@ void MP3(char * mp3name)
 		MP3GetLastFrameInfo(mp3DecoderState->hMP3Decoder, &mp3DecoderState->mp3FrameInfo);
 
 		// обновить частоту дискретизации
-		if (mp3DecoderState->samprate != mp3DecoderState->mp3FrameInfo.samprate)
+		//Буфер DMA вмещает 1152 стереопары за один фрейм. У LSF (MPEG-2/2.5) фрейм
+		//содержит 576 сэмплов/канал и каждый сэмпл растягивается на 2 периода DAC
+		//(zero-order hold), поэтому частота DAC для LSF удваивается - скорость верная.
+		uint32_t samplesPerChan = (uint32_t)(mp3DecoderState->mp3FrameInfo.outputSamps / mp3DecoderState->mp3FrameInfo.nChans);
+		uint32_t dacRate = (uint32_t)mp3DecoderState->mp3FrameInfo.samprate * ((samplesPerChan == 576) ? 2u : 1u);
+		if (mp3DecoderState->samprate != (int32_t)dacRate)
 		{
 			timber.info("----------");
 			timber.info("Битрейт %d", mp3DecoderState->mp3FrameInfo.bitrate);
 			timber.info("Битность %d", mp3DecoderState->mp3FrameInfo.bitsPerSample);
 			timber.info("outputSamps %d", mp3DecoderState->mp3FrameInfo.outputSamps);
 			timber.info("Каналов %d", mp3DecoderState->mp3FrameInfo.nChans);
-			timber.info("Set SampleRate %d",mp3DecoderState->mp3FrameInfo.samprate);
+			timber.info("Set SampleRate %d (DAC %d)",mp3DecoderState->mp3FrameInfo.samprate, (int)dacRate);
 			timber.info("layer %d",mp3DecoderState->mp3FrameInfo.layer);
 			timber.info("version %d",mp3DecoderState->mp3FrameInfo.version);
-			DAC_setSampleRate(mp3DecoderState->mp3FrameInfo.samprate);
-			mp3DecoderState->samprate = mp3DecoderState->mp3FrameInfo.samprate;
+			DAC_setSampleRate((int)dacRate);
+			mp3DecoderState->samprate = (int32_t)dacRate;
 		}
 
 
@@ -551,26 +558,29 @@ void MP3(char * mp3name)
 		 		}
 		  		outbuf[i] = sample;
 			 }
-			}else
-			//Каличный режим
+		}else
+		//MPEG-2/LSF стерео: 576 пар L/R. Каждая пара удерживается 2 периода DAC
+		//(zero-order hold x2, частота DAC удвоена) - скорость и стереокартина верные.
+		//Проход обратный: расширение происходит in-place, вперёд нельзя.
 			if (outputSamps == 1152)
 			{
-				 // для стереомузыки только сместить шкалу
-				 for (uint32_t i = 0; i < outputSamps * 2; i+=2)
+				 for (uint32_t i = outputSamps; i >= 2; i -= 2)
 				 {
-					float f = ( outbuf[i] )/65536.0F;
-			 		int16_t sample = 2048 + (int16_t)(2047.0F * mp3DecoderState->gain * f );
-			 		if (sample > 4095)
+					float fL = ( outbuf[i - 2] )/65536.0F;
+					float fR = ( outbuf[i - 1] )/65536.0F;
+			 		int16_t sL = 2048 + (int16_t)(2047.0F * mp3DecoderState->gain * fL );
+			 		int16_t sR = 2048 + (int16_t)(2047.0F * mp3DecoderState->gain * fR );
+			 		if (sL > 4095 || sL < 0 || sR > 4095 || sR < 0)
 			 		{
-			 		  sample = 4095;
+			 		  sL = (sL > 4095) ? 4095 : ((sL < 0) ? 0 : sL);
+			 		  sR = (sR > 4095) ? 4095 : ((sR < 0) ? 0 : sR);
 			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
 			 		}
-			 		if (sample < 0){
-			 		  sample = 0;
-			 		  if (mp3DecoderState->gain > 0.1F) mp3DecoderState->gain -= 0.1F; else mp3DecoderState->gain = 0.1F;
-			 		}
-			  		outbuf[i]   = sample;
-			  		outbuf[i+1] = sample;
+			 		uint32_t d = i * 2;	//пара i/2-1 занимает пары DAC d/2-2 и d/2-1
+			  		outbuf[d - 4] = sL;
+			  		outbuf[d - 3] = sR;
+			  		outbuf[d - 2] = sL;
+			  		outbuf[d - 1] = sR;
 				 }
 			}
 

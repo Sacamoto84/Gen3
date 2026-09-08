@@ -30,7 +30,7 @@ extern TIM_HandleTypeDef htim2;
 //extern GButton KEY;
 extern button_typedef button;
 
-extern classLog rtt;
+#include "timber.h"
 
 extern uint8_t  u8Volume;
 extern float    fVolume;

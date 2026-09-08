@@ -195,7 +195,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 		if ((menu->field.needUpdate) || (tft.driver.needUpdate)) {
 			menu->field.needUpdate = 0;
 
-		    rtt.println("MENU I ST7789_UpdateDMA16bitV3");
+		    timber.println("MENU I ST7789_UpdateDMA16bitV3");
 
 			tft.driver.ST7789_UpdateDMA16bitV3(); //DMA8bitV2();
 		}

@@ -9,8 +9,7 @@
 #include "HiSpeedDWT.h"
 #include "generator.h"
 
-#include "logUART.h"
-extern classLog rtt;
+#include "timber.h"
 
 extern uint8_t render;
 
@@ -120,7 +119,7 @@ public:
 
 
 	void start(void)  { pc = 1; end = false; }
-	void stop(void)   { pc = 1; end = true; rtt.print("Script Stop\n");}
+	void stop(void)   { pc = 1; end = true; timber.print("Script Stop\n");}
 
 	void pause(void)  { end = true;  }
 	void resume(void) { end = false; }

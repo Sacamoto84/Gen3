@@ -89,6 +89,25 @@ int main(void)
 
 	SCB->VTOR = 0x8040000;
 
+	//Переход из основного приложения (216 МГц, PLL = SYSCLK): HAL_RCC_OscConfig()
+	//не может переконфигурировать активный PLL и вернёт HAL_ERROR, если новая
+	//конфигурация отличается от текущей -> Error_Handler() (вечный цикл, выглядит
+	//как зависание). До HAL_Init() уходим на HSI и гасим PLL, после чего
+	//SystemClock_Config() штатно настроит 168 МГц.
+	//На холодном старте SYSCLK и так HSI, а PLL выключен - оба блока пропускаются.
+	if (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI)
+	{
+		__HAL_RCC_HSI_ENABLE();
+		while (__HAL_RCC_GET_FLAG(RCC_FLAG_HSIRDY) == RESET) {}
+		__HAL_RCC_SYSCLK_CONFIG(RCC_SYSCLKSOURCE_HSI);
+		while (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI) {}
+	}
+	if (READ_BIT(RCC->CR, RCC_CR_PLLON) != 0U)
+	{
+		__HAL_RCC_PLL_DISABLE();
+		while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) != 0U) {}
+	}
+
 	__enable_irq(); //????????? ??????????
   /* USER CODE END 1 */
 
@@ -136,6 +155,14 @@ int main(void)
   TIM1->CCR1 = 75;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 
+  /* TIM12: шкала 1 мкс для замеров времени (debugTask). ARR=1000 -> IRQ каждые 1 мс
+     инкрементирует debug_mode.timer_ms; без этого StopTimeMeasurement/GetCurrentTime
+     возвращали мусор (TIM12 никто не запускал). */
+  HAL_NVIC_SetPriority(TIM8_BRK_TIM12_IRQn, 6, 0);
+  HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);
+  TIM12->DIER |= TIM_DIER_UIE;
+  TIM12->CR1 |= TIM_CR1_CEN;
+
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -180,9 +207,9 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 4;
-  RCC_OscInitStruct.PLL.PLLN = 216;
+  RCC_OscInitStruct.PLL.PLLN = 168;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 9;
+  RCC_OscInitStruct.PLL.PLLQ = 7;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();

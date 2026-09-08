@@ -49,13 +49,29 @@ void PAGE_Video(void) {
 	        for (;;) {
 				res = f_readdir(&dir, &fno);                   /* Read a directory item */
 				if (res != FR_OK || fno.fname[0] == 0) break;  /* Break on error or end of dir */
-				   if (strstr (fno.fname, "rawi") == NULL)
-				   {
-					   memset(str, 0, 32);
-					   //strncpy (str, fno.fname, strlen(fno.fname) - 4);
-					   memcpy(str, fno.fname, strlen(fno.fname) - 4);
-					   sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", str);
-				   }
+
+				//Пропуск файлов описаний .rawi (без учёта регистра)
+				{
+					char low[_MAX_LFN + 1];
+					UINT k;
+					for (k = 0; fno.fname[k] != 0 && k < _MAX_LFN; k++) {
+						char ch = fno.fname[k];
+						if ((ch >= 'A') && (ch <= 'Z')) ch += 0x20;
+						low[k] = ch;
+					}
+					low[k] = 0;
+					if (strstr(low, "rawi") != NULL) continue;
+				}
+
+				//Имя для списка/открытия: длинное (LFN), если влезает в Name[16], иначе короткое 8.3 (altname)
+				const char * name = fno.fname;
+				if ((strlen(name) > 19) && (fno.altname[0] != 0)) name = fno.altname;
+
+				if (Dir_File_Info[0].maxFileCount < 32) {
+					memset(str, 0, 32);
+					memcpy(str, name, strlen(name) - 4);   //Убрать расширение ".raw"
+					sprintf(Dir_File_Info[Dir_File_Info[0].maxFileCount++].Name,"%s", str);
+				}
 	        }
 	        f_closedir(&dir);
 	    }
@@ -126,7 +142,7 @@ void PAGE_Video(void) {
 
 			char strUTF8[48];
 			ConvertString1251ToUTF8(str, strUTF8);
-			rtt.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\n", i,  strUTF8);
+			timber.print("\033[04;38;05;226;48;05;24m%d'%s'\x1B[0m\n", i,  strUTF8);
 			Font_Smooth_drawStr1251(&tft, 10, 8 + 40 * (ii % 6), str , (i == index)? RGB565(8, 8, 8) : RGB565(128, 128, 128));
 			ii++;
 		}
@@ -143,12 +159,13 @@ void PAGE_Video(void) {
              res = f_open(&SDFile, str, FA_READ );
              if (res == FR_OK)
              {
-            	rtt.print("res == FR_OK\r\n");
-            	UINT * br = NULL;
-            	//*br = 0;
-            	res = f_read (&SDFile, &str, 16, br); //Читаем строку времени задержки
-            	if (res == FR_OK)
-            	   time =  atoi(str); //Получили время кадра в ms
+           	timber.print("res == FR_OK\r\n");
+           	UINT br = 0;
+           	res = f_read (&SDFile, str, 16, &br); //Читаем строку времени задержки
+           	if ((res == FR_OK) && (br > 0)) {
+           		str[br] = 0;
+           	   time =  atoi(str); //Получили время кадра в ms
+           	}
              }
              f_close(&SDFile);
 

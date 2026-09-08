@@ -6,7 +6,7 @@
 #define NUM_OF(x) (sizeof(x)/sizeof(x[0]))
 
 #include "global_define.h"
-#include "logUART.h"
+#include "timber.h"
 #include "button.h"
 extern button_typedef button;
 
@@ -43,7 +43,7 @@ void setup(void) {
 	TimerDWT.init();
 	TimerT5.init(&htim5);
 
-	rtt.init(&huart3);
+	timber.init();
 
 	HAL_Delay(1000);
 

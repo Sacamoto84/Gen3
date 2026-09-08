@@ -241,7 +241,7 @@ void MX_TIM6_Init(void)
   htim6.Instance = TIM6;
   htim6.Init.Prescaler = 0;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim6.Init.Period = 216;
+  htim6.Init.Period = 1903;	/* дефолт 44.1 кГц: 84 МГц/(1903+1); перенастраивается в DAC_setSampleRate */
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
   {
@@ -272,9 +272,9 @@ void MX_TIM12_Init(void)
 
   /* USER CODE END TIM12_Init 1 */
   htim12.Instance = TIM12;
-  htim12.Init.Prescaler = 107;
+  htim12.Init.Prescaler = 83;	/* 84 МГц (APB1-таймер) / (83+1) = 1 МГц, тик 1 мкс */
   htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim12.Init.Period = 1000;
+  htim12.Init.Period = 1000;	/* 1 мкс * 1000 = переполнение каждые 1 мс */
   htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim12.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim12) != HAL_OK)
