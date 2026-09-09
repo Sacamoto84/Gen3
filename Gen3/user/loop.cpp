@@ -45,7 +45,7 @@ void setup(void) {
 
 	timber.init();
 
-	HAL_Delay(1000);
+	HAL_Delay(100);
 
 	__HAL_SPI_DISABLE(&hspi1);
 	SPI1->CR1 |= (0x1UL << (5U));

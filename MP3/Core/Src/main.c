@@ -152,7 +152,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
   TIM2->DIER |= TIM_DIER_UIE;
 
-  TIM1->CCR1 = 75;
+  TIM1->CCR1 = 200;
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 
   /* TIM12: шкала 1 мкс для замеров времени (debugTask). ARR=1000 -> IRQ каждые 1 мс

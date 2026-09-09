@@ -171,8 +171,10 @@ SECTIONS
  .my_ccmram :
  {
  . = ALIGN(4);
+ _smy_ccmram = .;
  KEEP(*(.my_ccmram))
  . = ALIGN(4);
+ _emy_ccmram = .;
  } >CCMRAM
 
  .out :

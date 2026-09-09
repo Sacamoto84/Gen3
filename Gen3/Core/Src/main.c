@@ -90,17 +90,30 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	__disable_irq(); //????????? ??????????
-	//SCB->VTOR = 0x8060000;
+	__disable_irq();
 	SCB->VTOR = 0x80C0000;
 
-	uint32_t *p;
-	p = (uint32_t *)(0x10000000);
-	int count = 16384;
-	while(count--)
-		*p++ = 0;
+	// Сброс тактирования на HSI и отключение PLL при мягком перезапуске (прошивка / отладчик),
+	// чтобы HAL_RCC_OscConfig() в SystemClock_Config() не возвращал HAL_ERROR
+	if (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI)
+	{
+		__HAL_RCC_HSI_ENABLE();
+		while (__HAL_RCC_GET_FLAG(RCC_FLAG_HSIRDY) == RESET) {}
+		__HAL_RCC_SYSCLK_CONFIG(RCC_SYSCLKSOURCE_HSI);
+		while (__HAL_RCC_GET_SYSCLK_SOURCE() != RCC_SYSCLKSOURCE_STATUS_HSI) {}
+	}
+	if (READ_BIT(RCC->CR, RCC_CR_PLLON) != 0U)
+	{
+		__HAL_RCC_PLL_DISABLE();
+		while (READ_BIT(RCC->CR, RCC_CR_PLLRDY) != 0U) {}
+	}
 
-	__enable_irq(); //????????? ??????????
+	// Обнулить только пользовательские буферы в CCM-памяти (.my_ccmram),
+	// не повреждая область стека у 0x10010000, где работает сам main
+	extern uint32_t _smy_ccmram[], _emy_ccmram[];
+	uint32_t *p = _smy_ccmram;
+	while (p < _emy_ccmram)
+		*p++ = 0;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -136,6 +149,7 @@ int main(void)
   MX_TIM5_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  __enable_irq();
 
   HAL_UART_MspInit(&huart3);
 
