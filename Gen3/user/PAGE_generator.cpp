@@ -7,6 +7,8 @@
 #include "global_typedef.h"
 #include "stdio.h"
 
+#include "timber.h"
+
 #include "generator.h"
 extern GENERATOR Gen;
 

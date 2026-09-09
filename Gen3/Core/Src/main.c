@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "crc.h"
 #include "dac.h"
 #include "dma.h"
@@ -133,6 +134,7 @@ int main(void)
   MX_TIM3_Init();
   MX_FATFS_Init();
   MX_TIM5_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_UART_MspInit(&huart3);
@@ -146,16 +148,12 @@ int main(void)
     //HAL_TIM_Base_Start(&htim2);
     //HAL_TIM_Base_Start_IT(&htim2);
 
-    TIM1->CCR1 = 75;
+    TIM1->CCR1 = 200;
     HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 
     res = f_mount(&SDFatFS, SDPath, 1); //Mount MicroSd
 
     main_cpp();
-
-
-
-
 
   /* USER CODE END 2 */
 

@@ -1,5 +1,4 @@
 #include "Page.h"
-#include "global_define.h"
 #include "stdio.h"
 #include "Gif.h"
 
@@ -8,6 +7,12 @@ extern button_typedef button;
 
 #include "global_typedef.h"
 extern Encoder_typedef Encoder;
+
+#include "timber.h"
+#include "HiSpeedDWT.h"
+#include "global_define.h"
+
+extern HiSpeedDWT TimerT5;
 
 void PAGE_Volume(void)
 {

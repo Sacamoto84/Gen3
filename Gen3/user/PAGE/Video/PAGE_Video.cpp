@@ -15,6 +15,8 @@ extern Encoder_typedef Encoder;
 
 #include "FontSmooth.h"
 
+#include "timber.h"
+
  typedef struct
  {
    char text [20];

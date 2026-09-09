@@ -11,6 +11,7 @@
 #include "cmsis_os.h"
 
 #include "timber.h"
+#include "TFT_convert.h"
 
 extern "C" uint32_t get_newlib_heap_free(void);	// свободно в newlib-куче (sysmem.c)
 
@@ -254,8 +255,14 @@ void MP3(char * mp3name)
     fullPath += "/";
     fullPath += mp3name;
 
+	//fullPath собран в UTF-8 (список хранит UTF-8), а FatFs работает в OEM CP866
+	char path_oem[_MAX_LFN + 1];
+	if (ConvertStringUTF8to1251(fullPath.c_str(), path_oem, sizeof(path_oem)) == 0)
+		strcpy(path_oem, fullPath.c_str());
+	ConvertString1251ToDos(path_oem);
+
 	//Открыть файл 'GIFtoBIN.exe'
-	FRESULT result = f_open(&SDFile, fullPath.c_str() , FA_READ);
+	FRESULT result = f_open(&SDFile, path_oem , FA_READ);
 	if (result != FR_OK)
 	{
 		timber.error("MP3:%s..Ошибка открытия файла", fullPath.c_str());

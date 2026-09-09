@@ -57,8 +57,15 @@ void readDir(char * path, Dir_File_Info_Array * list)
 	list->maxFileCount = 0;
 	DIR dir;
 	FILINFO fno;
+
+	//Путь приходит в UTF-8 (список/дисплей хранят UTF-8), а FatFs работает в OEM CP866
+	char path_oem[_MAX_LFN + 1];
+	if (ConvertStringUTF8to1251(path, path_oem, sizeof(path_oem)) == 0)
+		strcpy(path_oem, path);
+	ConvertString1251ToDos(path_oem);
+
 	// открыть директорий 'music'
-	FRESULT result = f_opendir(&dir, path);
+	FRESULT result = f_opendir(&dir, path_oem);
 	if (result != FR_OK)
 	{
 		timber.error("Невозможно открыть директорий; ошибка %d\n",(unsigned int)result);
@@ -140,10 +147,10 @@ mString <64> dirForvard(mString <64> dir)
   {
 	if (*p == '/')
 	{
-		j++;
+		if (j < 5) j++;   //Защита: не более 5 уровней вложенности
 		x = 0;
 	}
-	temp[j][x++] = *p;
+	if ((j < 5) && (x < 32)) temp[j][x++] = *p;   //Защита: не более 31 символа на уровень
     p++;
   }
 
