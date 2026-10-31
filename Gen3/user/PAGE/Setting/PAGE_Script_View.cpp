@@ -25,7 +25,7 @@ extern Scripting script;
 //└─────────────────────────────────────────────────────────┘
 
 //Цвет строки по команде
-static uint16_t view_line_color(const char * s)
+uint16_t view_line_color(const char * s)
 {
 	if ((strncmp(s, "IF", 2) == 0) || (strncmp(s, "ELSE", 4) == 0) || (strncmp(s, "ENDIF", 5) == 0))
 		return RGB565(90, 200, 255);
@@ -92,7 +92,7 @@ static void view_draw(int first)
 	tft.driver.ST7789_UpdateDMA16bitV3();
 }
 
-//Просмотр загруженного скрипта и текущей строки. Энкодер листает, нажатие выход
+//Просмотр загруженного скрипта и текущей строки. Энкодер листает, клик выход, удержание редактор
 void PAGE_Script_View(void)
 {
 	Font_Smooth_Load(menu_generator.font);
@@ -144,7 +144,12 @@ void PAGE_Script_View(void)
 			view_draw(first);
 		}
 
-		if (button.isHolded() || button.isClick())
+		if (button.isHolded()) {
+			PAGE_Script_Edit(); //Если открыты из редактора, сразу вернется и мы выйдем к нему
+			break;
+		}
+
+		if (button.isClick())
 			break;
 	}
 

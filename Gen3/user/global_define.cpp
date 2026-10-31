@@ -11,7 +11,7 @@ menu_typedef menu_generator CCMRAM;
 menu_typedef menu_setting CCMRAM;
 
 item_typedef   item_generator[NUM_ITEM_GENERETOR] CCMRAM;
-item_typedef   item_setting[11] CCMRAM;
+item_typedef   item_setting[12] CCMRAM;
 
 #include "GyverButton.h"
 GButton button(ENTER_GPIO_Port, ENTER_Pin);

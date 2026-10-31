@@ -25,7 +25,8 @@ void Scripting::run(void) {
 		return;
 	endTime = 0;
 
-	while ((yield == false) && (end == false)) {
+	//Цикл без DELAY и YIELD не должен вешать устройство: остальное на следующем проходе
+	for (int steps = 0; (steps < PC_MAX) && (yield == false) && (end == false); steps++) {
 		CMD_EXE();
 		if (uwTick <= endTime)
 			return;
@@ -432,7 +433,6 @@ void Scripting::CMD_EXE(void){
 void Scripting::ifComand(void){
 	  mString<CMD_LEN> comand;
 	  comand = list[pc];
-	  comand.truncate(1);
       if (comand.indexOf((char*) "IF", 0) != 0){pc++;return;}
       comand.remove(0, 3); //Убрали IF
       triple = excretionTripleOperand(comand);

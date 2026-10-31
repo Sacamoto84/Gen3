@@ -73,6 +73,9 @@ void PAGE_init_struct_setting(void) {
 	sprintf(item_setting[INDEX_SETTING_SCRIPT_VIEW].text, "Скрипт вид");
 	item_setting[INDEX_SETTING_SCRIPT_VIEW].callBackFunc_isClick = &PAGE_Script_View;
 
+	sprintf(item_setting[INDEX_SETTING_SCRIPT_EDIT].text, "Редактор");
+	item_setting[INDEX_SETTING_SCRIPT_EDIT].callBackFunc_isClick = &PAGE_Script_Edit;
+
     //
 	//page_item_setting[1].bmp = &bmpSave13232;
 	item_setting[INDEX_SETTING_SAVE].callBackFunc_isClick = &setting_save_click;
@@ -81,20 +84,20 @@ void PAGE_init_struct_setting(void) {
 	//page_item_setting[2].bmp = &bmpProgram3232;
 
 	//
-	sprintf(item_setting[5].text, "USB MSD");
-	item_setting[5].callBackFunc_isClick = &PAGE_MSD; //По нажатию
+	sprintf(item_setting[6].text, "USB MSD");
+	item_setting[6].callBackFunc_isClick = &PAGE_MSD; //По нажатию
 
 	//
-	sprintf(item_setting[6].text, "Видео");
-	item_setting[6].callBackFunc_isClick = &PAGE_Video;
+	sprintf(item_setting[7].text, "Видео");
+	item_setting[7].callBackFunc_isClick = &PAGE_Video;
 
 
-	sprintf(item_setting[7].text, "BT Audio");
-	item_setting[7].callBackFunc_isClick = &PAGE_BT_Audio;
+	sprintf(item_setting[8].text, "BT Audio");
+	item_setting[8].callBackFunc_isClick = &PAGE_BT_Audio;
 
 
-	sprintf(item_setting[8].text, "Плеер");
-	item_setting[8].callBackFunc_isClick = &PAGE_Player;
+	sprintf(item_setting[9].text, "Плеер");
+	item_setting[9].callBackFunc_isClick = &PAGE_Player;
 
 	sprintf(item_setting[INDEX_SETTING_FILTER].text, "Фильтр");
 	item_setting[INDEX_SETTING_FILTER].callBackFunc_isClick = &PAGE_Filter;

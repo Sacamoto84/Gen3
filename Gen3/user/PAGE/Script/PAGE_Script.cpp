@@ -35,7 +35,7 @@ void PAGE_Script(void) {
 	if (res == FR_OK) {
 		for (;;) {
 			res = f_readdir(&dir, &fno); /* Read a directory item */
-			if (res != FR_OK || fno.fname[0] == 0)
+			if (res != FR_OK || fno.fname[0] == 0 || countFiles >= 32)
 				break; /* Break on error or end of dir */
 			sFiles[countFiles] = fno.fname;
 			sFiles[countFiles++].truncate(4);
