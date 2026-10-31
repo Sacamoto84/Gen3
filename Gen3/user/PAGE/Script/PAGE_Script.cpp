@@ -50,7 +50,7 @@ void PAGE_Script(void) {
 	int window_item_count = 6 - 1; //6 реальных
 	window_start = 0;
 	window_end =
-			(countFiles >= window_item_count) ? window_item_count : countFiles;
+			(countFiles > window_item_count) ? window_item_count : countFiles - 1;
 
 	uint32_t H = 40;
 	uint32_t StartY = 0;
@@ -98,7 +98,7 @@ void PAGE_Script(void) {
 
 			//─ Рисуем список ──────────────────────────────────────┐
 			int ii = 0;
-			for (int i = window_start; i < window_end; i++) {
+			for (int i = window_start; i <= window_end; i++) {
 				if (i == index)
 					tft.RectangleFilled(0, StartY + H * (ii % 6), 239, H,
 							COLOR_RECTAGLE);

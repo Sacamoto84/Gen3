@@ -281,6 +281,11 @@ void Scripting::load(char *name) {
 	timber.print("\r\n*** Скрипт Конец ***\r\n");
 
 	lines = line;
+
+	//Без этого скрипт без END выполнит остатки предыдущего
+	for (int i = line; i < PC_MAX; i++)
+		list[i].clear();
+
 	line = 0;
 	pc_exec = 0;
 	Name = name;
