@@ -32,11 +32,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Generator</name>
-			<type>2</type>
-			<location>C:/Drivers/Generator</location>
-		</link>
-		<link>
 			<name>Lib</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>

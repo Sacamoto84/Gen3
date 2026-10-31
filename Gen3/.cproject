@@ -2705,7 +2705,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Lib"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="CLI"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="libs"/>
-						<entry excluding="mysignal.c|mysignal.h|Generator_buffer.c|signal.c|Generator_Render.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Generator"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Generator"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="user"/>
 						<entry excluding="blueBackground_240x240.cpp|save1_32x32.cpp|program32A_32x32.cpp|on.cpp|bmp889727.cpp|off.cpp|glass240x240.cpp" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Icons"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="uTFT2"/>
