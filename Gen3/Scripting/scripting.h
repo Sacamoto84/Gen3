@@ -111,6 +111,8 @@ public:
 	char str[32];                //Временная строка
 	mString<CMD_LEN> list[PC_MAX];    //Список команд
 	uint8_t line = 0;            //Текучая строка
+	uint8_t lines = 0;           //Сколько записей в list вместе с именем в [0]
+	uint32_t pc_exec = 0;        //Строка, которая выполнялась последней (pc уже на следующей, например в DELAY)
 	GENERATOR * G;
 
 	bool returnToMenu2 = false;

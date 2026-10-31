@@ -61,6 +61,7 @@ void setup(void) {
 
 	//tft.video_play((char*)"intro.raw", 20);
 
+	script.end = true; //script в CCM: main обнуляет секцию после конструкторов
 	script.G = &Gen; //Привязать генератор
 #ifdef USE_GEN
 	//script.Unit5Load();

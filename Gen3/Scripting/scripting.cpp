@@ -3,7 +3,7 @@
 
 #include "timber.h"
 
-Scripting script;
+Scripting script CCMRAM;
 
 extern HiSpeedDWT TimerDWT;
 extern HiSpeedDWT TimerT5;
@@ -270,7 +270,7 @@ void Scripting::load(char *name) {
 
 	line++;
 
-	while (f_gets(patch, 32, &SDFile)) {
+	while ((line < PC_MAX) && f_gets(patch, 32, &SDFile)) {
 		list[line] = patch;
 		timber.print("%d:%s", line, list[line].buf);
 		line++;
@@ -279,12 +279,16 @@ void Scripting::load(char *name) {
 
 	timber.print("\r\n*** Скрипт Конец ***\r\n");
 
+	lines = line;
 	line = 0;
+	pc_exec = 0;
 	Name = name;
 }
 
 //Выполнить команду по строке pc
 void Scripting::CMD_EXE(void){
+
+	pc_exec = pc;
 
 	mString<CMD_LEN> comand;
 	mString<CMD_LEN> com;

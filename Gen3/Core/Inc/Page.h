@@ -61,6 +61,7 @@ extern void generator_pre_CH1_AM_EN(uint32_t index);
 extern void generator_pre_CH1_FM_EN(uint32_t index);
 
 extern void PAGE_Filter(void);
+extern void PAGE_Script_View(void);
 
 extern void setting_save_click(void);
 extern void setting_script_stop(void);
