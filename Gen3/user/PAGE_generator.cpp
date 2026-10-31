@@ -178,7 +178,7 @@ void PAGE_generator_select_modulation(void)
     item_typedef    item[Dir_File_Info[0].maxFileCount+1] = {0};
     menu_typedef    menu = {0};
 
-    sprintf(item[0].text, "%s","<-Back");
+    sprintf(item[0].text, "%s","<-BackНазад");
     item[0].field.exit = 1; //Для выхода
 
     for(int i = 1; i<Dir_File_Info[0].maxFileCount+1;i++){
