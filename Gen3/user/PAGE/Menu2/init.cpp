@@ -70,14 +70,11 @@ void PAGE_init_struct_generator(void)
 	item_generator[INDEX_CH1_FM_FR].callBackFunc_isClick  = &PAGE_generator_encoder_block_switch;
 	item_generator[INDEX_CH1_FM_FR].preCallBackFunc = &generator_pre_CH1_FM_FR;
 
-	item_generator[INDEX_CH1_FILTER].callBackFunc_isClick = &PAGE_Filter;
-	item_generator[INDEX_CH1_FILTER].preCallBackFunc      = &generator_pre_FILTER;
-
 	//┌───────────────────────────────────────────────────────────────────┐
 	//│  Описание как рендерить меню                                      │
 	//└──────────────────────────────────────────────────┬────────────────┤
-	menu_generator.item_count   = NUM_ITEM_GENERETOR;  //│                │
-	menu_generator.item_height  = 20;                  //│ 12 строк в 240 │
+	menu_generator.item_count   = 11;                  //│                │
+	menu_generator.item_height  = 21;                  //│                │
 	menu_generator.item_start_y = 0;                   //│                │
 	                                                   //│                │
 	menu_generator.item_text_delta_y = -4;             //│                │

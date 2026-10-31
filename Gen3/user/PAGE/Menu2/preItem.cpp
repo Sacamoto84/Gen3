@@ -283,19 +283,6 @@ void generator_pre_CH1_FM_EN(uint32_t index)
 	  sprintf(item_generator[INDEX_CH1_FM_EN].text,"         -- FM 1");
 }
 
-void generator_pre_FILTER(uint32_t index)
-{
-	char * text = item_generator[INDEX_CH1_FILTER].text;
-	const size_t size = sizeof(item_generator[INDEX_CH1_FILTER].text);
-
-	if (!Gen.filter_cfg.EN)
-	  snprintf(text, size, " Фильтр OFF");
-	else if (Gen.filter_cfg.Fr < 10000)
-	  snprintf(text, size, " Фильтр %.1fk", Gen.filter_cfg.Fr / 1000.0F);
-	else
-	  snprintf(text, size, " Фильтр %dk", (uint8_t) (Gen.filter_cfg.Fr / 1000)); //Не больше FILTER_FR_MAX
-}
-
 
 
 

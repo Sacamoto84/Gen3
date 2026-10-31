@@ -65,8 +65,10 @@ void setup(void) {
 #ifdef USE_GEN
 	//script.Unit5Load();
 	Gen.CH1.CH = 0;
-	script.load((char *)"load_def");
-	script.start();
+	if (!Gen.Config_Load()) { //Нет сохраненной конфигурации: настройки по умолчанию из скрипта
+		script.load((char *)"load_def");
+		script.start();
+	}
 	Gen.Filter_Load();
 	Gen.Init();//Инициализация генератора
 #endif

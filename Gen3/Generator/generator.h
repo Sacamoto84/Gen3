@@ -135,6 +135,10 @@ public:
 	void Filter_Load(void);   //Прочитать /Config/filter.ini (если нет: фильтр выключен) и применить
 	bool Filter_Save(void);   //Записать /Config/filter.ini, на время записи выход замирает
 
+	bool Config_Save(void);   //Записать настройки CH1 в /Config/ch1.ini и фильтр
+	bool Config_Load(void);   //Прочитать /Config/ch1.ini и загрузить файлы сигналов, false если файла нет
+	bool Save_File(const char *path, const char *text, int len); //Записать текст в файл в /Config
+
 	void pause(void){
 		HAL_TIM_Base_Stop(&htim6);
 	}

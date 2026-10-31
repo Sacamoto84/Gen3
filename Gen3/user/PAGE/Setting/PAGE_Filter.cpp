@@ -164,5 +164,5 @@ void PAGE_Filter(void)
 
 	PAGE_Menu(&menu_filter, &item_filter[0], NUM_ITEM_FILTER);
 
-	Font_Smooth_Load(menu_generator.font);
+	Font_Smooth_Load(menu_setting.font);
 }

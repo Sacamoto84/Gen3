@@ -32,9 +32,8 @@
 	#define INDEX_CH1_FM_DEV  8 	      //│
 	#define INDEX_CH1_FM_MOD  9 	      //│
 	#define INDEX_CH1_FM_FR   10 	      //│
-	#define INDEX_CH1_FILTER  11 	      //│
 									      //│
-	#define NUM_ITEM_GENERETOR   12       //│
+	#define NUM_ITEM_GENERETOR   11       //│
 //└─────────────────────────────────────────┘
 
 //┌──────────────┬──────────────────────────────────────────────────────────┐

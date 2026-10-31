@@ -5,9 +5,10 @@
 //┌─────────────────────────────────────────┐
 	//Для картинки генератора индексы строк │
 	#define INDEX_SETTING_SAVE      3     //│
-	#define INDEX_SETTING_VOLTAGE   8     //│
+	#define INDEX_SETTING_FILTER    8     //│
+	#define INDEX_SETTING_VOLTAGE   9     //│
 									      //│
-	#define NUM_ITEM_SETTING  9           //│
+	#define NUM_ITEM_SETTING  10          //│
 //└─────────────────────────────────────────┘
 
 

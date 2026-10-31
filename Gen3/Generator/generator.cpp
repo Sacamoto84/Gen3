@@ -360,23 +360,77 @@ bool GENERATOR::Filter_Save(void) {
 			filter_cfg.EN, (filter_cfg.Type == FILTER_BUTTERWORTH) ? "BUTTER" : "BESSEL",
 			filter_cfg.Order, filter_cfg.Fr);
 
+	return Save_File("/Config/filter.ini", str, len);
+}
+
+bool GENERATOR::Save_File(const char *path, const char *text, int len) {
 	pause(); //Как в MSD: без прерываний DMA на время записи на SD
 
 	f_mkdir("/Config"); //Если уже есть, вернет FR_EXIST
 
 	bool ok = false;
-	if (f_open(&SDFile, "/Config/filter.ini", FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
+	if (f_open(&SDFile, path, FA_CREATE_ALWAYS | FA_WRITE) == FR_OK) {
 		UINT written;
-		ok = (f_write(&SDFile, str, len, &written) == FR_OK) && (written == (UINT) len);
+		ok = (f_write(&SDFile, text, len, &written) == FR_OK) && (written == (UINT) len);
 		ok = (f_close(&SDFile) == FR_OK) && ok;
 	}
 
 	start();
 
 	if (!ok)
-		timber.print(">Filter save error\n");
+		timber.print(">Save error %s\n", path);
 
 	return ok;
+}
+
+bool GENERATOR::Config_Save(void) {
+	char str[256];
+	const int len = snprintf(str, sizeof(str),
+			"CH_EN=%d\r\nCR_FR=%d\r\nCR_MOD=%s\r\n"
+			"AM_EN=%d\r\nAM_FR=%.1f\r\nAM_MOD=%s\r\n"
+			"FM_EN=%d\r\nFM_BASE=%d\r\nFM_DEV=%.1f\r\nFM_MOD=%s\r\nFM_FR=%.1f\r\n",
+			CH1.CH_EN, CH1.Carrier_fr, CH1.Carrier_mod,
+			CH1.AM_EN, CH1.AM_fr, CH1.AM_mod,
+			CH1.FM_EN, CH1.FM_Base, CH1.FM_Dev, CH1.FM_mod, CH1.FM_mod_fr);
+
+	return Save_File("/Config/ch1.ini", str, len) && Filter_Save();
+}
+
+bool GENERATOR::Config_Load(void) {
+	if (f_open(&SDFile, "/Config/ch1.ini", FA_OPEN_EXISTING | FA_READ) != FR_OK)
+		return false;
+
+	char line[48];
+	while (f_gets(line, sizeof(line), &SDFile)) {
+		line[strcspn(line, "\r\n")] = 0;
+
+		char *value = strchr(line, '=');
+		if (value == NULL)
+			continue;
+		*value++ = 0;
+
+		if      (strcmp(line, "CH_EN") == 0)   CH1.CH_EN = atoi(value) != 0;
+		else if (strcmp(line, "CR_FR") == 0)   CH1.Carrier_fr = atoi(value);
+		else if (strcmp(line, "CR_MOD") == 0)  snprintf(CH1.Carrier_mod, sizeof(CH1.Carrier_mod), "%s", value);
+		else if (strcmp(line, "AM_EN") == 0)   CH1.AM_EN = atoi(value) != 0;
+		else if (strcmp(line, "AM_FR") == 0)   CH1.AM_fr = atof(value);
+		else if (strcmp(line, "AM_MOD") == 0)  snprintf(CH1.AM_mod, sizeof(CH1.AM_mod), "%s", value);
+		else if (strcmp(line, "FM_EN") == 0)   CH1.FM_EN = atoi(value) != 0;
+		else if (strcmp(line, "FM_BASE") == 0) CH1.FM_Base = atoi(value);
+		else if (strcmp(line, "FM_DEV") == 0)  CH1.FM_Dev = atof(value);
+		else if (strcmp(line, "FM_MOD") == 0)  snprintf(CH1.FM_mod, sizeof(CH1.FM_mod), "%s", value);
+		else if (strcmp(line, "FM_FR") == 0)   CH1.FM_mod_fr = atof(value);
+	}
+	f_close(&SDFile);
+
+	if (CH1.Carrier_mod[0] == 0) //Файл пустой или битый: пусть стартует скрипт по умолчанию
+		return false;
+
+	Create_Carrier(&CH1);
+	Create_AM_Modulation(&CH1);
+	Create_FM_Modulation(&CH1);
+
+	return true;
 }
 
 void GENERATOR::read_save_ini_to_structure_ch(void)

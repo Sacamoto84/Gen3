@@ -52,6 +52,7 @@ static void setting_pre_callback(void)
 void PAGE_Setting(void)
 {
   menu_setting.preCallBackFunc = &setting_pre_callback;
+  sprintf(item_setting[INDEX_SETTING_SAVE].text, "Сохранить");
   update_setting_voltage();
   last_voltage_time = HAL_GetTick();
   PAGE_Menu(&menu_setting , &item_setting[0], NUM_ITEM_SETTING);
@@ -70,11 +71,7 @@ void PAGE_init_struct_setting(void) {
 	item_setting[2].callBackFunc_isClick = &setting_script_stop;
 
     //
-	sprintf(item_setting[INDEX_SETTING_SAVE].text, "Сохранить");
 	//page_item_setting[1].bmp = &bmpSave13232;
-	item_setting[INDEX_SETTING_SAVE].nameGif = (char*)"save";
-	item_setting[INDEX_SETTING_SAVE].gif_trigger = ONCE;
-	item_setting[INDEX_SETTING_SAVE].gif_x = 170;
 	item_setting[INDEX_SETTING_SAVE].callBackFunc_isClick = &setting_save_click;
     //
 
@@ -95,6 +92,9 @@ void PAGE_init_struct_setting(void) {
 
 	sprintf(item_setting[7].text, "Плеер");
 	item_setting[7].callBackFunc_isClick = &PAGE_Player;
+
+	sprintf(item_setting[INDEX_SETTING_FILTER].text, "Фильтр");
+	item_setting[INDEX_SETTING_FILTER].callBackFunc_isClick = &PAGE_Filter;
 
 	sprintf(item_setting[INDEX_SETTING_VOLTAGE].text, "U: --- V");
 	item_setting[INDEX_SETTING_VOLTAGE].callBackFunc_isClick = &update_setting_voltage;

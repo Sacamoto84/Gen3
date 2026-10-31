@@ -10,7 +10,7 @@ extern item_typedef item_setting[];
 
 void setting_save_click(void)
 {
-  item_setting[INDEX_SETTING_SAVE].gif->command(PLAY); //Команда запуска анимации
+  sprintf(item_setting[INDEX_SETTING_SAVE].text, "%s", Gen.Config_Save() ? "Сохранено" : "Ошибка SD");
 }
 
 void setting_script_stop(void)

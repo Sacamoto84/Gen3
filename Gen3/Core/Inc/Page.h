@@ -59,7 +59,6 @@ extern void generator_pre_CH1_FM_FR(uint32_t index);
 extern void generator_pre_CH1_EN(uint32_t index);
 extern void generator_pre_CH1_AM_EN(uint32_t index);
 extern void generator_pre_CH1_FM_EN(uint32_t index);
-extern void generator_pre_FILTER(uint32_t index);
 
 extern void PAGE_Filter(void);
 
