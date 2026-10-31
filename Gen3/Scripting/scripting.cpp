@@ -3,6 +3,8 @@
 
 #include "timber.h"
 
+#pragma GCC optimize ("Os") //Скорость тут не нужна, синтез в generator.cpp, а flash мало: с -Ofast файл на 900 байт больше
+
 Scripting script CCMRAM;
 
 extern HiSpeedDWT TimerDWT;
@@ -21,6 +23,8 @@ void Scripting::run(void) {
 		return;
 	end = false;
 	yield = false;
+	if (waiting)
+		return;
 	if (uwTick < endTime)
 		return;
 	endTime = 0;
@@ -41,15 +45,68 @@ void Scripting::printF(void)
 	timber.print(s);
 }
 
+//Первые три слова строки, недостающие пустые. Перевод строки и все, что после третьего слова, отбрасываем
 triple_operand Scripting::excretionTripleOperand(mString<CMD_LEN> str){
 	triple_operand out;
-	char* strings[3];
-	str.split(strings,' ');
+	const char * strings[3] = { "", "", "" };
+	char * p = str.buf;
+	int n = 0;
+
+	strings[0] = p;
+	for (; *p; p++) {
+		if ((*p == '\r') || (*p == '\n')) {
+			*p = 0;
+			break;
+		}
+		if (*p == ' ') {
+			*p = 0;
+			if (strings[n][0] == 0) { //Несколько пробелов подряд
+				strings[n] = p + 1;
+				continue;
+			}
+			if (n == 2)
+				break;
+			strings[++n] = p + 1;
+		}
+	}
+
 	out.operand0 = strings[0];
 	out.operand1 = strings[1];
 	out.operand2 = strings[2];
-	out.operand2.truncate(1);
 	return out;
+}
+
+//Ошибка в строке: скрипт встает, окно просмотра показывает ее подсвеченной и STOP
+void Scripting::comandError(void){
+	timber.print("Script:? pc:%d:%s\n", pc, list[pc].buf);
+	end = true;
+}
+
+//Регистр F0..F9 по имени. Чужое имя это ошибка в строке
+float * Scripting::reg(mString<CMD_LEN> & s){
+	const int index = s.buf[1] - '0';
+	if ((s.buf[0] == 'F') && (index >= 0) && (index <= 9) && (s.buf[2] == 0))
+		return &F[index];
+	comandError();
+	return NULL;
+}
+
+//Значение операнда: регистр или число
+float Scripting::opValue(mString<CMD_LEN> & s){
+	if (s.buf[0] == 'F') {
+		const float * r = reg(s);
+		return r ? *r : 0.0F;
+	}
+	if (s.buf[0] == 0) //Нет операнда
+		comandError();
+	return s.toFloat();
+}
+
+//Частота в поле uint16_t: без ограничения 70000 Гц превратились бы в 4464
+static uint16_t toFreq(float value){
+	if (value < 0.0F) return 0;
+	if (value > 65535.0F) return 65535;
+	return (uint16_t) value;
 }
 
 void Scripting::comandPlusMinus(){
@@ -59,40 +116,16 @@ void Scripting::comandPlusMinus(){
 
 	triple = excretionTripleOperand(comand);
 
-	int index = triple.operand1.buf[1] - 0x30;//Индекс первой ячейки 0..9
+	float * r = reg(triple.operand1);
+	if (r == NULL)
+		return;
 
-	if ( triple.operand2.buf[0] == 'F')
-	{
-	  //Втокой операнд это регистор
-	  int secondIndex = triple.operand2.buf[1]-0x30; //Индекс второго регистра
+	const float value = opValue(triple.operand2);
 
-	  //┌── MINUS ────────────────────────────────────┐
-	  if (triple.operand0 == (char*)"MINUS") {
-		 F[index] = F[index]-F[secondIndex];  //MINUS F* F*
-	  }
-	  //└────────────────────────────────────────────┘
-	  //┌── PLUS ────────────────────────────────────┐
-	  if (triple.operand0 == (char*)"PLUS") {
-	     F[index] = F[index]+F[secondIndex];          //MINUS F* F*
-	  }
-	  //└────────────────────────────────────────────┘
-	}
-    else
-	{
-	  //Второй операнд это константа
-      float fvalue = 0.0F;
-	  fvalue = triple.operand2.toFloat();
-	  //┌── MINUS ───────────────────────────────────┐
-	  if (triple.operand0 == (char*)"MINUS") {
-		  F[index] = F[index]-fvalue; //MINUS F* F*
-	  }
-	  //└────────────────────────────────────────────┘
-	  //┌── PLUS ────────────────────────────────────┐
-	  if (triple.operand0 == (char*)"PLUS") {
-	      F[index] = F[index]+fvalue; //MINUS F* F*
-	  }
-	  //└────────────────────────────────────────────┘
-	}
+	if      (triple.operand0 == (char*)"MINUS") *r -= value;
+	else if (triple.operand0 == (char*)"PLUS")  *r += value;
+	else if (triple.operand0 == (char*)"MUL")   *r *= value;
+	else comandError();
 }
 
 void Scripting::generatorComand(void){
@@ -100,8 +133,6 @@ void Scripting::generatorComand(void){
 		comand = list[pc];
 
 		triple = excretionTripleOperand(comand);
-
-	    float value;
 
 		uint8_t onoff = 0;
 
@@ -145,14 +176,7 @@ void Scripting::generatorComand(void){
 			//CR1 FR 1000.3                                                       //│
 		    if (triple.operand1 == (char*)"FR")                                   //│
 			{
-		       if (triple.operand2.buf[0] == 'F')
-		       {
-		    	 value = F[triple.operand2.buf[1]-0x30];
-		       }
-		       else
-			     value = triple.operand2.toFloat();
-
-		       G->CH1.Carrier_fr = (uint16_t)value;                               //│
+		       G->CH1.Carrier_fr = toFreq(opValue(triple.operand2));              //│
 			   render = 1;                                                        //│
 			}                                                                     //│
                                                                                   //│
@@ -168,14 +192,7 @@ void Scripting::generatorComand(void){
 	      //AM1 FR 1000.3                                                         //│
 	      if (triple.operand1 == (char*)"FR")                                     //│
 	      {                                                                       //│
-		     if (triple.operand2.buf[0] == 'F')
-		     {
-		       value = F[triple.operand2.buf[1]-0x30];
-		     }
-		     else
-			   value = triple.operand2.toFloat();
-
-               G->CH1.AM_fr = value;                                              //│
+               G->CH1.AM_fr = opValue(triple.operand2);                           //│
              render = 1;                                                          //│
 	      }                                                                       //│
 	                                                                              //│
@@ -197,14 +214,7 @@ void Scripting::generatorComand(void){
 	      //FM1 BASE 1234.6                                                       //│
 	      if (triple.operand1 == (char*)"BASE")                                   //│
 	      {
-		      if (triple.operand2.buf[0] == 'F')
-		      {
-		    	value = F[triple.operand2.buf[1]-0x30];
-		      }
-		      else
-			    value = triple.operand2.toFloat();
-
-	    	    G->CH1.FM_Base = (uint16_t)value;                                 //│
+	    	    G->CH1.FM_Base = toFreq(opValue(triple.operand2));                //│
 	    	    G->Refresh_FM_Modulation1();                                      //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
@@ -212,14 +222,7 @@ void Scripting::generatorComand(void){
 	      //FM1 DEV  123.8                                                        //│
 	      if (triple.operand1 == (char*)"DEV")                                    //│
 	      {
-		      if (triple.operand2.buf[0] == 'F')
-		      {
-		    	value = F[triple.operand2.buf[1]-0x30];
-		      }
-		      else
-			    value = triple.operand2.toFloat();
-
-	    	    G->CH1.FM_Dev = value;                                            //│
+	    	    G->CH1.FM_Dev = opValue(triple.operand2);                         //│
 	    	    G->Refresh_FM_Modulation1();                                      //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
@@ -235,21 +238,44 @@ void Scripting::generatorComand(void){
 	      //FM1 FR   3.5                                                          //│
 	      if (triple.operand1 == (char*)"FR")                                     //│
 	      {                                                                       //│
-		      if (triple.operand2.buf[0] == 'F')
-		      {
-		        value = F[triple.operand2.buf[1]-0x30];
-		      }
-		      else
-			    value = triple.operand2.toFloat();
-
-	    	    G->CH1.FM_mod_fr = value;                                         //│
+	    	    G->CH1.FM_mod_fr = opValue(triple.operand2);                      //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
                                                                                   //│
 	      return;                                                                 //│
 	    }                                                                         //│
 	//╰─────────────────────────────────────────────────────────────────────────────╯
+
+	    //Второго канала больше нет, старые скрипты еще упоминают CH2 CR2 AM2 FM2
+	    if ((triple.operand0.length() != 3) || (triple.operand0.buf[2] != '2'))
+	      comandError();
 	}
+
+//Строка файла для list, с переводом и не длиннее CMD_LEN. Хвост длинной строки отбрасываем,
+//иначе он станет отдельной строкой и собьет номера в GOTO
+bool Scripting::readLine(char * s, int size){
+	if (f_gets(s, size, &SDFile) == NULL)
+		return false;
+
+	if (strchr(s, '\n') == NULL) {
+		char c;
+		UINT count;
+		while ((f_read(&SDFile, &c, 1, &count) == FR_OK) && count && (c != '\n')) {}
+	}
+
+	if (strncmp(s, "\xEF\xBB\xBF", 3) == 0) //Метка UTF-8 от блокнота в начале файла
+		memmove(s, s + 3, strlen(s + 3) + 1);
+
+	int len = strcspn(s, "\r\n");
+	if (len > CMD_LEN - 2) {
+		len = CMD_LEN - 2;
+		while ((len > 0) && ((s[len] & 0xC0) == 0x80)) //Без половины символа UTF-8
+			len--;
+	}
+	s[len] = '\n';
+	s[len + 1] = 0;
+	return true;
+}
 
 //Загрузить скрипт в список
 void Scripting::load(char *name) {
@@ -271,7 +297,7 @@ void Scripting::load(char *name) {
 
 	line++;
 
-	while ((line < PC_MAX) && f_gets(patch, 32, &SDFile)) {
+	while ((line < PC_MAX) && readLine(patch, sizeof(patch))) {
 		list[line] = patch;
 		timber.print("%d:%s", line, list[line].buf);
 		line++;
@@ -293,6 +319,11 @@ void Scripting::load(char *name) {
 
 //Выполнить команду по строке pc
 void Scripting::CMD_EXE(void){
+
+	if (pc >= PC_MAX) { //Конец списка или GOTO мимо него
+		end = true;
+		return;
+	}
 
 	pc_exec = pc;
 
@@ -325,7 +356,10 @@ void Scripting::CMD_EXE(void){
 		    }                                                      //│ │
                                                                    //│ │
 		    currentPC++;                                           //│ │
-		    if (currentPC > (PC_MAX - 1)) break;                   //│ │
+		    if (currentPC > (PC_MAX - 1))                          //│ │
+		    {                                                      //│ │
+		      comandError(); break;                                //│ │
+		    }                                                      //│ │
 		  }                                                        //│ │
 		  break;                                                   //│ │
 		}                                                          //│ │
@@ -338,6 +372,7 @@ void Scripting::CMD_EXE(void){
 			timber.println("Скрипт окончен");                         //│ │
 			end = true; return; }                                  //│ │
 		//╰──────────────────────────────────────────────────────────╯ │
+		comandError();                                             //  │
 	    break;                                                     //  │
 	//╰────────────────────────────────────────────────────────────────╯
 
@@ -373,9 +408,10 @@ void Scripting::CMD_EXE(void){
                                                       //│
 		if (comand.indexOf((char*) "PLUS", 0) == 0)   //│
 		  comandPlusMinus();                          //│
-                                                      //│                                                          //│
-		if (comand.indexOf((char*) "PRINTF", 0) == 0) //│
+		else if (comand.indexOf((char*) "PRINTF", 0) == 0) //│
 		  printF();                                   //│
+		else                                          //│
+		  comandError();                              //│
                                                       //│
 		pc++;                                         //│
 		break;                                        //│
@@ -385,6 +421,8 @@ void Scripting::CMD_EXE(void){
 		if (comand.indexOf((char*) "GOTO", 0) == 0) {
 			pc = comand.toUint(4);
 		}
+		else
+			comandError();
 		break;
 	//└────────────────────────────────────────────┘
 	//┌── YELD ────────────────────────────────────┐
@@ -393,15 +431,31 @@ void Scripting::CMD_EXE(void){
 			yield = true;
 			pc++;
 		}
+		else
+			comandError();
+		break;
+	//└────────────────────────────────────────────┘
+	//┌── WAIT ────────────────────────────────────┐
+	case 'W':
+		if (comand.indexOf((char*) "WAIT", 0) == 0) {
+			waiting = true; //Снимет клик в окне просмотра
+			yield = true;
+			pc++;
+		}
+		else
+			comandError();
 		break;
 	//└────────────────────────────────────────────┘
 	//┌── DELAY ───────────────────────────────────┐
 	case 'D':
 		if (comand.indexOf((char*) "DELAY", 0) == 0) {
-			uint32_t d = comand.toUint(5);
-			endTime = uwTick + d;
+			triple = excretionTripleOperand(comand);
+			const float d = opValue(triple.operand1);
+			endTime = uwTick + ((d > 0.0F) ? (uint32_t) d : 0);
 			pc++;
 		}
+		else
+			comandError();
 		break;
 	//└────────────────────────────────────────────┘
 	//┌── TEXT ────────────────────────────────────┐
@@ -416,19 +470,23 @@ void Scripting::CMD_EXE(void){
 		triple = excretionTripleOperand(comand);
 		if (triple.operand0 == (char*)"LOAD")
 		{
-		   int index = triple.operand1.buf[1]-0x30;
-		   F[index] = triple.operand2.toFloat();
+		   float * r = reg(triple.operand1);
+		   if (r)
+		     *r = opValue(triple.operand2);
 		}
+		else
+		   comandError();
 		pc++;
 		break;
 	}
 	//└────────────────────────────────────────────┘
 
 	default:
-		timber.print("Script:? pc:%d:%s\n", pc, comand.buf);
-		pc++;
-		if (pc >= PC_MAX)
-		  end = true;
+		//Пустая строка занимает номер и ничего не делает
+		if (comand.buf[strspn(comand.buf, " \t\r\n")] == 0)
+			pc++;
+		else
+			comandError();
 		break;
 	};
 
@@ -438,32 +496,27 @@ void Scripting::CMD_EXE(void){
 void Scripting::ifComand(void){
 	  mString<CMD_LEN> comand;
 	  comand = list[pc];
-      if (comand.indexOf((char*) "IF", 0) != 0){pc++;return;}
+      if (comand.indexOf((char*) "IF", 0) != 0){comandError();return;}
       comand.remove(0, 3); //Убрали IF
       triple = excretionTripleOperand(comand);
 
-      float f1value = 0.0F;
-      float f2value = 0.0F;
+      const float * left = reg(triple.operand0); //Слева только регистр
+      if (left == NULL)
+    	  return;
 
-      f1value = F[triple.operand0.buf[1] - 0x30];
-
-      if ((triple.operand2.buf[0] == 'F'))
-      {
-          f2value = F[triple.operand2.buf[1] - 0x30];
-      }
-      else
-    	  f2value = triple.operand2.toFloat();
-
+      const float f1value = *left;
+      const float f2value = opValue(triple.operand2);
 
       // имеем f1value и f2value
       bool boolResult = false; //Результат сравнения true or false чтобы решить куда дальше
 
-      if ((triple.operand1 == "<" )&&(f1value <  f2value)) boolResult = true;
-      if ((triple.operand1 == ">" )&&(f1value >  f2value)) boolResult = true;
-      if ((triple.operand1 == "<=")&&(f1value <= f2value)) boolResult = true;
-      if ((triple.operand1 == ">=")&&(f1value >= f2value)) boolResult = true;
-      if ((triple.operand1 == "!=")&&(f1value != f2value)) boolResult = true;
-      if ((triple.operand1 == "==" )&&(f1value == f2value)) boolResult = true;
+      if      (triple.operand1 == "<" ) boolResult = (f1value <  f2value);
+      else if (triple.operand1 == ">" ) boolResult = (f1value >  f2value);
+      else if (triple.operand1 == "<=") boolResult = (f1value <= f2value);
+      else if (triple.operand1 == ">=") boolResult = (f1value >= f2value);
+      else if (triple.operand1 == "!=") boolResult = (f1value != f2value);
+      else if (triple.operand1 == "==") boolResult = (f1value == f2value);
+      else {comandError();return;}
 
       if (boolResult)
       {
@@ -488,7 +541,10 @@ void Scripting::ifComand(void){
         		  currentPC++;
 
         	  if (currentPC > (PC_MAX - 1))
+        	  {
+        		  comandError();
         		  break;
+        	  }
           }
       }
 	}

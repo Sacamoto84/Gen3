@@ -22,6 +22,8 @@ void PAGE_Generator()
 
 uint8_t render;
 
+#define RENDER_MS 200 //Кадр держит скрипт около 40 мс, поэтому его команды рисуем не чаще 5 раз в секунду
+
 //┌───────────────────────────────────────────────────────────────────┐
 //│  Построение в одну колонку                                        │
 //└──────────────────────────────────────────────────┬────────────────┤
@@ -56,11 +58,22 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 	menu->index = index;
 	menu->max_item = NUM - 1;
 
+	uint32_t render_time = 0;
+
 	while (1) {
 
 		script.returnToMenu2 = false;
 
 		script.run();
+
+		//Клик здесь занят меню, WAIT снимается в окне просмотра
+		if (script.waiting) {
+			PAGE_Script_View();
+			Font_Smooth_Load(menu->font);
+			tft.uTFT.GetColor = 0;
+			tft.driver.needUpdate = 1;
+			menu->field.needRender = 1;
+		}
 
 		button.tick();
 
@@ -92,9 +105,10 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 			}
 		}
 
-		if (render)
+		if (render && (HAL_GetTick() - render_time >= RENDER_MS))
 		{
 			render = 0;
+			render_time = HAL_GetTick();
 			menu->field.needRender = 1;
 			menu->field.needUpdate = 1;
 		}

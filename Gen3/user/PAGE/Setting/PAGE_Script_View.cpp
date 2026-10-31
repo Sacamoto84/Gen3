@@ -36,7 +36,7 @@ uint16_t view_line_color(const char * s)
 	{
 		case 'C': case 'A': case 'F': return RGB565(255, 170, 90); //CH CR AM FM
 		case 'G':           return RGB565(110, 230, 130); //GOTO
-		case 'D': case 'Y': return RGB565(200, 160, 255); //DELAY YIELD
+		case 'D': case 'Y': case 'W': return RGB565(200, 160, 255); //DELAY YIELD WAIT
 		case 'T':           return COLOR_TEXT_DISABLE;    //Текст
 		default:            return COLOR_TEXT_DEFAULT;    //LOAD PLUS MINUS
 	}
@@ -92,7 +92,7 @@ static void view_draw(int first)
 	tft.driver.ST7789_UpdateDMA16bitV3();
 }
 
-//Просмотр загруженного скрипта и текущей строки. Энкодер листает, клик выход, удержание редактор
+//Просмотр загруженного скрипта и текущей строки. Энкодер листает, клик выход или продолжение WAIT, удержание редактор
 void PAGE_Script_View(void)
 {
 	Font_Smooth_Load(menu_generator.font);
@@ -149,8 +149,11 @@ void PAGE_Script_View(void)
 			break;
 		}
 
-		if (button.isClick())
-			break;
+		if (button.isClick()) {
+			if (!script.waiting)
+				break;
+			script.waiting = false;
+		}
 	}
 
 	button.isClick();

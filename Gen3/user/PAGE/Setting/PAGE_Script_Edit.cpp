@@ -193,7 +193,7 @@ static int edit_pick_grid(const char * title, const char * const * cells, int co
 
 //────────────────────────── Ввод числа ────────────────────────────────────
 
-//Значения в единицах младшего разряда: при frac 1 это десятые
+//Значения в единицах младшего разряда: при frac 1 это десятые, при frac 3 тысячные
 typedef struct {
 	int32_t min;
 	int32_t max;
@@ -209,19 +209,35 @@ static const edit_range range_fm_dev = {    1,  50000,  2000, 1, "Гц" };
 static const edit_range range_fm_fr  = {    1,   1000,   100, 1, "Гц" };
 static const edit_range range_delay  = {    0,  99999,  1000, 0, "мc" };
 static const edit_range range_float  = {    0, 999999,     0, 1, NULL };
+static const edit_range range_mul    = {    1,  99999,  1000, 3, NULL };
 
-//Без лишнего .0, как в готовых скриптах
+static int32_t edit_scale(int frac)
+{
+	int32_t scale = 1;
+	while (frac-- > 0) scale *= 10;
+	return scale;
+}
+
+//Без лишних нулей после точки, как в готовых скриптах
 static void edit_format(char * out, int size, int32_t value, int frac)
 {
-	if (frac && (value % 10))
-		snprintf(out, size, "%ld.%ld", (long) (value / 10), (long) (value % 10));
-	else
-		snprintf(out, size, "%ld", (long) (frac ? value / 10 : value));
+	const int32_t scale = edit_scale(frac);
+	int len = snprintf(out, size, "%ld", (long) (value / scale));
+	int32_t rest = value % scale;
+
+	if (rest) {
+		out[len++] = '.';
+		for (int32_t div = scale / 10; rest && (len < size - 1); div /= 10) {
+			out[len++] = '0' + rest / div;
+			rest %= div;
+		}
+		out[len] = 0;
+	}
 }
 
 static int32_t edit_parse(const char * text, int frac)
 {
-	return (int32_t) (atof(text) * (frac ? 10.0 : 1.0) + 0.5);
+	return (int32_t) (atof(text) * edit_scale(frac) + 0.5);
 }
 
 static void edit_number_draw(const char * title, const edit_range * r, int32_t value, int digits, int cursor, int32_t step, bool preview)
@@ -252,7 +268,7 @@ static void edit_number_draw(const char * title, const edit_range * r, int32_t v
 	for (int i = 1; i < digits; i++) div *= 10;
 
 	for (int i = 0; i < digits; i++) {
-		if (r->frac && (i == digits - 1)) {
+		if (r->frac && (i == digits - r->frac)) {
 			Font_Smooth_drawStr(&tft, x, 50, ".", COLOR_TEXT_DEFAULT);
 			x += 10;
 		}
@@ -282,7 +298,7 @@ static int32_t edit_pick_number(const char * title, const edit_range * r, int32_
 
 	int digits = 1;
 	for (int32_t p = 10; p <= r->max; p *= 10) digits++;
-	if (r->frac && (digits < 2)) digits = 2;
+	if (digits < r->frac + 1) digits = r->frac + 1;
 
 	//Начинаем со старшего значащего разряда, но не ниже единиц
 	int cursor = 0;
@@ -388,7 +404,9 @@ static bool edit_pick_file(const char * title, const char * path, const char * e
 
 //────────────────────────── Сборка команды ────────────────────────────────
 
-static const char * const edit_blocks[] = { "CH1", "CR1", "AM1", "FM1", "GOTO", "IF", "ELSE", "ENDIF", "LOAD", "PLUS", "MINUS", "DELAY", "YIELD", "END" };
+//В сетке 16 клеток с Назад. Новые команды идут во вторую сетку, старые блоки остаются на местах
+static const char * const edit_blocks[] = { "CH1", "CR1", "AM1", "FM1", "GOTO", "IF", "ELSE", "ENDIF", "LOAD", "PLUS", "MINUS", "DELAY", "YIELD", "END", "Еще" };
+static const char * const edit_more[]   = { "MUL", "WAIT" };
 static const char * const edit_ch_parts[] = { "CR", "AM", "FM" };
 static const char * const edit_on_off[]   = { "ON", "OFF" };
 static const char * const edit_cr_am[]    = { "FR", "MOD" };
@@ -398,7 +416,7 @@ static const char * const edit_value[]    = { "Чиcло", "F0", "F1", "F2", "F3
 
 #define COUNT_OF(a) ((int) (sizeof(a) / sizeof((a)[0])))
 
-typedef enum { STEP_DONE, STEP_WORDS, STEP_REG, STEP_NUMBER, STEP_GOTO, STEP_VALUE, STEP_FILE } edit_step_kind;
+typedef enum { STEP_DONE, STEP_BLOCK, STEP_WORDS, STEP_REG, STEP_NUMBER, STEP_GOTO, STEP_VALUE, STEP_FILE } edit_step_kind;
 
 typedef struct {
 	edit_step_kind kind;
@@ -441,7 +459,7 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 	const char * arg = words[1];
 
 	if (pos == 0)
-		return step_words(edit_blocks, COUNT_OF(edit_blocks));
+		return step_kind(STEP_BLOCK, NULL);
 
 	if (strcmp(cmd, "CH1") == 0) {
 		if (pos == 1) return step_words(edit_ch_parts, COUNT_OF(edit_ch_parts));
@@ -476,7 +494,7 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 	}
 
 	if (strcmp(cmd, "DELAY") == 0)
-		return (pos == 1) ? step_kind(STEP_NUMBER, &range_delay) : done;
+		return (pos == 1) ? step_kind(STEP_VALUE, &range_delay) : done;
 
 	if (strcmp(cmd, "IF") == 0) {
 		if (pos == 1) return step_kind(STEP_REG, NULL);
@@ -485,20 +503,19 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 		return done;
 	}
 
-	if ((strcmp(cmd, "PLUS") == 0) || (strcmp(cmd, "MINUS") == 0)) {
+	if ((strcmp(cmd, "PLUS") == 0) || (strcmp(cmd, "MINUS") == 0) || (strcmp(cmd, "LOAD") == 0)) {
 		if (pos == 1) return step_kind(STEP_REG, NULL);
 		if (pos == 2) return step_kind(STEP_VALUE, &range_float);
 		return done;
 	}
 
-	//Движок читает в LOAD только константу
-	if (strcmp(cmd, "LOAD") == 0) {
+	if (strcmp(cmd, "MUL") == 0) {
 		if (pos == 1) return step_kind(STEP_REG, NULL);
-		if (pos == 2) return step_kind(STEP_NUMBER, &range_float);
+		if (pos == 2) return step_kind(STEP_VALUE, &range_mul);
 		return done;
 	}
 
-	return done; //ELSE ENDIF YIELD END без операндов
+	return done; //ELSE ENDIF YIELD END WAIT без операндов
 }
 
 static void edit_ask_number(const char * title, const edit_range * r, const char * hint, bool preview, char * out)
@@ -522,6 +539,29 @@ static bool edit_ask(const edit_step * s, const char * title, const char * hint,
 	int index;
 
 	switch (s->kind) {
+	case STEP_BLOCK: {
+		//Последняя клетка открывает вторую сетку, Назад из нее возвращает в первую
+		const int last = COUNT_OF(edit_blocks) - 1;
+		const int more = edit_word_index(edit_more, COUNT_OF(edit_more), hint);
+
+		index = (strcmp(edit_more[more], hint) == 0) ? last : edit_word_index(edit_blocks, COUNT_OF(edit_blocks), hint);
+
+		while (1) {
+			index = edit_pick_grid(title, edit_blocks, COUNT_OF(edit_blocks), index);
+			if (index < 0) return false;
+
+			const char * word = edit_blocks[index];
+			if (index == last) {
+				const int sub = edit_pick_grid(title, edit_more, COUNT_OF(edit_more), more);
+				if (sub < 0) continue;
+				word = edit_more[sub];
+			}
+
+			snprintf(out, EDIT_WORD_SIZE, "%s", word);
+			return true;
+		}
+	}
+
 	case STEP_WORDS:
 		index = edit_pick_grid(title, s->words, s->count, edit_word_index(s->words, s->count, hint));
 		if (index < 0) return false;
@@ -849,7 +889,7 @@ static bool edit_load_file(const char * name)
 
 	char str[32];
 	edit_lines = 1;
-	while ((edit_lines < PC_MAX) && f_gets(str, sizeof(str), &SDFile))
+	while ((edit_lines < PC_MAX) && script.readLine(str, sizeof(str)))
 		edit_set_line(edit_lines++, str);
 
 	f_close(&SDFile);
@@ -1146,7 +1186,6 @@ static void edit_run(void)
 	script.list[0] = script.Name.buf;
 	script.lines = edit_lines;
 	script.pc_exec = 0;
-	script.endTime = 0;
 	script.start();
 
 	PAGE_Script_View();
