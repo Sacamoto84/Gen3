@@ -28,24 +28,6 @@ void PAGE_generator_CH1_FM_EN_switch(void)
   menu_generator.field.needRender = 1;
 }
 
-void PAGE_generator_CH2_CH_EN_switch(void)
-{ if (Gen.CH2.CH_EN) Gen.CH2.CH_EN = 0; else Gen.CH2.CH_EN = 1;
-  menu_generator.field.needUpdate = 1;
-  menu_generator.field.needRender = 1;
-}
-
-void PAGE_generator_CH2_AM_EN_switch(void)
-{ if (Gen.CH2.AM_EN) Gen.CH2.AM_EN = 0; else Gen.CH2.AM_EN = 1;
-  menu_generator.field.needUpdate = 1;
-  menu_generator.field.needRender = 1;
-}
-
-void PAGE_generator_CH2_FM_EN_switch(void)
-{ if (Gen.CH2.FM_EN) Gen.CH2.FM_EN = 0; else Gen.CH2.FM_EN = 1;
-  menu_generator.field.needUpdate = 1;
-  menu_generator.field.needRender = 1;
-}
-
 
 //Включение отключение блокировки
 void PAGE_generator_encoder_block_switch(void){

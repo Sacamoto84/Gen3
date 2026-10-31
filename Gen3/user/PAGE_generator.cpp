@@ -62,29 +62,6 @@ void PageSelectModulation_onClick(void)
         Font_Smooth_Load(menu_generator.font);
 	}
 
-	if (i == INDEX_CH2_CR) //Carrier
-	{
-		sprintf(Gen.CH2.Carrier_mod,"%s", temp_item[index].text);
-        Gen.Create_Carrier(&Gen.CH2);
-        temp_item[index].field.exit = 1; //Для выхода
-        Font_Smooth_Load(menu_generator.font);
-	}
-
-	if (i == INDEX_CH2_AM_MOD) //AM mod
-	{
-		sprintf(Gen.CH2.AM_mod,"%s", temp_item[index].text);
-        Gen.Create_AM_Modulation(&Gen.CH2);
-        temp_item[index].field.exit = 1; //Для выхода
-        Font_Smooth_Load(menu_generator.font);
-	}
-
-	if (i == INDEX_CH2_FM_MOD) //AM mod
-	{
-		sprintf(Gen.CH2.FM_mod,"%s", temp_item[index].text);
-        Gen.Create_FM_Modulation(&Gen.CH2);
-        temp_item[index].field.exit = 1; //Для выхода
-        Font_Smooth_Load(menu_generator.font);
-	}
 }
 
 //Пре рисуем по index
@@ -100,7 +77,7 @@ void postPageSelectModulation(void){
    {
 
     //Получаем имя файла для отображения на экране
-	if ((i==INDEX_CH1_CR)||(i==INDEX_CH2_CR))
+	if (i==INDEX_CH1_CR)
 		sprintf(filename,"/Carrier/%s", temp_item[index].text);
 	else
 		sprintf(filename,"/Mod/%s", temp_item[index].text);
@@ -122,7 +99,7 @@ void postPageSelectModulation(void){
 	    Gen.buffer_temp[1025] = Gen.buffer_temp[1023];
 
 	    //Carrier
-	   if ((i == INDEX_CH1_CR)||(i == INDEX_CH2_CR))
+	   if (i == INDEX_CH1_CR)
 	   {
 	    tft.LineHW(0, 59, 239, BLUE);
 
@@ -141,7 +118,7 @@ void postPageSelectModulation(void){
 	   }
 
 	    //AM Mod
-	   if ((i==INDEX_CH1_AM_MOD)||(i==INDEX_CH1_FM_MOD)||(i==INDEX_CH2_AM_MOD)||(i==INDEX_CH2_FM_MOD))
+	   if ((i==INDEX_CH1_AM_MOD)||(i==INDEX_CH1_FM_MOD))
 	   {
 	    tft.LineHW(0, 59, 239, BLUE);
 	    tft.LineMoveXY(17, *p/40 + 8);
@@ -165,7 +142,7 @@ void PAGE_generator_select_modulation(void)
 	//Поиск файлов в папке
 	char * path;
 
-	if ((i==INDEX_CH1_CR)||(i==INDEX_CH2_CR))
+	if (i==INDEX_CH1_CR)
 	  path = (char*)"/Carrier";
 	else
 	  path = (char*)"/Mod";
@@ -251,9 +228,6 @@ void prePageGenerator(void)
 		sprintf(item_generator[INDEX_CH1_CR].text," %s", convert_item_modulation(Gen.CH1.Carrier_mod));
 		sprintf(item_generator[INDEX_CH1_AM_MOD].text," %s", convert_item_modulation(Gen.CH1.AM_mod));
 		sprintf(item_generator[INDEX_CH1_FM_MOD].text," %s", convert_item_modulation(Gen.CH1.FM_mod));
-		sprintf(item_generator[INDEX_CH2_CR].text," %s", convert_item_modulation(Gen.CH2.Carrier_mod));
-		sprintf(item_generator[INDEX_CH2_AM_MOD].text," %s", convert_item_modulation(Gen.CH2.AM_mod));
-		sprintf(item_generator[INDEX_CH2_FM_MOD].text," %s", convert_item_modulation(Gen.CH2.FM_mod));
 	}
 }
 

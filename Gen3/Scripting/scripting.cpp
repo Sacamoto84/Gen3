@@ -102,38 +102,26 @@ void Scripting::generatorComand(void){
 
 	    float value;
 
-		uint8_t chanel = 1;
-		chanel = triple.operand0.buf[2] - 0x30; //Номер канала
-
 		uint8_t onoff = 0;
 
-	//╭─ CH1 CH2 ───────────────────────────────────────────────────────────────────╮
-	    if ((triple.operand0 == (char*)"CH1")||(triple.operand0 == (char*)"CH2")) //│
+	//╭─ CH1 ───────────────────────────────────────────────────────────────────────╮
+	    if (triple.operand0 == (char*)"CH1")                                      //│
 	    {                                                                         //│
 	      if (triple.operand2 == (char*)"ON") onoff = 1; else onoff = 0;          //│
 	                                                                              //│
 	      if (triple.operand1 == (char*)"CR")                                     //│
 	      {                                                                       //│
-	    	  if (chanel == 1)                                                    //│
 	    		  G->CH1.CH_EN = onoff;                                           //│
-	    	  else                                                                //│
-	    		  G->CH2.CH_EN = onoff;                                           //│
 	      }                                                                       //│
 	                                                                              //│
 	      if (triple.operand1 == (char*)"AM")                                     //│
 	      {                                                                       //│
-	    	  if (chanel == 1)                                                    //│
 	    		  G->CH1.AM_EN = onoff;                                           //│
-	    	  else                                                                //│
-	    		  G->CH2.AM_EN = onoff;                                           //│
 	      }                                                                       //│
 	                                                                              //│
 	      if (triple.operand1 == (char*)"FM")                                     //│
 	      {                                                                       //│
-	    	  if (chanel == 1)                                                    //│
 	    		  G->CH1.FM_EN = onoff;                                           //│
-	    	  else                                                                //│
-	    		  G->CH2.FM_EN = onoff;                                           //│
 	      }                                                                       //│
 	                                                                              //│
 	      render = 1;                                                             //│
@@ -142,25 +130,18 @@ void Scripting::generatorComand(void){
 	    }                                                                         //│
 	//╰─────────────────────────────────────────────────────────────────────────────╯
 
-	//╭─ CR1 CR2 ───────────────────────────────────────────────────────────────────╮
-		if ((triple.operand0 == (char*)"CR1")||(triple.operand0 == (char*)"CR2")) //│
+	//╭─ CR1 ───────────────────────────────────────────────────────────────────────╮
+		if (triple.operand0 == (char*)"CR1")                                      //│
 		{                                                                         //│
-			//CR[1 2] MOD 01_Sine_12b                                             //│
+			//CR1 MOD 01_Sine_12b                                                 //│
 		    if (triple.operand1 == (char*)"MOD")                                  //│
 		    {                                                                     //│
-		       if (chanel == 1){                                                  //│
 		      	sprintf(G->CH1.Carrier_mod,"%s.dat",triple.operand2.buf);         //│
 	              G->Create_Carrier1();                                           //│
-		       }                                                                  //│
-		       else                                                               //│
-		       {                                                                  //│
-		      	sprintf(G->CH2.Carrier_mod,"%s.dat",triple.operand2.buf);         //│
-		      	G->Create_Carrier2();                                             //│
-		       }                                                                  //│
 		      render = 1;                                                         //│
 		    }                                                                     //│
 		                                                                          //│
-			//CR[1 2] FR 1000.3                                                   //│
+			//CR1 FR 1000.3                                                       //│
 		    if (triple.operand1 == (char*)"FR")                                   //│
 			{
 		       if (triple.operand2.buf[0] == 'F')
@@ -170,10 +151,7 @@ void Scripting::generatorComand(void){
 		       else
 			     value = triple.operand2.toFloat();
 
-			   if (chanel == 1)                                                   //│
-			     G->CH1.Carrier_fr = (uint16_t)value;                             //│
-			   else                                                               //│
-			     G->CH2.Carrier_fr = (uint16_t)value;                             //│
+		       G->CH1.Carrier_fr = (uint16_t)value;                               //│
 			   render = 1;                                                        //│
 			}                                                                     //│
                                                                                   //│
@@ -181,12 +159,12 @@ void Scripting::generatorComand(void){
 		}                                                                         //│
 	//╰─────────────────────────────────────────────────────────────────────────────╯
 
-	//╭─ AM1 AM2 ───────────────────────────────────────────────────────────────────╮
-	    if ((triple.operand0 == (char*)"AM1")||(triple.operand0 == (char*)"AM2")) //│
+	//╭─ AM1 ───────────────────────────────────────────────────────────────────────╮
+	    if (triple.operand0 == (char*)"AM1")                                      //│
 	    {                                                                         //│
-	      //SEGGER_RTT_printf(0, "╭─ AM1 AM2 ─╮\n");                              //│
+	      //SEGGER_RTT_printf(0, "╭─ AM1 ─────╮\n");                              //│
 	    	                                                                      //│
-	      //AM[1 2] FR 1000.3                                                     //│
+	      //AM1 FR 1000.3                                                         //│
 	      if (triple.operand1 == (char*)"FR")                                     //│
 	      {                                                                       //│
 		     if (triple.operand2.buf[0] == 'F')
@@ -196,36 +174,26 @@ void Scripting::generatorComand(void){
 		     else
 			   value = triple.operand2.toFloat();
 
-             if (chanel == 1)                                                     //│
                G->CH1.AM_fr = value;                                              //│
-             else                                                                 //│
-               G->CH2.AM_fr = value;                                              //│
              render = 1;                                                          //│
 	      }                                                                       //│
 	                                                                              //│
-	      //AM[1 2] MOD 02_HWawe { 1.9ms }                                        //│
+	      //AM1 MOD 02_HWawe { 1.9ms }                                            //│
 	      if (triple.operand1 == (char*)"MOD")                                    //│
 	      {                                                                       //│
-	         if (chanel == 1){                                                    //│
 	        	sprintf(G->CH1.AM_mod,"%s.dat",triple.operand2.buf);              //│
                 G->Create_AM_Modulation1();                                       //│
-	         }                                                                    //│
-	         else                                                                 //│
-	         {                                                                    //│
-	        	sprintf(G->CH2.AM_mod,"%s.dat",triple.operand2.buf);              //│
-	        	G->Create_AM_Modulation2();                                       //│
-	         }                                                                    //│
 	        render = 1;                                                           //│
 	      }                                                                       //│
 	      return;                                                                 //│
 	    }                                                                         //│
 	//╰─────────────────────────────────────────────────────────────────────────────╯
-	//╭─ FM1 FM2 ───────────────────────────────────────────────────────────────────╮
-	    if ((triple.operand0 == (char*)"FM1")||(triple.operand0 == (char*)"FM2")) //│
+	//╭─ FM1 ───────────────────────────────────────────────────────────────────────╮
+	    if (triple.operand0 == (char*)"FM1")                                      //│
 	    {                                                                         //│
-	      //SEGGER_RTT_printf(0, "╭─ FM1 FM2 ─╮\n");                              //│
+	      //SEGGER_RTT_printf(0, "╭─ FM1 ─────╮\n");                              //│
 	                                                                              //│
-	      //FM[1 2] BASE 1234.6                                                   //│
+	      //FM1 BASE 1234.6                                                       //│
 	      if (triple.operand1 == (char*)"BASE")                                   //│
 	      {
 		      if (triple.operand2.buf[0] == 'F')
@@ -235,18 +203,12 @@ void Scripting::generatorComand(void){
 		      else
 			    value = triple.operand2.toFloat();
 
-	    	  if (chanel == 1){                                                   //│
 	    	    G->CH1.FM_Base = (uint16_t)value;                                 //│
 	    	    G->Refresh_FM_Modulation1();                                      //│
-	    	  }                                                                   //│
-	    	  else{                                                               //│
-	    	    G->CH2.FM_Base = (uint16_t)value;                                 //│
-	    	    G->Refresh_FM_Modulation2();                                      //│
-	    	  }                                                                   //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
                                                                                   //│
-	      //FM[1 2] DEV  123.8                                                    //│
+	      //FM1 DEV  123.8                                                        //│
 	      if (triple.operand1 == (char*)"DEV")                                    //│
 	      {
 		      if (triple.operand2.buf[0] == 'F')
@@ -256,33 +218,20 @@ void Scripting::generatorComand(void){
 		      else
 			    value = triple.operand2.toFloat();
 
-	    	  if (chanel == 1){                                                   //│
 	    	    G->CH1.FM_Dev = value;                                            //│
 	    	    G->Refresh_FM_Modulation1();                                      //│
-	    	  }                                                                   //│
-	    	  else{                                                               //│
-	    	    G->CH2.FM_Dev = value;                                            //│
-	    	    G->Refresh_FM_Modulation2();                                      //│
-	    	  }                                                                   //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
 	                                                                              //│
-	      //FM[1 2] MOD 02_HWawe                                                  //│
+	      //FM1 MOD 02_HWawe                                                      //│
 	      if (triple.operand1 == (char*)"MOD")                                    //│
 	      {                                                                       //│
-	    	  if (chanel == 1){                                                   //│
 	    	 	 sprintf(G->CH1.FM_mod,"%s.dat",triple.operand2.buf);             //│
 	    	     G->Create_FM_Modulation1();                                      //│
-	    	  }                                                                   //│
-	    	  else                                                                //│
-	    	  {                                                                   //│
-	    	 	 sprintf(G->CH2.FM_mod,"%s.dat",triple.operand2.buf);             //│
-	    	 	 G->Create_FM_Modulation2();                                      //│
-	    	  }                                                                   //│                                                              //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
                                                                                   //│
-	      //FM[1 2] FR   3.5                                                      //│
+	      //FM1 FR   3.5                                                          //│
 	      if (triple.operand1 == (char*)"FR")                                     //│
 	      {                                                                       //│
 		      if (triple.operand2.buf[0] == 'F')
@@ -292,10 +241,7 @@ void Scripting::generatorComand(void){
 		      else
 			    value = triple.operand2.toFloat();
 
-	    	  if (chanel == 1)                                                    //│
 	    	    G->CH1.FM_mod_fr = value;                                         //│
-	    	  else                                                                //│
-	    	    G->CH2.FM_mod_fr = value;                                         //│
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
                                                                                   //│

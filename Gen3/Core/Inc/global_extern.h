@@ -40,7 +40,7 @@ extern TFT_LCD_t LCD_0;
 extern Dir_File_Info_Array Dir_File_Info[] CCMRAM; //Массив всех файлов в папке
 
 //Сформировать и отправить текущие настройки
-extern void sendStructCHtoHost(unsigned int ch);
+extern void sendStructCHtoHost(void);
 
 extern uint32_t DMA_Run_Tick;
 extern uint32_t DMA_Run_us;

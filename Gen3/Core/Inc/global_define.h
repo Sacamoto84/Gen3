@@ -32,20 +32,9 @@
 	#define INDEX_CH1_FM_DEV  8 	      //│
 	#define INDEX_CH1_FM_MOD  9 	      //│
 	#define INDEX_CH1_FM_FR   10 	      //│
- 	 	 	 	 	 	 	 	 	      //│
-	#define INDEX_CH2_EN      11 	 	  //│
-	#define INDEX_CH2_FR      12 	 	  //│
-	#define INDEX_CH2_CR      13 	 	  //│
-	#define INDEX_CH2_AM_EN   14 	 	  //│
-	#define INDEX_CH2_AM_MOD  15 	 	  //│
-	#define INDEX_CH2_AM_FR   16 	 	  //│
-	#define INDEX_CH2_FM_EN   17 	 	  //│
-	#define INDEX_CH2_FM_BASE 18 	 	  //│
-	#define INDEX_CH2_FM_DEV  19 	      //│
-	#define INDEX_CH2_FM_MOD  20 	      //│
-	#define INDEX_CH2_FM_FR   21 	      //│
+	#define INDEX_CH1_FILTER  11 	      //│
 									      //│
-	#define NUM_ITEM_GENERETOR   22       //│
+	#define NUM_ITEM_GENERETOR   12       //│
 //└─────────────────────────────────────────┘
 
 //┌──────────────┬──────────────────────────────────────────────────────────┐

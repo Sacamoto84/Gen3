@@ -158,67 +158,22 @@ extern GENERATOR Gen;
 	   		   items[INDEX_CH1_FM_MOD].field.disable  = 1;      //│
 	   		   items[INDEX_CH1_FM_FR].field.disable   = 1;      //│
 	   	   }                                                    //│
-	   	                                                        //│
-	   	   if (Gen.CH2.CH_EN)                                   //│
-	   	   {                                                    //│
-	   		   items[INDEX_CH2_CR].field.disable      = 0;      //│
-	   		   items[INDEX_CH2_AM_EN].field.disable   = 0;      //│
-	   		   if (Gen.CH2.AM_EN)                               //│
-	   		   {                                                //│
-	   		     items[INDEX_CH2_AM_MOD].field.disable  = 0;    //│
-	   		     items[INDEX_CH2_AM_FR].field.disable   = 0;    //│
-	   		   }                                                //│
-	   		   else                                             //│
-	   		   {                                                //│
-	   			 items[INDEX_CH2_AM_MOD].field.disable  = 1;    //│
-	   			 items[INDEX_CH2_AM_FR].field.disable   = 1;    //│
-	   		   }                                                //│
-	   		   items[INDEX_CH2_FM_EN].field.disable   = 0;      //│
-	   		   if (Gen.CH2.FM_EN)                               //│
-	   	        {                                               //│
-	   			   items[INDEX_CH2_FM_BASE].field.disable = 0;  //│
-	   			   items[INDEX_CH2_FM_DEV].field.disable  = 0;  //│
-	   			   items[INDEX_CH2_FM_MOD].field.disable  = 0;  //│
-	   			   items[INDEX_CH2_FM_FR].field.disable   = 0;  //│
-	   			   items[INDEX_CH2_FR].field.disable      = 1;  //│
-	   			}                                               //│
-	   		   else                                             //│
-	   		   {                                                //│
-	   			   items[INDEX_CH2_FM_BASE].field.disable = 1;  //│
-	   			   items[INDEX_CH2_FM_DEV].field.disable  = 1;  //│
-	   			   items[INDEX_CH2_FM_MOD].field.disable  = 1;  //│
-	   			   items[INDEX_CH2_FM_FR].field.disable   = 1;  //│
-	   			   items[INDEX_CH2_FR].field.disable      = 0;  //│
-	   		   }                                                //│
-	   	   }                                                    //│
-	   	   else                                                 //│
-	   	   {                                                    //│
-	   		   items[INDEX_CH2_FR].field.disable      = 1;      //│
-	   		   items[INDEX_CH2_CR].field.disable      = 1;      //│
-	   		   items[INDEX_CH2_AM_EN].field.disable   = 1;      //│
-	   		   items[INDEX_CH2_AM_MOD].field.disable  = 1;      //│
-	   		   items[INDEX_CH2_AM_FR].field.disable   = 1;      //│
-	   		   items[INDEX_CH2_FM_EN].field.disable   = 1;      //│
-	   		   items[INDEX_CH2_FM_BASE].field.disable = 1;      //│
-	   		   items[INDEX_CH2_FM_DEV].field.disable  = 1;      //│
-	   		   items[INDEX_CH2_FM_MOD].field.disable  = 1;      //│
-	   		   items[INDEX_CH2_FM_FR].field.disable   = 1;      //│
-	   	   }                                                    //│
 	   	   //─────────────────────────────────────────────────────┘
    }
 
    //┌───────────────────────────────────────────────────┐
-   //│ Рендер в две колонки                              │
+   //│ Рендер в одну колонку                             │
    //└───────────────────────────────────────────────────┤
    void run2(uint8_t i)
    {
+	   const int16_t y = item_start_y + item_height * i;
+
 	   //┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐
 	   //│ Рисуем выбранную строку                                                33us -Of GenOn На выделенном │
 	   //└─────────────────────────────────────────────────────────────────────────────────────────────────────┤
 	   if (i == index)                                                                                       //│
 	   {                                                                                                     //│
-	      tft.RectangleFilled( (i < ((max_item+1)/2)) ? 0 : 119,                                             //│
-	    			item_start_y + item_height * (i % ((max_item+1)/2)), 119, item_height, COLOR_RECTAGLE); //│
+	      tft.RectangleFilled(0, y, 240, item_height, COLOR_RECTAGLE);                                       //│
 	      tft.uTFT.GetColor = 1;                                                                             //│
 	   }                                                                                                     //│
 	   else                                                                                                  //│
@@ -240,12 +195,12 @@ extern GENERATOR Gen;
 	   {
 		   //1500us
 		   if (items[i].text_color != -1)
-			   Font_Smooth_drawStr(&tft, (i < ((max_item+1)/2)) ? 0 : 119  + item_text_delta_x, 8 + item_height * (i % item_count) - 1 + item_start_y + item_text_delta_y, items[i].text, (uint16_t) items[i].text_color);
+			   Font_Smooth_drawStr(&tft, item_text_delta_x, 8 + y - 1 + item_text_delta_y, items[i].text, (uint16_t) items[i].text_color);
 		   else
-			   Font_Smooth_drawStr(&tft, (i < ((max_item+1)/2)) ? 0 : 119  + item_text_delta_x, 8 + item_height * (i % item_count) - 1 + item_start_y + item_text_delta_y, items[i].text, (i == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT);
+			   Font_Smooth_drawStr(&tft, item_text_delta_x, 8 + y - 1 + item_text_delta_y, items[i].text, (i == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT);
 	   }
 	   else
-		   Font_Smooth_drawStr(&tft, (i < ((max_item+1)/2)) ? 0 : 119  + item_text_delta_x, 8 + item_height * (i % item_count) - 1 + item_start_y + item_text_delta_y, items[i].text, COLOR_TEXT_DISABLE);
+		   Font_Smooth_drawStr(&tft, item_text_delta_x, 8 + y - 1 + item_text_delta_y, items[i].text, COLOR_TEXT_DISABLE);
 	   //─────────────────────────────────────────────────────┘
 
 	   //┌────────────────────────────────────────────────────┐
@@ -266,9 +221,9 @@ extern GENERATOR Gen;
 
                    switch (bmp.bit)
                    {
-                   	  case 32: BitmapFromFlash32b(&tft,(i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
-                   	  case 24: BitmapFromFlash24b (&tft,(i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
-                      case 16: BitmapFromFlash16b (&tft,(i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
+                   	  case 32: BitmapFromFlash32b(&tft, 0, y, &bmp);	break;
+                   	  case 24: BitmapFromFlash24b(&tft, 0, y, &bmp);	break;
+                      case 16: BitmapFromFlash16b(&tft, 0, y, &bmp);	break;
                    }
 	    		}
 	    	}
@@ -280,9 +235,9 @@ extern GENERATOR Gen;
 
 	    			switch (bmp.bit)
 	                {
-	                   case 32: BitmapFromFlash32b(&tft, (i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
-	                   case 24: BitmapFromFlash24b(&tft, (i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
-	                   case 16: BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119, item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);	break;
+	                   case 32: BitmapFromFlash32b(&tft, 0, y, &bmp);	break;
+	                   case 24: BitmapFromFlash24b(&tft, 0, y, &bmp);	break;
+	                   case 16: BitmapFromFlash16b(&tft, 0, y, &bmp);	break;
 	                }
 
 	    		}
@@ -295,14 +250,12 @@ extern GENERATOR Gen;
 	    	if (Gen.CH1.AM_EN)
 	    	{
 	    	  bmp = getResBitmapID(id_ON_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
+              BitmapFromFlash16b(&tft, 0, y, &bmp);
 	    	}
 	    	else
 	    	{
 	    	  bmp = getResBitmapID(id_OFF_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
+              BitmapFromFlash16b(&tft, 0, y, &bmp);
 	    	}
 	    }
 
@@ -311,46 +264,12 @@ extern GENERATOR Gen;
 	    	if (Gen.CH1.FM_EN)
 	    	{
 	    	  bmp = getResBitmapID(id_ON_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
+              BitmapFromFlash16b(&tft, 0, y, &bmp);
 	    	}
 	    	else
 	    	{
 	    	  bmp = getResBitmapID(id_OFF_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
-	    	}
-	    }
-
-	    if   ( (i == INDEX_CH2_AM_EN) && (Gen.CH2.CH_EN == 0))
-	    {
-	    	if (Gen.CH2.AM_EN)
-	    	{
-	    	  bmp = getResBitmapID(id_ON_DISABLE);
-              BitmapFromFlash16b(&tft,(i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
-	    	}
-	    	else
-	    	{
-	    	  bmp = getResBitmapID(id_OFF_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
-	    	}
-	    }
-
-	    if   ( (i == INDEX_CH2_FM_EN) && (Gen.CH2.CH_EN == 0))
-	    {
-	    	if (Gen.CH2.FM_EN)
-	    	{
-	    	  bmp = getResBitmapID(id_ON_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
-	    	}
-	    	else
-	    	{
-	    	  bmp = getResBitmapID(id_OFF_DISABLE);
-              BitmapFromFlash16b(&tft, (i < ((max_item+1)/2)) ? 0 : 119,
-            		  item_start_y + item_height * (i % ((max_item+1)/2)), &bmp);
+              BitmapFromFlash16b(&tft, 0, y, &bmp);
 	    	}
 	    }
 

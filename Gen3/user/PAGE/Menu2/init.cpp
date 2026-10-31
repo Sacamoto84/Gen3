@@ -70,69 +70,14 @@ void PAGE_init_struct_generator(void)
 	item_generator[INDEX_CH1_FM_FR].callBackFunc_isClick  = &PAGE_generator_encoder_block_switch;
 	item_generator[INDEX_CH1_FM_FR].preCallBackFunc = &generator_pre_CH1_FM_FR;
 
-
-
-	//page_item_generator[12].text = (char*) "CH2 EN";
-	item_generator[INDEX_CH2_EN].callBackFunc_isClick = &PAGE_generator_CH2_CH_EN_switch;
-	item_generator[INDEX_CH2_EN].preCallBackFunc      = &generator_pre_CH2_EN;
-	item_generator[INDEX_CH2_EN].gif_init_state       = &Gen.CH2.CH_EN;
-	item_generator[INDEX_CH2_EN].resid_last  = id_OFF;
-	item_generator[INDEX_CH2_EN].resid_first = id_ON;
-
-	//page_item_generator[13].text = (char*) "CR 1000Hz";
-	item_generator[INDEX_CH2_FR].callBackFunc_isClick = &PAGE_generator_encoder_block_switch;
-	item_generator[INDEX_CH2_FR].preCallBackFunc      = &generator_pre_CH2_FR;
-
-
-	//page_item_generator[14].text = (char*) "CR SINUS";
-	item_generator[INDEX_CH2_CR].callBackFunc_isClick = &PAGE_generator_select_modulation;
-
-	//page_item_generator[15].text = (char*) "AM EN";
-	item_generator[INDEX_CH2_AM_EN].callBackFunc_isClick = &PAGE_generator_CH2_AM_EN_switch;
-	item_generator[INDEX_CH2_AM_EN].preCallBackFunc = &generator_pre_CH2_AM_EN;
-	item_generator[INDEX_CH2_AM_EN].gif_init_state  = &Gen.CH2.AM_EN;
-	item_generator[INDEX_CH2_AM_EN].resid_last  = id_OFF;
-	item_generator[INDEX_CH2_AM_EN].resid_first = id_ON;
-
-	//page_item_generator[16].text = (char*) "--CHARP";
-	item_generator[INDEX_CH2_AM_MOD].callBackFunc_isClick  = &PAGE_generator_select_modulation;
-
-	//page_item_generator[17].text = (char*) "AM 10.4 Hz";
-	item_generator[INDEX_CH2_AM_FR].callBackFunc_isClick  = &PAGE_generator_encoder_block_switch;
-	item_generator[INDEX_CH2_AM_FR].preCallBackFunc = &generator_pre_CH2_AM_FR;
-
-	//────────────────────────────────────────────────────────────────────
-	//page_item_generator[18].text = (char*) "FM Base 2500";
-	item_generator[INDEX_CH2_FM_EN].callBackFunc_isClick  = &PAGE_generator_CH2_FM_EN_switch;
-	item_generator[INDEX_CH2_FM_EN].preCallBackFunc       = &generator_pre_CH2_FM_EN;
-	item_generator[INDEX_CH2_FM_EN].gif_init_state        = &Gen.CH2.FM_EN;
-	item_generator[INDEX_CH2_FM_EN].resid_last            = id_OFF;
-	item_generator[INDEX_CH2_FM_EN].resid_first           = id_ON;
-
-
-	//page_item_generator[19].text = (char*) "--Div 200";
-	item_generator[INDEX_CH2_FM_BASE].callBackFunc_isClick = &PAGE_generator_encoder_block_switch;
-	item_generator[INDEX_CH2_FM_BASE].preCallBackFunc = &generator_pre_CH2_FM_BASE;
-
-	//────────────────────────────────────────────────────────────────────
-	//page_item_generator[20].text = (char*) "--SIN ";
-	item_generator[INDEX_CH2_FM_DEV].callBackFunc_isClick = &PAGE_generator_encoder_block_switch;
-	item_generator[INDEX_CH2_FM_DEV].preCallBackFunc = &generator_pre_CH2_FM_DEV;
-
-	//────────────────────────────────────────────────────────────────────
-	//page_item_generator[21].text = (char*) "--12.5 Hz ";
-	item_generator[INDEX_CH2_FM_MOD].callBackFunc_isClick  = &PAGE_generator_select_modulation;
-
-	//────────────────────────────────────────────────────────────────────
-	item_generator[INDEX_CH2_FM_FR].callBackFunc_isClick  = &PAGE_generator_encoder_block_switch;
-	item_generator[INDEX_CH2_FM_FR].preCallBackFunc       = &generator_pre_CH2_FM_FR;
-
+	item_generator[INDEX_CH1_FILTER].callBackFunc_isClick = &PAGE_Filter;
+	item_generator[INDEX_CH1_FILTER].preCallBackFunc      = &generator_pre_FILTER;
 
 	//┌───────────────────────────────────────────────────────────────────┐
 	//│  Описание как рендерить меню                                      │
 	//└──────────────────────────────────────────────────┬────────────────┤
-	menu_generator.item_count   = 11;                  //│                │
-	menu_generator.item_height  = 21;                  //│                │
+	menu_generator.item_count   = NUM_ITEM_GENERETOR;  //│                │
+	menu_generator.item_height  = 20;                  //│ 12 строк в 240 │
 	menu_generator.item_start_y = 0;                   //│                │
 	                                                   //│                │
 	menu_generator.item_text_delta_y = -4;             //│                │

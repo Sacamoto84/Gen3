@@ -48,29 +48,20 @@ extern void PAGE_generator_CH1_CH_EN_switch(void);
 extern void PAGE_generator_CH1_AM_EN_switch(void);
 extern void PAGE_generator_CH1_FM_EN_switch(void);
 
-extern void PAGE_generator_CH2_CH_EN_switch(void);
-extern void PAGE_generator_CH2_AM_EN_switch(void);
-extern void PAGE_generator_CH2_FM_EN_switch(void);
-
 extern void PAGE_generator_encoder_block_switch(void);
 extern void PAGE_generator_select_modulation(void);
 
 extern void generator_pre_CH1_FR(uint32_t index);
-extern void generator_pre_CH2_FR(uint32_t index);
 extern void generator_pre_CH1_AM_FR(uint32_t index);
-extern void generator_pre_CH2_AM_FR(uint32_t index);
 extern void generator_pre_CH1_FM_BASE(uint32_t index);
-extern void generator_pre_CH2_FM_BASE(uint32_t index);
 extern void generator_pre_CH1_FM_DEV(uint32_t index);
-extern void generator_pre_CH2_FM_DEV(uint32_t index);
 extern void generator_pre_CH1_FM_FR(uint32_t index);
-extern void generator_pre_CH2_FM_FR(uint32_t index);
 extern void generator_pre_CH1_EN(uint32_t index);
-extern void generator_pre_CH2_EN(uint32_t index);
 extern void generator_pre_CH1_AM_EN(uint32_t index);
-extern void generator_pre_CH2_AM_EN(uint32_t index);
 extern void generator_pre_CH1_FM_EN(uint32_t index);
-extern void generator_pre_CH2_FM_EN(uint32_t index);
+extern void generator_pre_FILTER(uint32_t index);
+
+extern void PAGE_Filter(void);
 
 extern void setting_save_click(void);
 extern void setting_script_stop(void);

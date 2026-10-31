@@ -129,7 +129,7 @@ void ConvertString1251ToDos ( char *str )
 } // ConvertStringDosTo1251
 
 //Сформировать и отправить текущие настройки
-void sendStructCHtoHost(unsigned int ch)
+void sendStructCHtoHost(void)
 {
 
 	char buffer[256]  __attribute__((aligned (4)));
@@ -141,39 +141,39 @@ void sendStructCHtoHost(unsigned int ch)
 
 	LOG( (char*)"F", 'I',(char*)"sendStructCHtoHost");
 
-	strcat(buffer, (ch) ? "!51#" : "!50#");
+	strcat(buffer, "!50#");
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.CH_EN : Gen.CH1.CH_EN);
+	sprintf(str_temp, "%d,", Gen.CH1.CH_EN);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.Carrier_fr : Gen.CH1.Carrier_fr);
+	sprintf(str_temp, "%d,", Gen.CH1.Carrier_fr);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%s,", (ch)? Gen.CH2.Carrier_mod: Gen.CH1.Carrier_mod);
+	sprintf(str_temp, "%s,", Gen.CH1.Carrier_mod);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.AM_EN : Gen.CH1.AM_EN);
+	sprintf(str_temp, "%d,", Gen.CH1.AM_EN);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%.1f,", (ch)? Gen.CH2.AM_fr : Gen.CH1.AM_fr);
+	sprintf(str_temp, "%.1f,", Gen.CH1.AM_fr);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%s,", (ch)? Gen.CH2.AM_mod : Gen.CH1.AM_mod);
+	sprintf(str_temp, "%s,", Gen.CH1.AM_mod);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.FM_EN : Gen.CH1.FM_EN);
+	sprintf(str_temp, "%d,", Gen.CH1.FM_EN);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.FM_Base : Gen.CH1.FM_Base);
+	sprintf(str_temp, "%d,", Gen.CH1.FM_Base);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%d,", (ch)? Gen.CH2.FM_Dev : Gen.CH1.FM_Dev);
+	sprintf(str_temp, "%d,", Gen.CH1.FM_Dev);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%.1f,", (ch)? Gen.CH2.FM_mod_fr : Gen.CH1.FM_mod_fr);
+	sprintf(str_temp, "%.1f,", Gen.CH1.FM_mod_fr);
 	strcat (buffer,str_temp);
 
-	sprintf(str_temp, "%s", (ch)? Gen.CH2.FM_mod : Gen.CH1.FM_mod);
+	sprintf(str_temp, "%s", Gen.CH1.FM_mod);
 	strcat (buffer,str_temp);
 
 	crc = CRC8(&buffer[1], strlen(buffer)-1);
@@ -238,9 +238,8 @@ void comandRead_ConfCallback(cmd* c)
 	String invertValue = invertArg.getValue();
 	int argIntValue = StrToInt(invertValue);
 
-    if (argIntValue == 0) 	sendStructCHtoHost(0);
-    if (argIntValue == 1) 	sendStructCHtoHost(1);
-    if (argIntValue == 2) 	{sendStructCHtoHost(0); sendStructCHtoHost(1);}
+    if (argIntValue == 0) 	sendStructCHtoHost();
+    if (argIntValue == 2) 	sendStructCHtoHost();
 
 }
 
