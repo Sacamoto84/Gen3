@@ -711,20 +711,22 @@ static bool edit_is_full(void)
 	return true;
 }
 
-//Новая строка перед at. Номер цели GOTO выбирается уже с учетом вставки
-static void edit_add_line(int at)
+//Новая строка перед at. Номер цели GOTO выбирается уже с учетом вставки. true если строка добавлена
+static bool edit_add_line(int at)
 {
 	if (edit_is_full())
-		return;
+		return false;
 
 	edit_insert(at);
 
 	if (edit_build("", edit_list[at])) {
 		edit_modified = true;
 		edit_cursor = at + 1;
+		return true;
 	}
-	else
-		edit_delete(at);
+
+	edit_delete(at);
+	return false;
 }
 
 static void edit_list_draw(bool moving)
@@ -797,7 +799,7 @@ static void edit_move(void)
 
 static void edit_line_menu(void)
 {
-	static const char * const rows[] = { "Вcтавить выше", "Изменить", "Копия", "Перемеcтить", "Удалить", "Назад" };
+	static const char * const rows[] = { "Вcтавить выше", "Вcтавить ниже", "Изменить", "Копия", "Перемеcтить", "Удалить", "Назад" };
 
 	const int at = edit_cursor;
 
@@ -805,7 +807,7 @@ static void edit_line_menu(void)
 	snprintf(title, sizeof(title), "%d: %s", at, edit_list[at]);
 
 	const int action = edit_pick_list(title, rows, COUNT_OF(rows), edit_menu_pos);
-	if ((action < 0) || (action == 5))
+	if ((action < 0) || (action == 6))
 		return;
 
 	edit_menu_pos = action;
@@ -815,7 +817,13 @@ static void edit_line_menu(void)
 		edit_add_line(at);
 		break;
 
-	case 1: {
+	case 1:
+		//Курсор на новой строке: следующая вставка подряд пойдет под нее, порядок как при наборе
+		if (edit_add_line(at + 1))
+			edit_cursor = at + 1;
+		break;
+
+	case 2: {
 		char text[CMD_LEN];
 		if (edit_build(edit_list[at], text)) {
 			memcpy(edit_list[at], text, CMD_LEN);
@@ -824,7 +832,7 @@ static void edit_line_menu(void)
 		break;
 	}
 
-	case 2:
+	case 3:
 		if (edit_is_full())
 			break;
 		edit_insert(at + 1);
@@ -833,11 +841,11 @@ static void edit_line_menu(void)
 		edit_modified = true;
 		break;
 
-	case 3:
+	case 4:
 		edit_move();
 		break;
 
-	case 4:
+	case 5:
 		edit_delete(at);
 		edit_modified = true;
 		break;
