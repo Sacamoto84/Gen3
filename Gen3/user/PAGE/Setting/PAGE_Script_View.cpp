@@ -1,6 +1,7 @@
 #include "Page.h"
 #include "global_define.h"
 #include "stdio.h"
+#include "stdlib.h"
 #include "string.h"
 
 #include "menu_typedef.h"
@@ -19,6 +20,7 @@ extern Scripting script;
 	#define VIEW_ROWS       10                            //│ Плюс строка заголовка
 	#define VIEW_TEXT_DY    3                             //│ Как на рабочем экране
 	#define VIEW_NUMBER_W   34                            //│ Ширина колонки номера
+	#define VIEW_INDENT_STEP 8                            //│ Шаг отступа на уровень вложенности (~1 символ)
 	#define VIEW_ABOVE      3                             //│ Строк над текущей
 	#define VIEW_FRAME_MS   50                            //│ Не чаще 20 кадров в секунду
 	#define VIEW_MANUAL_MS  3000                          //│ После энкодера снова за текущей строкой
@@ -96,9 +98,65 @@ static int view_first_for(int pc, int last_first)
 	return first;
 }
 
+//Вычисление отступов для строк скрипта (0..3 уровня, шаг VIEW_INDENT_STEP)
+static void view_compute_indents(uint8_t * indents)
+{
+	bool is_sub[PC_MAX] = {false};
+
+	for (int i = 1; i < script.lines; i++) {
+		const char * s = script.list[i].buf;
+		while (*s == ' ' || *s == '\t') s++;
+		if ((strncmp(s, "GOSUB", 5) == 0) && (s[5] == ' ' || s[5] == '\t')) {
+			int target = atoi(s + 5);
+			if ((target >= 1) && (target < script.lines))
+				is_sub[target] = true;
+		}
+	}
+
+	int sub_depth = 0;
+	int if_depth = 0;
+
+	for (int i = 1; i < script.lines; i++) {
+		const char * s = script.list[i].buf;
+		while (*s == ' ' || *s == '\t') s++;
+
+		if (is_sub[i])
+			sub_depth = 1;
+
+		int indent = sub_depth + if_depth;
+
+		if ((strncmp(s, "IF", 2) == 0) && (s[2] == ' ' || s[2] == '\t')) {
+			indent = sub_depth + if_depth;
+			if (if_depth < 3) if_depth++;
+		}
+		else if ((strncmp(s, "ELSE", 4) == 0) && (s[4] == ' ' || s[4] == '\t' || s[4] == '\r' || s[4] == '\n' || s[4] == 0)) {
+			indent = sub_depth + (if_depth > 0 ? if_depth - 1 : 0);
+		}
+		else if ((strncmp(s, "ENDIF", 5) == 0) && (s[5] == ' ' || s[5] == '\t' || s[5] == '\r' || s[5] == '\n' || s[5] == 0)) {
+			if (if_depth > 0) if_depth--;
+			indent = sub_depth + if_depth;
+		}
+		else if ((strncmp(s, "RET", 3) == 0) && (s[3] == ' ' || s[3] == '\t' || s[3] == '\r' || s[3] == '\n' || s[3] == 0)) {
+			indent = sub_depth + if_depth;
+			sub_depth = 0;
+		}
+		else if ((strncmp(s, "END", 3) == 0) && (s[3] == ' ' || s[3] == '\t' || s[3] == '\r' || s[3] == '\n' || s[3] == 0)) {
+			indent = 0;
+			sub_depth = 0;
+			if_depth = 0;
+		}
+
+		if (indent > 3) indent = 3;
+		if (indent < 0) indent = 0;
+		indents[i] = (uint8_t) indent;
+	}
+}
+
 static void view_draw(int first, int rows, uint16_t used)
 {
 	char str[32];
+	uint8_t indents[PC_MAX] = {0};
+	view_compute_indents(indents);
 
 	tft.Fill16(COLOR_BACKGROUND);
 
@@ -131,7 +189,8 @@ static void view_draw(int first, int rows, uint16_t used)
 
 		snprintf(str, sizeof(str), "%s", script.list[i].buf);
 		str[strcspn(str, "\r\n")] = 0;
-		Font_Smooth_drawStr(&tft, VIEW_NUMBER_W, y + VIEW_TEXT_DY, str, current ? COLOR_TEXT_SELECT : view_line_color(str));
+		const int x = VIEW_NUMBER_W + indents[i] * VIEW_INDENT_STEP;
+		Font_Smooth_drawStr(&tft, x, y + VIEW_TEXT_DY, str, current ? COLOR_TEXT_SELECT : view_line_color(str));
 	}
 
 	if (used)

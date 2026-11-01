@@ -66,9 +66,9 @@ static void setting_pre_volume(uint32_t index)
 			menu_setting.field.needUpdate = 1;
 		}
 
-		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "> %d%% <", Gen.Volume_Get());
+		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "> %d <", Gen.Volume_Get());
 	} else {
-		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "Громк. %d%%", Gen.Volume_Get());
+		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "Громк. %d", Gen.Volume_Get());
 	}
 }
 

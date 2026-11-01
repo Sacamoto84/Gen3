@@ -27,6 +27,7 @@ extern uint16_t view_line_color(const char * s);
 	#define EDIT_ROWS       10                            //│ Плюс строка заголовка
 	#define EDIT_TEXT_DY    3                             //│ Как на рабочем экране
 	#define EDIT_NUMBER_W   34                            //│ Ширина колонки номера
+	#define EDIT_INDENT_STEP 8                            //│ Шаг отступа на уровень вложенности (~1 символ)
 	#define EDIT_TEXT_MAX   (CMD_LEN - 2)                 //│ Без \n и нуля, движок добавит \n
 	#define EDIT_GRID_W     60                            //│ Клетка сетки
 	#define EDIT_GRID_H     54                            //│
@@ -760,9 +761,65 @@ static bool edit_add_line(int at)
 	return false;
 }
 
+//Вычисление отступов для строк редактора (0..3 уровня, шаг EDIT_INDENT_STEP)
+static void edit_compute_indents(uint8_t * indents)
+{
+	bool is_sub[PC_MAX] = {false};
+
+	for (int i = 1; i < edit_lines; i++) {
+		const char * s = edit_list[i];
+		while (*s == ' ' || *s == '\t') s++;
+		if ((strncmp(s, "GOSUB", 5) == 0) && (s[5] == ' ' || s[5] == '\t')) {
+			int target = atoi(s + 5);
+			if ((target >= 1) && (target < edit_lines))
+				is_sub[target] = true;
+		}
+	}
+
+	int sub_depth = 0;
+	int if_depth = 0;
+
+	for (int i = 1; i < edit_lines; i++) {
+		const char * s = edit_list[i];
+		while (*s == ' ' || *s == '\t') s++;
+
+		if (is_sub[i])
+			sub_depth = 1;
+
+		int indent = sub_depth + if_depth;
+
+		if ((strncmp(s, "IF", 2) == 0) && (s[2] == ' ' || s[2] == '\t')) {
+			indent = sub_depth + if_depth;
+			if (if_depth < 3) if_depth++;
+		}
+		else if ((strncmp(s, "ELSE", 4) == 0) && (s[4] == ' ' || s[4] == '\t' || s[4] == '\r' || s[4] == '\n' || s[4] == 0)) {
+			indent = sub_depth + (if_depth > 0 ? if_depth - 1 : 0);
+		}
+		else if ((strncmp(s, "ENDIF", 5) == 0) && (s[5] == ' ' || s[5] == '\t' || s[5] == '\r' || s[5] == '\n' || s[5] == 0)) {
+			if (if_depth > 0) if_depth--;
+			indent = sub_depth + if_depth;
+		}
+		else if ((strncmp(s, "RET", 3) == 0) && (s[3] == ' ' || s[3] == '\t' || s[3] == '\r' || s[3] == '\n' || s[3] == 0)) {
+			indent = sub_depth + if_depth;
+			sub_depth = 0;
+		}
+		else if ((strncmp(s, "END", 3) == 0) && (s[3] == ' ' || s[3] == '\t' || s[3] == '\r' || s[3] == '\n' || s[3] == 0)) {
+			indent = 0;
+			sub_depth = 0;
+			if_depth = 0;
+		}
+
+		if (indent > 3) indent = 3;
+		if (indent < 0) indent = 0;
+		indents[i] = (uint8_t) indent;
+	}
+}
+
 static void edit_list_draw(bool moving)
 {
 	char str[32];
+	uint8_t indents[PC_MAX] = {0};
+	edit_compute_indents(indents);
 
 	if (edit_cursor < edit_first) edit_first = edit_cursor;
 	if (edit_cursor >= edit_first + EDIT_ROWS) edit_first = edit_cursor - EDIT_ROWS + 1;
@@ -789,7 +846,8 @@ static void edit_list_draw(bool moving)
 
 		snprintf(str, sizeof(str), "%d", i);
 		Font_Smooth_drawStr(&tft, 2, y + EDIT_TEXT_DY, str, current ? COLOR_TEXT_SELECT : COLOR_TEXT_DISABLE);
-		Font_Smooth_drawStr(&tft, EDIT_NUMBER_W, y + EDIT_TEXT_DY, edit_list[i], current ? COLOR_TEXT_SELECT : view_line_color(edit_list[i]));
+		const int x = EDIT_NUMBER_W + indents[i] * EDIT_INDENT_STEP;
+		Font_Smooth_drawStr(&tft, x, y + EDIT_TEXT_DY, edit_list[i], current ? COLOR_TEXT_SELECT : view_line_color(edit_list[i]));
 	}
 
 	tft.driver.ST7789_UpdateDMA16bitV3();
