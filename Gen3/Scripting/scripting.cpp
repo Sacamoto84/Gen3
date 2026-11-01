@@ -125,7 +125,8 @@ void Scripting::comandPlusMinus(){
 	if      (triple.operand0 == (char*)"MINUS") *r -= value;
 	else if (triple.operand0 == (char*)"PLUS")  *r += value;
 	else if (triple.operand0 == (char*)"MUL")   *r *= value;
-	else comandError();
+	else if ((triple.operand0 == (char*)"DIV") && (value != 0.0F)) *r /= value;
+	else comandError(); //В том числе деление на ноль
 }
 
 void Scripting::generatorComand(void){
@@ -452,6 +453,10 @@ void Scripting::CMD_EXE(void){
 			triple = excretionTripleOperand(comand);
 			const float d = opValue(triple.operand1);
 			endTime = uwTick + ((d > 0.0F) ? (uint32_t) d : 0);
+			pc++;
+		}
+		else if (comand.indexOf((char*) "DIV", 0) == 0) {
+			comandPlusMinus();
 			pc++;
 		}
 		else

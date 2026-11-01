@@ -31,6 +31,8 @@ uint16_t view_line_color(const char * s)
 		return RGB565(90, 200, 255);
 	if (strncmp(s, "END", 3) == 0)
 		return RGB565(255, 220, 60);
+	if (strncmp(s, "DIV", 3) == 0)
+		return COLOR_TEXT_DEFAULT;
 
 	switch (s[0])
 	{
@@ -38,7 +40,7 @@ uint16_t view_line_color(const char * s)
 		case 'G':           return RGB565(110, 230, 130); //GOTO
 		case 'D': case 'Y': case 'W': return RGB565(200, 160, 255); //DELAY YIELD WAIT
 		case 'T':           return COLOR_TEXT_DISABLE;    //Текст
-		default:            return COLOR_TEXT_DEFAULT;    //LOAD PLUS MINUS
+		default:            return COLOR_TEXT_DEFAULT;    //LOAD PLUS MINUS MUL
 	}
 }
 

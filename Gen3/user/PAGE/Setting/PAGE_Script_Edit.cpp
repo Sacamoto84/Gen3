@@ -406,7 +406,7 @@ static bool edit_pick_file(const char * title, const char * path, const char * e
 
 //В сетке 16 клеток с Назад. Новые команды идут во вторую сетку, старые блоки остаются на местах
 static const char * const edit_blocks[] = { "CH1", "CR1", "AM1", "FM1", "GOTO", "IF", "ELSE", "ENDIF", "LOAD", "PLUS", "MINUS", "DELAY", "YIELD", "END", "Еще" };
-static const char * const edit_more[]   = { "MUL", "WAIT" };
+static const char * const edit_more[]   = { "MUL", "DIV", "WAIT" };
 static const char * const edit_ch_parts[] = { "CR", "AM", "FM" };
 static const char * const edit_on_off[]   = { "ON", "OFF" };
 static const char * const edit_cr_am[]    = { "FR", "MOD" };
@@ -509,7 +509,7 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 		return done;
 	}
 
-	if (strcmp(cmd, "MUL") == 0) {
+	if ((strcmp(cmd, "MUL") == 0) || (strcmp(cmd, "DIV") == 0)) {
 		if (pos == 1) return step_kind(STEP_REG, NULL);
 		if (pos == 2) return step_kind(STEP_VALUE, &range_mul);
 		return done;
