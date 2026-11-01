@@ -406,7 +406,7 @@ static bool edit_pick_file(const char * title, const char * path, const char * e
 
 //В сетке 16 клеток с Назад. Новые команды идут во вторую сетку, старые блоки остаются на местах
 static const char * const edit_blocks[] = { "CH1", "CR1", "AM1", "FM1", "GOTO", "IF", "ELSE", "ENDIF", "LOAD", "PLUS", "MINUS", "DELAY", "YIELD", "END", "Еще" };
-static const char * const edit_more[]   = { "MUL", "DIV", "WAIT" };
+static const char * const edit_more[]   = { "MUL", "DIV", "WAIT", "LOOP", "GOSUB", "RET", "READ" };
 static const char * const edit_ch_parts[] = { "CR", "AM", "FM" };
 static const char * const edit_on_off[]   = { "ON", "OFF" };
 static const char * const edit_cr_am[]    = { "FR", "MOD" };
@@ -488,9 +488,23 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 		return done;
 	}
 
-	if (strcmp(cmd, "GOTO") == 0) {
-		const edit_range range = { 1, edit_lines - 1, 1, 0, "cтр" };
-		return (pos == 1) ? step_kind(STEP_GOTO, &range) : done;
+	const edit_range range_line = { 1, edit_lines - 1, 1, 0, "cтр" };
+
+	if ((strcmp(cmd, "GOTO") == 0) || (strcmp(cmd, "GOSUB") == 0))
+		return (pos == 1) ? step_kind(STEP_GOTO, &range_line) : done;
+
+	if (strcmp(cmd, "LOOP") == 0) {
+		if (pos == 1) return step_kind(STEP_REG, NULL);
+		if (pos == 2) return step_kind(STEP_GOTO, &range_line);
+		return done;
+	}
+
+	//Формы это имена файлов, в регистр читаются только числа
+	if (strcmp(cmd, "READ") == 0) {
+		if (pos == 1) return step_kind(STEP_REG, NULL);
+		if (pos == 2) return step_words(edit_blocks + 1, 3); //CR1 AM1 FM1
+		if (pos == 3) return (strcmp(words[2], "FM1") == 0) ? step_words(edit_fm, 3) : step_words(edit_cr_am, 1);
+		return done;
 	}
 
 	if (strcmp(cmd, "DELAY") == 0)
@@ -515,7 +529,7 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 		return done;
 	}
 
-	return done; //ELSE ENDIF YIELD END WAIT без операндов
+	return done; //ELSE ENDIF YIELD END WAIT RET без операндов
 }
 
 static void edit_ask_number(const char * title, const edit_range * r, const char * hint, bool preview, char * out)
@@ -563,6 +577,10 @@ static bool edit_ask(const edit_step * s, const char * title, const char * hint,
 	}
 
 	case STEP_WORDS:
+		if (s->count == 1) { //Выбирать не из чего, это всегда последнее слово строки
+			snprintf(out, EDIT_WORD_SIZE, "%s", s->words[0]);
+			return true;
+		}
 		index = edit_pick_grid(title, s->words, s->count, edit_word_index(s->words, s->count, hint));
 		if (index < 0) return false;
 		snprintf(out, EDIT_WORD_SIZE, "%s", s->words[index]);
@@ -665,15 +683,28 @@ static void edit_set_line(int i, const char * s)
 	}
 }
 
-//Номера в GOTO идут за своими строками.
+//Номер цели перехода в строке, с пробелом перед ним: GOTO n, GOSUB n, LOOP F0 n. NULL если перехода нет
+static char * edit_jump_target(char * s)
+{
+	if (strncmp(s, "GOTO", 4) == 0)  return s + 4;
+	if (strncmp(s, "GOSUB", 5) == 0) return s + 5;
+	if (strncmp(s, "LOOP", 4) == 0) {
+		char * last = strrchr(s, ' ');
+		return (last != strchr(s, ' ')) ? last : NULL;
+	}
+	return NULL;
+}
+
+//Номера переходов идут за своими строками.
 //'I' вставка перед at, 'D' удаление at, 'S' обмен at и at+1
 static void edit_fix_goto(char op, int at)
 {
 	for (int i = 1; i < edit_lines; i++) {
-		if (strncmp(edit_list[i], "GOTO", 4) != 0)
+		char * target = edit_jump_target(edit_list[i]);
+		if (target == NULL)
 			continue;
 
-		int n = atoi(edit_list[i] + 4);
+		int n = atoi(target);
 
 		if (op == 'I') { if (n >= at) n++; }
 		if (op == 'D') { if (n > at)  n--; }
@@ -682,7 +713,7 @@ static void edit_fix_goto(char op, int at)
 			else if (n == at + 1) n = at;
 		}
 
-		snprintf(edit_list[i], CMD_LEN, "GOTO %d", n);
+		snprintf(target, CMD_LEN - (target - edit_list[i]), " %d", n);
 	}
 }
 
@@ -961,37 +992,41 @@ static void edit_ensure_end(void)
 	edit_modified = true;
 }
 
-//Первая ошибка структуры: номер строки или 0. Вложенные IF движок не умеет
+//Первая ошибка структуры: номер строки или 0
 static int edit_check(const char ** message)
 {
-	int open_if = 0;
-	bool has_else = false;
+	uint8_t open_if[PC_MAX]; //Строки открытых IF, вложенные идут стопкой
+	bool has_else[PC_MAX];
+	int depth = 0;
 
 	for (int i = 1; i < edit_lines; i++) {
-		const char * s = edit_list[i];
+		char * s = edit_list[i];
 
 		if (strncmp(s, "ENDIF", 5) == 0) {
-			if (open_if == 0) { *message = "ENDIF без IF"; return i; }
-			open_if = 0;
+			if (depth == 0) { *message = "ENDIF без IF"; return i; }
+			depth--;
 		}
 		else if (strncmp(s, "ELSE", 4) == 0) {
-			if ((open_if == 0) || has_else) { *message = "ELSE без IF"; return i; }
-			has_else = true;
+			if ((depth == 0) || has_else[depth - 1]) { *message = "ELSE без IF"; return i; }
+			has_else[depth - 1] = true;
 		}
 		else if (strncmp(s, "IF", 2) == 0) {
-			if (open_if) { *message = "IF внутри IF"; return i; }
-			open_if = i;
-			has_else = false;
+			open_if[depth] = i;
+			has_else[depth] = false;
+			depth++;
 		}
-		else if (strncmp(s, "GOTO", 4) == 0) {
-			const int n = atoi(s + 4);
-			if ((n < 1) || (n >= edit_lines)) { *message = "GOTO мимо"; return i; }
+		else {
+			const char * target = edit_jump_target(s);
+			if (target) {
+				const int n = atoi(target);
+				if ((n < 1) || (n >= edit_lines)) { *message = "Переход мимо"; return i; }
+			}
 		}
 	}
 
-	if (open_if) {
+	if (depth) {
 		*message = "IF без ENDIF";
-		return open_if;
+		return open_if[depth - 1];
 	}
 	return 0;
 }

@@ -321,7 +321,7 @@ void Scripting::load(char *name) {
 //Выполнить команду по строке pc
 void Scripting::CMD_EXE(void){
 
-	if (pc >= PC_MAX) { //Конец списка или GOTO мимо него
+	if ((pc == 0) || (pc >= PC_MAX)) { //Конец списка или переход мимо него, в [0] лежит имя
 		end = true;
 		return;
 	}
@@ -346,22 +346,9 @@ void Scripting::CMD_EXE(void){
 		//╭── ELSE ──────────────────────────────────────────────────╮ │
 		if (comand.indexOf((char*) "ELSE", 0) == 0)                //│ │
 		{                                                          //│ │
-		  //Ищем первое ENDIF                                      //│ │
-		  uint16_t currentPC = pc;                                 //│ │
-		                                                           //│ │
-		  while(true)                                              //│ │
-		  {                                                        //│ │
-		    if (list[currentPC].indexOf((char*)"ENDIF", 0) == 0)   //│ │
-		    {                                                      //│ │
-		      pc = currentPC; break;                               //│ │
-		    }                                                      //│ │
-                                                                   //│ │
-		    currentPC++;                                           //│ │
-		    if (currentPC > (PC_MAX - 1))                          //│ │
-		    {                                                      //│ │
-		      comandError(); break;                                //│ │
-		    }                                                      //│ │
-		  }                                                        //│ │
+		  //Ищем свой ENDIF                                        //│ │
+		  const uint32_t found = ifBlockEnd(false);                //│ │
+		  if (found) pc = found; else comandError();               //│ │
 		  break;                                                   //│ │
 		}                                                          //│ │
 		//╰──────────────────────────────────────────────────────────╯ │
@@ -422,8 +409,29 @@ void Scripting::CMD_EXE(void){
 		if (comand.indexOf((char*) "GOTO", 0) == 0) {
 			pc = comand.toUint(4);
 		}
+		else if (comand.indexOf((char*) "GOSUB", 0) == 0) {
+			if (gosub_depth < GOSUB_MAX) {
+				gosub_stack[gosub_depth++] = pc + 1;
+				pc = comand.toUint(5);
+			}
+			else
+				comandError(); //Слишком глубоко или вызов самого себя
+		}
 		else
 			comandError();
+		break;
+	//└────────────────────────────────────────────┘
+	//┌── READ ─ RET ──────────────────────────────┐
+	case 'R':
+		if (comand.indexOf((char*) "READ", 0) == 0) {
+			readComand();
+			pc++;
+		}
+		else if ((comand.indexOf((char*) "RET", 0) == 0) && (gosub_depth > 0)) {
+			pc = gosub_stack[--gosub_depth];
+		}
+		else
+			comandError(); //В том числе RET без GOSUB
 		break;
 	//└────────────────────────────────────────────┘
 	//┌── YELD ────────────────────────────────────┐
@@ -479,6 +487,19 @@ void Scripting::CMD_EXE(void){
 		   if (r)
 		     *r = opValue(triple.operand2);
 		}
+		else if (triple.operand0 == (char*)"LOOP")
+		{
+		   float * r = reg(triple.operand1);
+		   if (r)
+		   {
+		     *r -= 1.0F;
+		     if (*r > 0.0F)
+		     {
+		       pc = triple.operand2.toUint();
+		       break;
+		     }
+		   }
+		}
 		else
 		   comandError();
 		pc++;
@@ -529,30 +550,60 @@ void Scripting::ifComand(void){
       }
       else
       {
-    	  //Ищем первое ELSE или ENDIF
-          uint16_t currentPC = pc;
-          while(true)
-          {
-        	  if (list[currentPC].indexOf((char*)"ELSE", 0) == 0) //+1 к ELSE
-        	  {
-        		  pc = currentPC + 1 ; break;
-        	  }
-
-        	  if (list[currentPC].indexOf((char*)"ENDIF", 0) == 0)
-        	  {
-        		  pc = currentPC; break;
-        	  }
-
-        		  currentPC++;
-
-        	  if (currentPC > (PC_MAX - 1))
-        	  {
-        		  comandError();
-        		  break;
-        	  }
-          }
+    	  //Ищем свой ELSE или ENDIF
+    	  const uint32_t found = ifBlockEnd(true);
+    	  if (found == 0)
+    		  comandError();
+    	  else if (list[found].indexOf((char*)"ELSE", 0) == 0) //+1 к ELSE
+    		  pc = found + 1;
+    	  else
+    		  pc = found;
       }
 	}
+
+//Конец блока, в котором стоит pc: свой ENDIF, а по просьбе и свой ELSE. Вложенные блоки пропускаем. 0 если не нашли
+uint32_t Scripting::ifBlockEnd(bool stop_at_else){
+	int depth = 0;
+
+	for (uint32_t i = pc + 1; i < PC_MAX; i++) {
+		if (list[i].indexOf((char*)"IF", 0) == 0) {
+			depth++;
+		}
+		else if (list[i].indexOf((char*)"ENDIF", 0) == 0) {
+			if (depth == 0)
+				return i;
+			depth--;
+		}
+		else if (stop_at_else && (depth == 0) && (list[i].indexOf((char*)"ELSE", 0) == 0)) {
+			return i;
+		}
+	}
+	return 0;
+}
+
+//READ F1 CR1 FR: значение с панели в регистр, например выставленное энкодером
+void Scripting::readComand(void){
+	mString<CMD_LEN> comand;
+	comand = list[pc];
+	comand.remove(0, 5); //Убрали READ
+	triple = excretionTripleOperand(comand);
+
+	float * r = reg(triple.operand0);
+	if (r == NULL)
+		return;
+
+	const bool cr = (triple.operand1 == (char*)"CR1");
+	const bool am = (triple.operand1 == (char*)"AM1");
+	const bool fm = (triple.operand1 == (char*)"FM1");
+	const bool fr = (triple.operand2 == (char*)"FR");
+
+	if      (cr && fr) *r = G->CH1.Carrier_fr;
+	else if (am && fr) *r = G->CH1.AM_fr;
+	else if (fm && fr) *r = G->CH1.FM_mod_fr;
+	else if (fm && (triple.operand2 == (char*)"BASE")) *r = G->CH1.FM_Base;
+	else if (fm && (triple.operand2 == (char*)"DEV"))  *r = G->CH1.FM_Dev;
+	else comandError();
+}
 
 
 

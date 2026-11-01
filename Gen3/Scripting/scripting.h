@@ -17,6 +17,7 @@ extern HiSpeedDWT TimerT5;
 
 #define PC_MAX 128
 #define CMD_LEN 24
+#define GOSUB_MAX 4 //Вложенность подпрограмм
 
 
 //Команда максимум 24 байт [128]
@@ -32,7 +33,10 @@ extern HiSpeedDWT TimerT5;
  *
  * DELAY 1000 - Задержка работы
  *
- * Неизвестная команда, чужой регистр, деление на ноль и IF без ENDIF останавливают скрипт на этой строке.
+ * IF можно вкладывать в IF.
+ *
+ * Неизвестная команда, чужой регистр, деление на ноль, IF без ENDIF, RET без GOSUB
+ * и вложенность GOSUB больше GOSUB_MAX останавливают скрипт на этой строке.
  * Пустая строка занимает номер и ничего не делает, CH2 CR2 AM2 FM2 пропускаются
  */
 
@@ -41,6 +45,15 @@ extern HiSpeedDWT TimerT5;
  *│ YIELD   ││ GOTO 2    ││ DELAY 4000 ││ END          ││ TEXT Текст ││ WAIT         │
  *╰─────────╯╰───────────╯│ DELAY F1   │╰──────────────╯╰────────────╯╰──────────────╯
  *                        ╰────────────╯
+ *╭─ Цикл ─────────┬──────────────────────────────╮╭─ Подпрограмма ─╮
+ *│ LOOP F0 2      │ F0 - 1 -> F0, если > 0 GOTO 2 ││ GOSUB 7        │
+ *╰────────────────┴──────────────────────────────╯│ RET            │
+ *                                                 ╰────────────────╯
+ *╭─ Прочитать с панели ─────────────────╮
+ *│ READ F1 CR1 FR │ частота несущей     │
+ *│ READ F1 AM1 FR │ частота AM          │
+ *│ READ F1 FM1 FR │ BASE DEV FR         │
+ *╰────────────────┴─────────────────────╯
  *╭─ Арифметика ────┬─────────────────────╮╭─ Загрузка в регистр ────────────╮
  *│ MINUS F1 5000.0 │ F1 - 5000.0 -> F1   ││ LOAD F1 2344.0  │ 2344.0 -> F1  │
  *│ MINUS F1 F2     │ F1 - F2 -> F1       ││ LOAD F1 F2      │ F2 -> F1      │
@@ -103,6 +116,9 @@ public:
 
 	uint32_t endTime;            //Время > которого можно продолжать работу
 
+	uint8_t gosub_stack[GOSUB_MAX]; //Куда вернется RET
+	uint8_t gosub_depth;
+
 	float   F[10];               //10 FLOAT регистров
 
 	char str[32];                //Временная строка
@@ -118,7 +134,7 @@ public:
 
 
 	//Новый запуск не наследует паузу и регистры прошлого скрипта
-	void start(void)  { pc = 1; end = false; waiting = false; endTime = 0; memset(F, 0, sizeof(F)); }
+	void start(void)  { pc = 1; end = false; waiting = false; endTime = 0; gosub_depth = 0; memset(F, 0, sizeof(F)); }
 	void stop(void)   { pc = 1; end = true; waiting = false; timber.print("Script Stop\n");}
 
 	void pause(void)  { end = true;  }
@@ -143,6 +159,8 @@ public:
 	void CMD_EXE(void);
 
 	void ifComand(void);
+	uint32_t ifBlockEnd(bool stop_at_else);
+	void readComand(void);
 
 	void command(char * str);
 

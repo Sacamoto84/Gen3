@@ -22,6 +22,7 @@ extern Scripting script;
 	#define VIEW_ABOVE      3                             //│ Строк над текущей
 	#define VIEW_FRAME_MS   50                            //│ Не чаще 20 кадров в секунду
 	#define VIEW_MANUAL_MS  3000                          //│ После энкодера снова за текущей строкой
+	#define VIEW_REGS_MS    200                           //│ Новое значение регистра: кадр стоит скрипту 40 мс
 //└─────────────────────────────────────────────────────────┘
 
 //Цвет строки по команде
@@ -33,15 +34,57 @@ uint16_t view_line_color(const char * s)
 		return RGB565(255, 220, 60);
 	if (strncmp(s, "DIV", 3) == 0)
 		return COLOR_TEXT_DEFAULT;
+	if ((strncmp(s, "LOOP", 4) == 0) || (strncmp(s, "RET", 3) == 0))
+		return RGB565(110, 230, 130);
 
 	switch (s[0])
 	{
 		case 'C': case 'A': case 'F': return RGB565(255, 170, 90); //CH CR AM FM
-		case 'G':           return RGB565(110, 230, 130); //GOTO
+		case 'G':           return RGB565(110, 230, 130); //GOTO GOSUB
 		case 'D': case 'Y': case 'W': return RGB565(200, 160, 255); //DELAY YIELD WAIT
 		case 'T':           return COLOR_TEXT_DISABLE;    //Текст
 		default:            return COLOR_TEXT_DEFAULT;    //LOAD PLUS MINUS MUL
 	}
+}
+
+//Какие регистры упомянуты в скрипте: бит на каждый F0..F9
+static uint16_t view_used_regs(void)
+{
+	uint16_t used = 0;
+
+	for (int i = 1; i < script.lines; i++) {
+		const char * s = script.list[i].buf;
+		if (s[0] == 'T')
+			continue;
+		for (const char * p = s; (p = strchr(p, ' ')) != NULL; ) {
+			p++;
+			if ((p[0] == 'F') && (p[1] >= '0') && (p[1] <= '9') && ((p[2] == ' ') || (p[2] == '\r') || (p[2] == '\n') || (p[2] == 0)))
+				used |= 1 << (p[1] - '0');
+		}
+	}
+	return used;
+}
+
+//Строка значений внизу. В DELAY скрипт стоит почти все время, поэтому показываем регистры, а не текущую строку
+static void view_draw_regs(uint16_t used, int y)
+{
+	char str[96];
+	int len = 0;
+
+	tft.RectangleFilled(0, y, 240, 240 - y, RGB565(40, 40, 70));
+
+	for (int i = 0; (i < 10) && (len < (int) sizeof(str)); i++) {
+		if (used & (1 << i)) {
+			len += snprintf(str + len, sizeof(str) - len, "F%d=%.1f ", i, script.F[i]);
+			if ((len >= 3) && (len < (int) sizeof(str)) && (strncmp(str + len - 3, ".0 ", 3) == 0)) { //Без лишнего .0
+				len -= 3;
+				str[len++] = ' ';
+				str[len] = 0;
+			}
+		}
+	}
+
+	Font_Smooth_drawStr(&tft, 2, y + VIEW_TEXT_DY, str, COLOR_TEXT_DEFAULT);
 }
 
 //Первая строка окна, чтобы текущая была видна
@@ -53,7 +96,7 @@ static int view_first_for(int pc, int last_first)
 	return first;
 }
 
-static void view_draw(int first)
+static void view_draw(int first, int rows, uint16_t used)
 {
 	char str[32];
 
@@ -73,7 +116,7 @@ static void view_draw(int first)
 			script.end ? COLOR_TEXT_DISABLE : RGB565(110, 230, 130));
 
 	//Строки скрипта, нумерация как в GOTO
-	for (int row = 0; row < VIEW_ROWS; row++) {
+	for (int row = 0; row < rows; row++) {
 		const int i = first + row;
 		if (i >= script.lines) break;
 
@@ -90,6 +133,9 @@ static void view_draw(int first)
 		str[strcspn(str, "\r\n")] = 0;
 		Font_Smooth_drawStr(&tft, VIEW_NUMBER_W, y + VIEW_TEXT_DY, str, current ? COLOR_TEXT_SELECT : view_line_color(str));
 	}
+
+	if (used)
+		view_draw_regs(used, VIEW_ROW_H * (rows + 1));
 
 	tft.driver.ST7789_UpdateDMA16bitV3();
 }
@@ -108,13 +154,17 @@ void PAGE_Script_View(void)
 	bool manual = false;
 	uint32_t frame_time = 0;
 
+	const uint16_t used = view_used_regs();
+	const int rows = used ? VIEW_ROWS - 1 : VIEW_ROWS; //Место для строки регистров
+	float drawn_F[10] = {};
+
 	while (1) {
 
 		script.run();
 
 		button.tick();
 
-		const int last_first = (script.lines > VIEW_ROWS + 1) ? script.lines - VIEW_ROWS : 1;
+		const int last_first = (script.lines > rows + 1) ? script.lines - rows : 1;
 
 		if (Encoder.Left || Encoder.Right) {
 			if (first < 1) first = view_first_for(script.pc_exec, last_first);
@@ -136,14 +186,18 @@ void PAGE_Script_View(void)
 		if (!manual)
 			first = view_first_for(script.pc_exec, last_first);
 
-		const bool changed = (first != drawn_first) || ((int) script.pc_exec != drawn_pc) || ((int) script.end != drawn_end);
+		//Цикл возвращается в свой DELAY за один проход: номер строки тот же, а регистр уже другой
+		const bool regs_changed = used && (memcmp(drawn_F, script.F, sizeof(drawn_F)) != 0) && (now - frame_time >= VIEW_REGS_MS);
+
+		const bool changed = (first != drawn_first) || ((int) script.pc_exec != drawn_pc) || ((int) script.end != drawn_end) || regs_changed;
 
 		if (changed && ((drawn_first < 0) || (now - frame_time >= VIEW_FRAME_MS))) {
 			frame_time = now;
 			drawn_first = first;
 			drawn_pc = script.pc_exec;
 			drawn_end = script.end;
-			view_draw(first);
+			memcpy(drawn_F, script.F, sizeof(drawn_F));
+			view_draw(first, rows, used);
 		}
 
 		if (button.isHolded()) {
