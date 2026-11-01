@@ -1193,41 +1193,41 @@ static void edit_run(void)
 	edit_font();
 }
 
-//Меню файла. true значит выйти из редактора
+//Меню файла. true значит выйти из редактора. Курсор стоит на Назад: меню могли открыть случайным удержанием
 static bool edit_file_menu(void)
 {
-	static const char * const rows[] = { "Запуcк", "Стоп", "Сохранить", "Сохранить как", "Новый", "Открыть", "Выход" };
+	static const char * const rows[] = { "Назад", "Запуcк", "Стоп", "Сохранить", "Сохранить как", "Новый", "Открыть", "Выход" };
 
 	char title[CMD_LEN + 8];
 	snprintf(title, sizeof(title), "%s%s", edit_list[0][0] ? edit_list[0] : EDIT_NEW_NAME, edit_modified ? "*" : "");
 
 	switch (edit_pick_list(title, rows, COUNT_OF(rows), 0)) {
-	case 0:
+	case 1:
 		edit_run();
 		break;
 
-	case 1:
+	case 2:
 		script.stop();
 		break;
 
-	case 2:
+	case 3:
 		edit_save_current();
 		break;
 
-	case 3:
+	case 4:
 		edit_save_as();
 		break;
 
-	case 4:
+	case 5:
 		if (edit_can_leave())
 			edit_new();
 		break;
 
-	case 5:
+	case 6:
 		edit_open();
 		break;
 
-	case 6:
+	case 7:
 		return edit_can_leave();
 	}
 
