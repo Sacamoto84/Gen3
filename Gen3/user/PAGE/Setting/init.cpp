@@ -6,6 +6,9 @@
 
 #include "menu_typedef.h"
 
+#include "global_typedef.h"
+extern Encoder_typedef Encoder;
+
 extern menu_typedef menu_generator;
 extern menu_typedef menu_setting;
 
@@ -47,6 +50,32 @@ static void setting_pre_callback(void)
 			menu_setting.field.needUpdate = 1;
 		}
 	}
+}
+
+//Первый клик отдает энкодер громкости, второй возвращает. В text 19 байт и на экран полное слово с числом не влезает
+static void setting_pre_volume(uint32_t index)
+{
+	if (menu_setting.field.encoder_block) {
+		const int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
+		Encoder.Left = 0;
+		Encoder.Right = 0;
+
+		if (delta) {
+			Gen.Volume_Set(Gen.Volume_Get() + delta);
+			sprintf(item_setting[INDEX_SETTING_SAVE].text, "Сохранить");
+			menu_setting.field.needUpdate = 1;
+		}
+
+		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "> %d%% <", Gen.Volume_Get());
+	} else {
+		sprintf(item_setting[INDEX_SETTING_VOLUME].text, "Громк. %d%%", Gen.Volume_Get());
+	}
+}
+
+static void setting_volume_click(void)
+{
+	menu_setting.field.encoder_block = !menu_setting.field.encoder_block;
+	menu_setting.field.needUpdate = 1;
 }
 
 void PAGE_Setting(void)
@@ -101,6 +130,9 @@ void PAGE_init_struct_setting(void) {
 
 	sprintf(item_setting[INDEX_SETTING_FILTER].text, "Фильтр");
 	item_setting[INDEX_SETTING_FILTER].callBackFunc_isClick = &PAGE_Filter;
+
+	item_setting[INDEX_SETTING_VOLUME].preCallBackFunc = &setting_pre_volume;
+	item_setting[INDEX_SETTING_VOLUME].callBackFunc_isClick = &setting_volume_click;
 
 	sprintf(item_setting[INDEX_SETTING_VOLTAGE].text, "U: --- V");
 	item_setting[INDEX_SETTING_VOLTAGE].callBackFunc_isClick = &update_setting_voltage;

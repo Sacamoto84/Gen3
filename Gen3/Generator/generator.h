@@ -71,6 +71,8 @@ typedef struct {
 } _structure_ch;
 #pragma pack(pop)
 
+#define VOLUME_DEFAULT  65 //Если в ch1.ini нет громкости. Такой уровень был зашит раньше
+
 //Цифровой ФНЧ на выходе
 #define SAMPLE_RATE_HZ  (108000000.0F / 217.0F) //TIM6: 108 МГц / (216 + 1)
 #define FILTER_FR_MIN   200
@@ -145,6 +147,17 @@ public:
 
 	void start(void){
 	  HAL_TIM_Base_Start(&htim6);
+	}
+
+	//Громкость в процентах, 100 это весь размах ЦАП
+	void Volume_Set(int percent) {
+		if (percent < 0) percent = 0;
+		if (percent > 100) percent = 100;
+		CH1.Volume = percent / 100.0F;
+	}
+
+	int Volume_Get(void) {
+		return (int) (CH1.Volume * 100.0F + 0.5F);
 	}
 
     //Сброс фазы и аккумулятора

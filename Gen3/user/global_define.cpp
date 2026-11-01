@@ -4,6 +4,7 @@
 #include "global_typedef.h"
 #include "Button.h"
 #include "HiSpeedDWT.h"
+#include "PAGE/Setting/define.h"
 
 
 
@@ -11,7 +12,7 @@ menu_typedef menu_generator CCMRAM;
 menu_typedef menu_setting CCMRAM;
 
 item_typedef   item_generator[NUM_ITEM_GENERETOR] CCMRAM;
-item_typedef   item_setting[12] CCMRAM;
+item_typedef   item_setting[NUM_ITEM_SETTING] CCMRAM;
 
 #include "GyverButton.h"
 GButton button(ENTER_GPIO_Port, ENTER_Pin);

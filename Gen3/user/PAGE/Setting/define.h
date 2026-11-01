@@ -8,9 +8,10 @@
 	#define INDEX_SETTING_SCRIPT_EDIT 4   //│
 	#define INDEX_SETTING_SAVE      5     //│
 	#define INDEX_SETTING_FILTER    10    //│
-	#define INDEX_SETTING_VOLTAGE   11    //│
+	#define INDEX_SETTING_VOLUME    11    //│
+	#define INDEX_SETTING_VOLTAGE   12    //│
 									      //│
-	#define NUM_ITEM_SETTING  12          //│
+	#define NUM_ITEM_SETTING  13          //│
 //└─────────────────────────────────────────┘
 
 

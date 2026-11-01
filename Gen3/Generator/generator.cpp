@@ -233,8 +233,6 @@ void GENERATOR::syg_update(int Buffer_Current) {
 	CH1.rAM = convertHzToR(CH1.AM_fr);
 	CH1.rFM = convertHzToR(CH1.FM_mod_fr);
 
-	CH1.Volume = 0.65F;
-
 	//Состояние на время куска держим в локальных: поля CH1 в packed структуре
 	const uint32_t rC = CH1.rC;
 	const uint32_t rAM = CH1.rAM;
@@ -388,15 +386,19 @@ bool GENERATOR::Config_Save(void) {
 	const int len = snprintf(str, sizeof(str),
 			"CH_EN=%d\r\nCR_FR=%d\r\nCR_MOD=%s\r\n"
 			"AM_EN=%d\r\nAM_FR=%.1f\r\nAM_MOD=%s\r\n"
-			"FM_EN=%d\r\nFM_BASE=%d\r\nFM_DEV=%.1f\r\nFM_MOD=%s\r\nFM_FR=%.1f\r\n",
+			"FM_EN=%d\r\nFM_BASE=%d\r\nFM_DEV=%.1f\r\nFM_MOD=%s\r\nFM_FR=%.1f\r\n"
+			"VOLUME=%d\r\n",
 			CH1.CH_EN, CH1.Carrier_fr, CH1.Carrier_mod,
 			CH1.AM_EN, CH1.AM_fr, CH1.AM_mod,
-			CH1.FM_EN, CH1.FM_Base, CH1.FM_Dev, CH1.FM_mod, CH1.FM_mod_fr);
+			CH1.FM_EN, CH1.FM_Base, CH1.FM_Dev, CH1.FM_mod, CH1.FM_mod_fr,
+			Volume_Get());
 
 	return Save_File("/Config/ch1.ini", str, len) && Filter_Save();
 }
 
 bool GENERATOR::Config_Load(void) {
+	Volume_Set(VOLUME_DEFAULT);
+
 	if (f_open(&SDFile, "/Config/ch1.ini", FA_OPEN_EXISTING | FA_READ) != FR_OK)
 		return false;
 
@@ -420,6 +422,7 @@ bool GENERATOR::Config_Load(void) {
 		else if (strcmp(line, "FM_DEV") == 0)  CH1.FM_Dev = atof(value);
 		else if (strcmp(line, "FM_MOD") == 0)  snprintf(CH1.FM_mod, sizeof(CH1.FM_mod), "%s", value);
 		else if (strcmp(line, "FM_FR") == 0)   CH1.FM_mod_fr = atof(value);
+		else if (strcmp(line, "VOLUME") == 0)  Volume_Set(atoi(value));
 	}
 	f_close(&SDFile);
 
