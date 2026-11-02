@@ -3,6 +3,7 @@
 #include "stdio.h"
 #include "define.h"
 #include "adc.h"
+#include "PAGE_Battery.h"
 
 #include "menu_typedef.h"
 
@@ -17,27 +18,17 @@ extern item_typedef item_generator[];
 
 extern void PAGE_Menu(menu_typedef * menu , item_typedef * item, int NUM);
 
-static float get_adc_voltage(void)
+void update_setting_voltage(void)
 {
-	uint32_t sum = 0;
-	const int ADC_SAMPLES = 16;
-	for (int i = 0; i < ADC_SAMPLES; i++) {
-		HAL_ADC_Start(&hadc1);
-		if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
-			sum += HAL_ADC_GetValue(&hadc1);
-		}
-		HAL_ADC_Stop(&hadc1);
+	float v_in = Battery_GetVoltage();
+	uint8_t cells = Battery_GetCells();
+	if (cells <= 1) {
+		snprintf(item_setting[INDEX_SETTING_VOLTAGE].text, sizeof(item_setting[INDEX_SETTING_VOLTAGE].text), "U: %.3f V", v_in);
+	} else {
+		float v_cell = Battery_GetCellVoltage();
+		snprintf(item_setting[INDEX_SETTING_VOLTAGE].text, sizeof(item_setting[INDEX_SETTING_VOLTAGE].text), "U:%.1f 1S:%.2f", v_in, v_cell);
 	}
-	float raw_avg = (float)sum / (float)ADC_SAMPLES;
-	return (raw_avg * 3.294f) / 4095.0f * 3.965f/1.976f * 3.966f/3.961f;
 }
-
-static void update_setting_voltage(void)
-{
-	float voltage = get_adc_voltage();
-	snprintf(item_setting[INDEX_SETTING_VOLTAGE].text, sizeof(item_setting[INDEX_SETTING_VOLTAGE].text), "U: %.3f V", voltage);
-}
-
 static uint32_t last_voltage_time = 0;
 
 static void setting_pre_callback(void)
@@ -135,7 +126,9 @@ void PAGE_init_struct_setting(void) {
 	item_setting[INDEX_SETTING_VOLUME].callBackFunc_isClick = &setting_volume_click;
 
 	sprintf(item_setting[INDEX_SETTING_VOLTAGE].text, "U: --- V");
-	item_setting[INDEX_SETTING_VOLTAGE].callBackFunc_isClick = &update_setting_voltage;
+	Battery_Init();
+	update_setting_voltage();
+	item_setting[INDEX_SETTING_VOLTAGE].callBackFunc_isClick = &PAGE_Battery;
 
 	for(int i = 0; i < NUM_ITEM_SETTING ; i++)
 	{
