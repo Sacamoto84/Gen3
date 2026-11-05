@@ -150,6 +150,7 @@ void PAGE_Menu2(menu_typedef *menu, item_typedef *item, int NUM) {
 					func_name = item[index].callBackFunc_isClick;
 					func_name();
 					menu->field.needUpdate = 1; //При выходе из события обновляем экран
+					Font_Smooth_Load(menu->font);
 				}
 			}
 			tft.driver.needUpdate = 1; //При выходе из события обновляем экран

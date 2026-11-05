@@ -13,6 +13,7 @@
 extern Encoder_typedef Encoder;
 extern button_typedef button;
 extern Scripting script;
+extern menu_typedef menu_setting;
 
 #define HOWL_MAIN_NUM_ITEMS 7
 
@@ -99,6 +100,7 @@ void PAGE_Howl_Main(void) {
 						Howl.Stop();
 						script.waiting = legacy_script_was_waiting;
 						Gen.CH1.CH_EN = legacy_gen_en;
+						Font_Smooth_Load(menu_setting.font);
 						tft.driver.needUpdate = 1;
 						return;
 

@@ -205,6 +205,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 				func_name = item[index].callBackFunc_isHolded;
 				func_name();
 				tft.driver.needUpdate = 1;
+				Font_Smooth_Load(menu->font);
 			}
 		}
 
@@ -213,6 +214,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 				func_name = item[index].callBackFunc_isDouble;
 				func_name();
 				tft.driver.needUpdate = 1;
+				Font_Smooth_Load(menu->font);
 			}
 		}
 
@@ -227,12 +229,14 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 					func_name = item[index].callBackFunc_isClick;
 					func_name();
 					menu->field.needUpdate = 1; //При выходе из события обновляем экран
+					Font_Smooth_Load(menu->font);
 				}
 			}
 
 			if (item[index].field.exit)
 			{
-				tft.driver.needUpdate = 1; //При выходе из события обновляем экран
+				tft.driver.needUpdate = 1;
+				Font_Smooth_Load(menu->font); //При выходе из события обновляем экран
 				return;
 			}
 		}

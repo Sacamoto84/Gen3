@@ -7,6 +7,7 @@
 
 extern Encoder_typedef Encoder;
 extern void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM);
+extern menu_typedef menu_setting;
 
 #define INDEX_STIM_BACK        0
 #define INDEX_STIM_MODE        1
@@ -293,4 +294,5 @@ void PAGE_Stim(void) {
 	menu_stim.preCallBackFunc = NULL;
 
 	PAGE_Menu(&menu_stim, item_stim, NUM_ITEM_STIM);
+	Font_Smooth_Load(menu_setting.font);
 }
