@@ -38,6 +38,8 @@ uint16_t view_line_color(const char * s)
 		return COLOR_TEXT_DEFAULT;
 	if ((strncmp(s, "LOOP", 4) == 0) || (strncmp(s, "RET", 3) == 0))
 		return RGB565(110, 230, 130);
+	if ((strncmp(s, "WAV", 3) == 0) || (strncmp(s, "MP", 2) == 0))
+		return RGB565(255, 170, 90);
 
 	switch (s[0])
 	{

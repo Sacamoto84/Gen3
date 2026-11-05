@@ -4,6 +4,7 @@
 #include "define.h"
 #include "adc.h"
 #include "PAGE_Battery.h"
+#include "PAGE_Stim.h"
 
 #include "menu_typedef.h"
 
@@ -98,6 +99,7 @@ void PAGE_init_struct_setting(void) {
 
     //
 	//page_item_setting[1].bmp = &bmpSave13232;
+
 	item_setting[INDEX_SETTING_SAVE].callBackFunc_isClick = &setting_save_click;
     //
 
@@ -129,6 +131,9 @@ void PAGE_init_struct_setting(void) {
 	Battery_Init();
 	update_setting_voltage();
 	item_setting[INDEX_SETTING_VOLTAGE].callBackFunc_isClick = &PAGE_Battery;
+
+	sprintf(item_setting[INDEX_SETTING_STIM].text, "Стимуляция");
+	item_setting[INDEX_SETTING_STIM].callBackFunc_isClick = &PAGE_Stim;
 
 	for(int i = 0; i < NUM_ITEM_SETTING ; i++)
 	{

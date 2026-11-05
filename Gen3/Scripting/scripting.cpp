@@ -166,6 +166,19 @@ void Scripting::generatorComand(void){
 	    		  G->CH1.Volume_Script = v;                                       //│
 	      }                                                                       //│
 	                                                                              //│
+	      if (triple.operand1 == (char*)"MODE")                                   //│
+	      {                                                                       //│
+	    		  if ((triple.operand2 == (char*)"CONT") || (triple.operand2 == (char*)"0") || (triple.operand2 == (char*)"DDS")) { //│
+	    			  G->Mode_Set(GEN_MODE_CONTINUOUS);                           //│
+	    		  } else if ((triple.operand2 == (char*)"WAV") || (triple.operand2 == (char*)"1")) { //│
+	    			  G->Mode_Set(GEN_MODE_WAVELET);                              //│
+	    		  } else if ((triple.operand2 == (char*)"MP") || (triple.operand2 == (char*)"2")) { //│
+	    			  G->Mode_Set(GEN_MODE_MULTIPULSE);                           //│
+	    		  } else {                                                        //│
+	    			  comandError();                                              //│
+	    		  }                                                               //│
+	      }                                                                       //│
+	                                                                              //│
 	      render = 1;                                                             //│
 	                                                                              //│
 	      return;                                                                 //│
@@ -252,6 +265,111 @@ void Scripting::generatorComand(void){
 	    	  render = 1;                                                         //│
 	      }                                                                       //│
                                                                                   //│
+	      return;                                                                 //│
+	    }                                                                         //│
+	//╰─────────────────────────────────────────────────────────────────────────────╯
+
+	//╭─ WAV ───────────────────────────────────────────────────────────────────────╮
+	    if (triple.operand0 == (char*)"WAV")                                      //│
+	    {                                                                         //│
+	      if (triple.operand1 == (char*)"ON")                                     //│
+	      {                                                                       //│
+	          G->Mode_Set(GEN_MODE_WAVELET);                                      //│
+	          G->CH1.CH_EN = 1;                                                   //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"OFF")                                    //│
+	      {                                                                       //│
+	          G->Mode_Set(GEN_MODE_CONTINUOUS);                                   //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"FR")                                     //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 1.0F) val = 1.0F;                                         //│
+	          if (val > 100.0F) val = 100.0F;                                     //│
+	          G->CH1.Wavelet_Pulse_fr = val;                                      //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"CYC")                                    //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 1.0F) val = 1.0F;                                         //│
+	          if (val > 20.0F) val = 20.0F;                                       //│
+	          G->CH1.Wavelet_Cycles = (uint8_t)val;                               //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"FADE")                                   //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 0.0F) val = 0.0F;                                         //│
+	          if (val > 100.0F) val = 100.0F;                                     //│
+	          G->CH1.Wavelet_Fade = (uint8_t)val;                                 //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      comandError();                                                          //│
+	      return;                                                                 //│
+	    }                                                                         //│
+	//╰─────────────────────────────────────────────────────────────────────────────╯
+
+	//╭─ MP ────────────────────────────────────────────────────────────────────────╮
+	    if (triple.operand0 == (char*)"MP")                                       //│
+	    {                                                                         //│
+	      if (triple.operand1 == (char*)"ON")                                     //│
+	      {                                                                       //│
+	          G->Mode_Set(GEN_MODE_MULTIPULSE);                                   //│
+	          G->CH1.CH_EN = 1;                                                   //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"OFF")                                    //│
+	      {                                                                       //│
+	          G->Mode_Set(GEN_MODE_CONTINUOUS);                                   //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"FR")                                     //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 1.0F) val = 1.0F;                                         //│
+	          if (val > 200.0F) val = 200.0F;                                     //│
+	          G->CH1.Multi_Pulse_fr = val;                                        //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"US")                                     //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 50.0F) val = 50.0F;                                       //│
+	          if (val > 1000.0F) val = 1000.0F;                                   //│
+	          G->CH1.Multi_Pulse_us = (uint16_t)val;                              //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"INTRA")                                  //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 0.0F) val = 0.0F;                                         //│
+	          if (val > 200.0F) val = 200.0F;                                     //│
+	          G->CH1.Multi_Intra_us = (uint16_t)val;                              //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      if (triple.operand1 == (char*)"CNT")                                    //│
+	      {                                                                       //│
+	          float val = opValue(triple.operand2);                               //│
+	          if (val < 1.0F) val = 1.0F;                                         //│
+	          if (val > 10.0F) val = 10.0F;                                       //│
+	          G->CH1.Multi_Count = (uint8_t)val;                                  //│
+	          render = 1;                                                         //│
+	          return;                                                             //│
+	      }                                                                       //│
+	      comandError();                                                          //│
 	      return;                                                                 //│
 	    }                                                                         //│
 	//╰─────────────────────────────────────────────────────────────────────────────╯
@@ -394,9 +512,12 @@ void Scripting::CMD_EXE(void){
 		pc++;               //│
 		break;              //│
 	//╰───────────────────────╯
-	//╭── MINUS ─────────────╮
+	//╭── MINUS / MP ────────╮
 	case 'M':              //│
-		comandPlusMinus(); //│
+		if (comand.indexOf((char*)"MP", 0) == 0)
+			generatorComand();
+		else
+			comandPlusMinus();
 		pc++;              //│
 		break;             //│
 	//╰──────────────────────╯
@@ -469,11 +590,15 @@ void Scripting::CMD_EXE(void){
 			comandError();
 		break;
 	//└────────────────────────────────────────────┘
-	//┌── WAIT ────────────────────────────────────┐
+	//┌── WAIT / WAV ──────────────────────────────┐
 	case 'W':
 		if (comand.indexOf((char*) "WAIT", 0) == 0) {
 			waiting = true; //Снимет клик в окне просмотра
 			yield = true;
+			pc++;
+		}
+		else if (comand.indexOf((char*) "WAV", 0) == 0) {
+			generatorComand();
 			pc++;
 		}
 		else
@@ -620,8 +745,11 @@ void Scripting::readComand(void){
 	const bool cr = (triple.operand1 == (char*)"CR1");
 	const bool am = (triple.operand1 == (char*)"AM1");
 	const bool fm = (triple.operand1 == (char*)"FM1");
+	const bool wav = (triple.operand1 == (char*)"WAV");
+	const bool mp = (triple.operand1 == (char*)"MP");
 	const bool fr = (triple.operand2 == (char*)"FR");
 	const bool vol = (triple.operand1 == (char*)"VOL") || ((triple.operand1 == (char*)"CH1") && (triple.operand2 == (char*)"VOL"));
+	const bool mode = (triple.operand1 == (char*)"MODE") || ((triple.operand1 == (char*)"CH1") && (triple.operand2 == (char*)"MODE"));
 
 	if      (cr && fr) *r = G->CH1.Carrier_fr;
 	else if (am && fr) *r = G->CH1.AM_fr;
@@ -629,6 +757,14 @@ void Scripting::readComand(void){
 	else if (fm && (triple.operand2 == (char*)"BASE")) *r = G->CH1.FM_Base;
 	else if (fm && (triple.operand2 == (char*)"DEV"))  *r = G->CH1.FM_Dev;
 	else if (vol)      *r = G->CH1.Volume_Script;
+	else if (mode)     *r = G->CH1.Mode;
+	else if (wav && fr) *r = G->CH1.Wavelet_Pulse_fr;
+	else if (wav && (triple.operand2 == (char*)"CYC")) *r = G->CH1.Wavelet_Cycles;
+	else if (wav && (triple.operand2 == (char*)"FADE")) *r = G->CH1.Wavelet_Fade;
+	else if (mp && fr) *r = G->CH1.Multi_Pulse_fr;
+	else if (mp && (triple.operand2 == (char*)"US")) *r = G->CH1.Multi_Pulse_us;
+	else if (mp && (triple.operand2 == (char*)"INTRA")) *r = G->CH1.Multi_Intra_us;
+	else if (mp && (triple.operand2 == (char*)"CNT")) *r = G->CH1.Multi_Count;
 	else comandError();
 }
 
@@ -649,16 +785,20 @@ void Scripting::command(char * str){
 	switch (c) {
 	//╭── Генератор ──────────╮
 	case 'C':               //│
-		generatorComand();  //│
-		break;              //│
-	                        //│
 	case 'A':               //│
-		generatorComand();  //│
-		break;              //│
-	                        //│
 	case 'F':               //│
 		generatorComand();  //│
 		break;              //│
+	case 'W':               //│
+		if (comand.indexOf((char*)"WAV", 0) == 0) { //│
+			generatorComand();                      //│
+		}                                           //│
+		break;                                      //│
+	case 'M':                                       //│
+		if (comand.indexOf((char*)"MP", 0) == 0) {  //│
+			generatorComand();                      //│
+		}                                           //│
+		break;                                      //│
 	//╰───────────────────────╯
 	//╭── PLUS ─ PRINTR ─ PRINTF ───────────────────────╮
 	case 'P':                                         //│                                                   //│
@@ -672,9 +812,3 @@ void Scripting::command(char * str){
 	};
 
 }
-
-
-
-
-
-

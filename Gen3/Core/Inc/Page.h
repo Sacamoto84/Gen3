@@ -61,6 +61,7 @@ extern void generator_pre_CH1_AM_EN(uint32_t index);
 extern void generator_pre_CH1_FM_EN(uint32_t index);
 
 extern void PAGE_Filter(void);
+extern void PAGE_Stim(void);
 extern void PAGE_Battery(void);
 extern void PAGE_Script_View(void);
 extern void PAGE_Script_Edit(void);

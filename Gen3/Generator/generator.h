@@ -18,6 +18,12 @@ extern DMA_HandleTypeDef hdma_dac1;
 #define FM_MODSAMPLES  512
 #define OUTPUTSAMPLES  4096 //По 2048 на половину DMA буфера (16 бит, секция .out 8K)
 
+enum GeneratorMode : uint8_t {
+	GEN_MODE_CONTINUOUS = 0, //Классический DDS (Несущая + AM/FM)
+	GEN_MODE_WAVELET    = 1, //Вейвлеты (пачки несущей с огибающей Ханна + паузы)
+	GEN_MODE_MULTIPULSE = 2  //Двухфазные симметричные импульсы (MultiPulse TENS)
+};
+
 #include "fatfs.h"
 
 extern uint8_t retSD; /* Return value for SD */
@@ -68,6 +74,16 @@ typedef struct {
 	uint32_t phase_accumulator_carrier;
 	uint32_t phase_accumulator_mod;
 	uint32_t phase_accumulator_fm;
+
+	//Новые режимы стимуляции (Wavelet, MultiPulse)
+	uint8_t  Mode;              //GeneratorMode: 0=DDS, 1=Wavelet, 2=MultiPulse
+	float    Wavelet_Pulse_fr;  //Частота следования пачек (Гц, 1..100)
+	uint8_t  Wavelet_Cycles;    //Периодов несущей в пачке (1..20)
+	uint8_t  Wavelet_Fade;      //Процент сглаживания фронтов пачки (0..100)
+	float    Multi_Pulse_fr;    //Частота двухфазных импульсов (Гц, 1..200)
+	uint16_t Multi_Pulse_us;    //Длительность полупериода в мкс (50..1000)
+	uint16_t Multi_Intra_us;    //Пауза между полуволнами в мкс (0..200)
+	uint8_t  Multi_Count;       //Количество импульсов в пачке (1..10)
 
 } _structure_ch;
 #pragma pack(pop)
@@ -168,6 +184,20 @@ public:
 		CH1.phase_accumulator_fm = 0;
 	}
 
+	void Reset_Stim_States(void) {
+		wavelet_stage = 0;
+		wavelet_counter = 0;
+		wavelet_rand_seed = 0x12345678U;
+		mp_stage = 0;
+		mp_counter = 0;
+		mp_pulses_left = 0;
+	}
+
+	void Mode_Set(GeneratorMode mode) {
+		CH1.Mode = (uint8_t)mode;
+		Reset_Stim_States();
+	}
+
 	_structure_ch CH1; //Используется для чтения настроек из файла save.dat
 
 	UINT buffer_temp[1024+16]; //Сохраняются данные файлов
@@ -180,6 +210,15 @@ public:
 	_filter_coef filter_coef[2];        //Основной поток пишет в неактивный набор, прерывание читает активный
 	volatile uint8_t filter_active;
 	float filter_state[FILTER_SECTIONS][4]; //x1 x2 y1 y2 каждой секции
+
+	//Автоматы состояний стимуляции
+	uint8_t  wavelet_stage;
+	uint32_t wavelet_counter;
+	uint32_t wavelet_rand_seed;
+
+	uint8_t  mp_stage;
+	uint32_t mp_counter;
+	uint8_t  mp_pulses_left;
 
 };
 
