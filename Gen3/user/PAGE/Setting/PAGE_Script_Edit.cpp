@@ -211,6 +211,7 @@ static const edit_range range_fm_fr  = {    1,   1000,   100, 1, "Гц" };
 static const edit_range range_delay  = {    0,  99999,  1000, 0, "мc" };
 static const edit_range range_float  = {    0, 999999,     0, 1, NULL };
 static const edit_range range_mul    = {    1,  99999,  1000, 3, NULL };
+static const edit_range range_vol    = {    0,   1000,   1000, 3, NULL };
 
 static int32_t edit_scale(int frac)
 {
@@ -407,8 +408,8 @@ static bool edit_pick_file(const char * title, const char * path, const char * e
 
 //В сетке 16 клеток с Назад. Новые команды идут во вторую сетку, старые блоки остаются на местах
 static const char * const edit_blocks[] = { "CH1", "CR1", "AM1", "FM1", "GOTO", "IF", "ELSE", "ENDIF", "LOAD", "PLUS", "MINUS", "DELAY", "YIELD", "END", "Еще" };
-static const char * const edit_more[]   = { "MUL", "DIV", "WAIT", "LOOP", "GOSUB", "RET", "READ" };
-static const char * const edit_ch_parts[] = { "CR", "AM", "FM" };
+static const char * const edit_more[]   = { "MUL", "DIV", "WAIT", "LOOP", "GOSUB", "RET", "READ", "VOL" };
+static const char * const edit_ch_parts[] = { "CR", "AM", "FM", "VOL" };
 static const char * const edit_on_off[]   = { "ON", "OFF" };
 static const char * const edit_cr_am[]    = { "FR", "MOD" };
 static const char * const edit_fm[]       = { "BASE", "DEV", "FR", "MOD" };
@@ -464,7 +465,10 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 
 	if (strcmp(cmd, "CH1") == 0) {
 		if (pos == 1) return step_words(edit_ch_parts, COUNT_OF(edit_ch_parts));
-		if (pos == 2) return step_words(edit_on_off, COUNT_OF(edit_on_off));
+		if (pos == 2) {
+			if (strcmp(arg, "VOL") == 0) return step_kind(STEP_VALUE, &range_vol);
+			return step_words(edit_on_off, COUNT_OF(edit_on_off));
+		}
 		return done;
 	}
 
@@ -507,6 +511,9 @@ static edit_step edit_step_at(char words[][EDIT_WORD_SIZE], int pos)
 		if (pos == 3) return (strcmp(words[2], "FM1") == 0) ? step_words(edit_fm, 3) : step_words(edit_cr_am, 1);
 		return done;
 	}
+
+	if (strcmp(cmd, "VOL") == 0)
+		return (pos == 1) ? step_kind(STEP_VALUE, &range_vol) : done;
 
 	if (strcmp(cmd, "DELAY") == 0)
 		return (pos == 1) ? step_kind(STEP_VALUE, &range_delay) : done;

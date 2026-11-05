@@ -19,8 +19,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ILMerge" Version="3.0.41" />
-    <PackageReference Include="System.Text.Json" Version="6.0.2" />
+    <PackageReference Include="ILMerge" Version="3.0.40" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Text.Json" Version="10.0.14" />
   </ItemGroup>
 
   <Target Name="ILMerge">

@@ -134,7 +134,7 @@ public:
 
 
 	//Новый запуск не наследует паузу и регистры прошлого скрипта
-	void start(void)  { pc = 1; end = false; waiting = false; endTime = 0; gosub_depth = 0; memset(F, 0, sizeof(F)); }
+	void start(void)  { pc = 1; end = false; waiting = false; endTime = 0; gosub_depth = 0; memset(F, 0, sizeof(F)); if (G) G->CH1.Volume_Script = 1.0F; }
 	void stop(void)   { pc = 1; end = true; waiting = false; timber.print("Script Stop\n");}
 
 	void pause(void)  { end = true;  }

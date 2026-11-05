@@ -62,6 +62,7 @@ typedef struct {
 	uint32_t angle_fm;
 
 	float Volume; //Громкость 0..1
+	float Volume_Script; //Громкость из скрипта 0..1 (множитель)
 
 	//Аккумуляторы
 	uint32_t phase_accumulator_carrier;

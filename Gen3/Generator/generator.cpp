@@ -173,6 +173,7 @@ void GENERATOR::Refresh_FM_Modulation(_structure_ch *_CH) {
 
 
 void GENERATOR::Init(void) {
+	CH1.Volume_Script = 1.0F;
 
 
 	//Читаем настройки из файла save.ini и заполняем структуру CH1
@@ -237,7 +238,7 @@ void GENERATOR::syg_update(int Buffer_Current) {
 	const uint32_t rC = CH1.rC;
 	const uint32_t rAM = CH1.rAM;
 	const uint32_t rFM = CH1.rFM;
-	const float volume = CH1.Volume;
+	const float volume = CH1.Volume * CH1.Volume_Script;
 	const float fm_to_r = convertHzToR(1.0F);
 	const bool am_en = CH1.AM_EN;
 	const bool fm_en = CH1.FM_EN;
@@ -398,6 +399,7 @@ bool GENERATOR::Config_Save(void) {
 
 bool GENERATOR::Config_Load(void) {
 	Volume_Set(VOLUME_DEFAULT);
+	CH1.Volume_Script = 1.0F;
 
 	if (f_open(&SDFile, "/Config/ch1.ini", FA_OPEN_EXISTING | FA_READ) != FR_OK)
 		return false;

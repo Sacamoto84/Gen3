@@ -41,7 +41,7 @@ uint16_t view_line_color(const char * s)
 
 	switch (s[0])
 	{
-		case 'C': case 'A': case 'F': return RGB565(255, 170, 90); //CH CR AM FM
+		case 'C': case 'A': case 'F': case 'V': return RGB565(255, 170, 90); //CH CR AM FM VOL
 		case 'G':           return RGB565(110, 230, 130); //GOTO GOSUB
 		case 'D': case 'Y': case 'W': return RGB565(200, 160, 255); //DELAY YIELD WAIT
 		case 'T':           return COLOR_TEXT_DISABLE;    //Текст

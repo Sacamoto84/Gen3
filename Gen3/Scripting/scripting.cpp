@@ -157,6 +157,15 @@ void Scripting::generatorComand(void){
 	    		  G->CH1.FM_EN = onoff;                                           //│
 	      }                                                                       //│
 	                                                                              //│
+	      if (triple.operand1 == (char*)"VOL")                                    //│
+	      {                                                                       //│
+	    		  float v = opValue(triple.operand2);                             //│
+	    		  if (v > 1.0F) v /= 100.0F;                                      //│
+	    		  if (v < 0.0F) v = 0.0F;                                         //│
+	    		  if (v > 1.0F) v = 1.0F;                                         //│
+	    		  G->CH1.Volume_Script = v;                                       //│
+	      }                                                                       //│
+	                                                                              //│
 	      render = 1;                                                             //│
 	                                                                              //│
 	      return;                                                                 //│
@@ -434,6 +443,22 @@ void Scripting::CMD_EXE(void){
 			comandError(); //В том числе RET без GOSUB
 		break;
 	//└────────────────────────────────────────────┘
+	//┌── VOL ─────────────────────────────────────┐
+	case 'V':
+		if (comand.indexOf((char*) "VOL", 0) == 0) {
+			triple = excretionTripleOperand(comand);
+			float v = opValue(triple.operand1);
+			if (v > 1.0F) v /= 100.0F;
+			if (v < 0.0F) v = 0.0F;
+			if (v > 1.0F) v = 1.0F;
+			G->CH1.Volume_Script = v;
+			render = 1;
+			pc++;
+		}
+		else
+			comandError();
+		break;
+	//└────────────────────────────────────────────┘
 	//┌── YELD ────────────────────────────────────┐
 	case 'Y':
 		if (comand.indexOf((char*) "YIELD", 0) == 0) {
@@ -596,12 +621,14 @@ void Scripting::readComand(void){
 	const bool am = (triple.operand1 == (char*)"AM1");
 	const bool fm = (triple.operand1 == (char*)"FM1");
 	const bool fr = (triple.operand2 == (char*)"FR");
+	const bool vol = (triple.operand1 == (char*)"VOL") || ((triple.operand1 == (char*)"CH1") && (triple.operand2 == (char*)"VOL"));
 
 	if      (cr && fr) *r = G->CH1.Carrier_fr;
 	else if (am && fr) *r = G->CH1.AM_fr;
 	else if (fm && fr) *r = G->CH1.FM_mod_fr;
 	else if (fm && (triple.operand2 == (char*)"BASE")) *r = G->CH1.FM_Base;
 	else if (fm && (triple.operand2 == (char*)"DEV"))  *r = G->CH1.FM_Dev;
+	else if (vol)      *r = G->CH1.Volume_Script;
 	else comandError();
 }
 
@@ -645,7 +672,6 @@ void Scripting::command(char * str){
 	};
 
 }
-
 
 
 
