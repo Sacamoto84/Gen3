@@ -86,14 +86,14 @@ static void stim_pre_PARAM1(uint32_t index) {
 			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "Пачки: %.1f Hz", Gen.CH1.Wavelet_Pulse_fr);
 	} else if (Gen.CH1.Mode == GEN_MODE_MULTIPULSE) {
 		if (editing)
-			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "> Частота: %.1f Hz <", Gen.CH1.Multi_Pulse_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "> Чаcтота: %.1f Hz <", Gen.CH1.Multi_Pulse_fr);
 		else
-			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "Частота: %.1f Hz", Gen.CH1.Multi_Pulse_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "Чаcтота: %.1f Hz", Gen.CH1.Multi_Pulse_fr);
 	} else {
 		if (editing)
-			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "> Несущая: %u Hz <", Gen.CH1.Carrier_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "> Неcущая: %u Hz <", Gen.CH1.Carrier_fr);
 		else
-			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "Несущая: %u Hz", Gen.CH1.Carrier_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM1].text, sizeof(item_stim[INDEX_STIM_PARAM1].text), "Неcущая: %u Hz", Gen.CH1.Carrier_fr);
 	}
 }
 
@@ -221,9 +221,9 @@ static void stim_pre_PARAM4(uint32_t index) {
 
 	if (Gen.CH1.Mode == GEN_MODE_WAVELET) {
 		if (editing)
-			snprintf(item_stim[INDEX_STIM_PARAM4].text, sizeof(item_stim[INDEX_STIM_PARAM4].text), "> Несущая: %u Hz <", Gen.CH1.Carrier_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM4].text, sizeof(item_stim[INDEX_STIM_PARAM4].text), "> Неcущая: %u Hz <", Gen.CH1.Carrier_fr);
 		else
-			snprintf(item_stim[INDEX_STIM_PARAM4].text, sizeof(item_stim[INDEX_STIM_PARAM4].text), "Несущая: %u Hz", Gen.CH1.Carrier_fr);
+			snprintf(item_stim[INDEX_STIM_PARAM4].text, sizeof(item_stim[INDEX_STIM_PARAM4].text), "Неcущая: %u Hz", Gen.CH1.Carrier_fr);
 	} else if (Gen.CH1.Mode == GEN_MODE_MULTIPULSE) {
 		if (editing)
 			snprintf(item_stim[INDEX_STIM_PARAM4].text, sizeof(item_stim[INDEX_STIM_PARAM4].text), "> Пачка: %u имп. <", Gen.CH1.Multi_Count);
@@ -250,7 +250,7 @@ static void stim_save_click(void) {
 	if (Gen.Config_Save()) {
 		save_text = "Сохранено!";
 	} else {
-		save_text = "Ошибка записи";
+		save_text = "Ошибка запиcи";
 	}
 	menu_stim.field.needUpdate = 1;
 }
