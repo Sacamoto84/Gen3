@@ -4,10 +4,18 @@
 
 #include "TFT.h"
 #include "bitmap.h"
+#if __has_include("resource.h")
 #include "resource.h"
+#elif __has_include("Resource/resource.h")
+#include "Resource/resource.h"
+#endif
 #include "FontSmooth.h"
 
+#if __has_include("Gif.h")
 #include "Gif.h"
+#elif __has_include("Animated/Gif.h")
+#include "Animated/Gif.h"
+#endif
 
 extern TFT tft CCMRAM;
 
@@ -17,7 +25,7 @@ extern GENERATOR Gen;
 //───────────────────────────────────────────────┬───────────────────────────┐
  typedef struct                                //│ Item                      │
  {                                             //├───────────────────────────┤
-   char text [20];        					   //│ Текст                     │
+   char text [28];        					   //│ Текст                     │
                                  	 	 	   //│                           │
    void (*callBackFunc_isClick)  (void); 	   //│ Обработчик нажатий        │
    void (*callBackFunc_isHolded) (void); 	   //│                           │

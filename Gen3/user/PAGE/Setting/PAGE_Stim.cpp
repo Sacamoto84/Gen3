@@ -39,7 +39,7 @@ static void stim_pre_MODE(uint32_t index) {
 			break;
 		case GEN_MODE_CONTINUOUS:
 		default:
-			snprintf(item_stim[INDEX_STIM_MODE].text, sizeof(item_stim[INDEX_STIM_MODE].text), "Режим: Непрерыв");
+			snprintf(item_stim[INDEX_STIM_MODE].text, sizeof(item_stim[INDEX_STIM_MODE].text), "Режим: Непрер.");
 			break;
 	}
 }
