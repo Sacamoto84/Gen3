@@ -16,7 +16,8 @@ extern DMA_HandleTypeDef hdma_dac1;
 #define SAMPLES        1024
 #define AM_MODSAMPLES  1024
 #define FM_MODSAMPLES  512
-#define OUTPUTSAMPLES  4096 //По 2048 на половину DMA буфера (16 бит, секция .out 8K)
+#define OUTPUTSAMPLES  2500 //По 1250 на половину DMA буфера (ровно 2.5 мс при 500 кГц, ровно 10 буферов на такт 40 Гц Howl)
+#define SAMPLES_PER_HALF_BUFFER (OUTPUTSAMPLES / 2) //1250
 
 enum GeneratorMode : uint8_t {
 	GEN_MODE_CONTINUOUS = 0, //Классический DDS (Несущая + AM/FM)
@@ -91,7 +92,7 @@ typedef struct {
 #define VOLUME_DEFAULT  65 //Если в ch1.ini нет громкости. Такой уровень был зашит раньше
 
 //Цифровой ФНЧ на выходе
-#define SAMPLE_RATE_HZ  (108000000.0F / 217.0F) //TIM6: 108 МГц / (216 + 1)
+#define SAMPLE_RATE_HZ  500000.0F //TIM6: 108 МГц / (215 + 1) = ровно 500.000 кГц
 #define FILTER_FR_MIN   200
 #define FILTER_FR_MAX   100000
 #define FILTER_SECTIONS 2                       //2 секции = 4 порядок
@@ -118,9 +119,9 @@ typedef struct {
 class GENERATOR {
 public:
 
-	float convertHzToR(float hz) {	hz = hz * 16384.0F / 3.798F * 2.0F; 	return hz;	}
-	float convertHzToR_FM(float hz) { hz = hz * 16384.0F;	return hz; }
-	float convertRToHz(float hz) {	hz = hz / 16384.0F * 3.798F / 2.0F; 	return hz;	}
+	float convertHzToR(float hz) {	return hz * (4294967296.0F / SAMPLE_RATE_HZ);	} //при 500 кГц: hz * 8589.934592F
+	float convertHzToR_FM(float hz) { return hz * (4294967296.0F / SAMPLE_RATE_HZ); }
+	float convertRToHz(float r) {	return r * (SAMPLE_RATE_HZ / 4294967296.0F);	}
 
     //dma_dac_it.c
 
@@ -191,6 +192,7 @@ public:
 		mp_stage = 0;
 		mp_counter = 0;
 		mp_pulses_left = 0;
+		howl_dma_chunk = 0;
 	}
 
 	void Mode_Set(GeneratorMode mode) {
@@ -219,6 +221,7 @@ public:
 	uint8_t  mp_stage;
 	uint32_t mp_counter;
 	uint8_t  mp_pulses_left;
+	uint8_t  howl_dma_chunk; //Счётчик полубуферов DMA (0..9) для такта Howl (40 Гц = 25 мс)
 
 };
 

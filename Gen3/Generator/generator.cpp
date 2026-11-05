@@ -309,7 +309,7 @@ void GENERATOR::syg_update(int Buffer_Current) {
 		// РЕЖИМ 2: MULTIPULSE (двухфазные симметричные прямоугольные импульсы)
 		// ════════════════════════════════════════════════════════════════
 		const float pulse_fr = (CH1.Multi_Pulse_fr < 0.1F) ? 0.1F : CH1.Multi_Pulse_fr;
-		const float us_to_samples = SAMPLE_RATE_HZ * 1e-6F; // ~0.497696 сэмплов на мкс
+		const float us_to_samples = SAMPLE_RATE_HZ * 1e-6F; // ровно 0.5 сэмплов на 1 мкс (1 сэмпл = 2.0 мкс)
 
 		const uint32_t pos_len   = (uint32_t)((float)CH1.Multi_Pulse_us * us_to_samples);
 		const uint32_t intra_len = (uint32_t)((float)CH1.Multi_Intra_us * us_to_samples);
