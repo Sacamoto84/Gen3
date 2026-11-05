@@ -116,6 +116,13 @@ typedef struct {
 	_biquad  s[FILTER_SECTIONS];
 } _filter_coef;
 
+static inline uint32_t convert_hz_to_dds(float hz) {
+	return (uint32_t)(hz * (4294967296.0F / SAMPLE_RATE_HZ));
+}
+
+class GENERATOR;
+extern GENERATOR Gen;
+
 class GENERATOR {
 public:
 
@@ -224,5 +231,7 @@ public:
 	uint8_t  howl_dma_chunk; //Счётчик полубуферов DMA (0..9) для такта Howl (40 Гц = 25 мс)
 
 };
+
+#include "howl_core.h"
 
 #endif

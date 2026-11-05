@@ -183,6 +183,7 @@ void GENERATOR::Init(void) {
 	CH1.Multi_Intra_us = 50;
 	CH1.Multi_Count = 1;
 	Reset_Stim_States();
+	Howl.Init();
 
 	/**************************
 	 *  DMA DAC
@@ -216,6 +217,11 @@ static inline float biquad(const _biquad &c, float *s, float x) {
 void GENERATOR::syg_update(int Buffer_Current) {
 	uint16_t *out = &OUTPUT[Buffer_Current ? OUTPUTSAMPLES / 2 : 0];
 	uint16_t *const out_end = out + OUTPUTSAMPLES / 2;
+
+	if (Howl.is_active) {
+		Howl.DMA_Render(out, out_end);
+		return;
+	}
 
 	if (!CH1.CH_EN) {
 		memset(filter_state, 0, sizeof(filter_state));
@@ -569,6 +575,7 @@ bool GENERATOR::Config_Load(void) {
 	CH1.Multi_Intra_us = 50;
 	CH1.Multi_Count = 1;
 	Reset_Stim_States();
+	Howl.Init();
 
 	if (f_open(&SDFile, "/Config/ch1.ini", FA_OPEN_EXISTING | FA_READ) != FR_OK)
 		return false;

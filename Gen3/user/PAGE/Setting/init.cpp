@@ -5,6 +5,7 @@
 #include "adc.h"
 #include "PAGE_Battery.h"
 #include "PAGE_Stim.h"
+#include "PAGE/Howl/PAGE_Howl.h"
 
 #include "menu_typedef.h"
 
@@ -134,6 +135,9 @@ void PAGE_init_struct_setting(void) {
 
 	sprintf(item_setting[INDEX_SETTING_STIM].text, "Стимуляция");
 	item_setting[INDEX_SETTING_STIM].callBackFunc_isClick = &PAGE_Stim;
+
+	sprintf(item_setting[INDEX_SETTING_HOWL].text, "Howl Режим");
+	item_setting[INDEX_SETTING_HOWL].callBackFunc_isClick = &PAGE_Howl_Main;
 
 	for(int i = 0; i < NUM_ITEM_SETTING ; i++)
 	{

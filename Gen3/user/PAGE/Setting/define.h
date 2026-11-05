@@ -11,8 +11,9 @@
 	#define INDEX_SETTING_VOLUME    11    //│
 	#define INDEX_SETTING_VOLTAGE   12    //│
 	#define INDEX_SETTING_STIM      13    //│
+	#define INDEX_SETTING_HOWL      14    //│
 									      //│
-	#define NUM_ITEM_SETTING  14          //│
+	#define NUM_ITEM_SETTING  15          //│
 //└─────────────────────────────────────────┘
 
 
