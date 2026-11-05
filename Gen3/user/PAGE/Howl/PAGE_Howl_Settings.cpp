@@ -10,42 +10,57 @@
 extern Encoder_typedef Encoder;
 extern void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM);
 
-#define INDEX_HSET_BACK         0
-#define INDEX_HSET_MODE         1
-#define INDEX_HSET_CARRIER      2
-#define INDEX_HSET_CYCLES       3
-#define INDEX_HSET_FADE         4
-#define INDEX_HSET_MP_WIDTH     5
-#define INDEX_HSET_LIMIT        6
-#define INDEX_HSET_STEP         7
-#define INDEX_HSET_AUTO_EN      8
-#define INDEX_HSET_AUTO_STEP    9
-#define INDEX_HSET_AUTO_INT    10
-#define INDEX_HSET_SAVE        11
+enum HowlSettingParamId {
+	HPARAM_BACK,
+	HPARAM_MODE,
+	HPARAM_CARRIER,
+	HPARAM_CYCLES,
+	HPARAM_FADE,
+	HPARAM_MP_WIDTH,
+	HPARAM_LIMIT,
+	HPARAM_STEP,
+	HPARAM_AUTO_EN,
+	HPARAM_AUTO_STEP,
+	HPARAM_AUTO_INT,
+	HPARAM_SAVE,
+	HPARAM_MAX
+};
 
-#define NUM_ITEM_HOWL_SET      12
+static int param_to_item_index[HPARAM_MAX];
+static const int MAX_HOWL_SETTINGS_ITEMS = 14;
 
 static menu_typedef menu_howl_set CCMRAM;
-static item_typedef item_howl_set[NUM_ITEM_HOWL_SET] CCMRAM;
+static item_typedef item_howl_set[MAX_HOWL_SETTINGS_ITEMS] CCMRAM;
 static const char* save_status_text = "Сохранить";
+static bool exit_requested = false;
+
+// ── 1. Навигация и Режим ──────────────────────────────────────────
+static void hset_click_BACK(void) {
+	exit_requested = true;
+}
 
 static void hset_pre_MODE(uint32_t index) {
-	const char* m = "Вейв";
-	if (Howl.settings.pulse_mode == HOWL_PULSE_MULTIPULSE) m = "MultiP";
-	else if (Howl.settings.pulse_mode == HOWL_PULSE_CONTINUOUS) m = "Непр";
-	snprintf(item_howl_set[INDEX_HSET_MODE].text, sizeof(item_howl_set[INDEX_HSET_MODE].text),
-		"Режим:%s", m);
+	int my_idx = param_to_item_index[HPARAM_MODE];
+	if (my_idx < 0) return;
+	const char* m = "Вейвлет";
+	if (Howl.settings.pulse_mode == HOWL_PULSE_MULTIPULSE) m = "MultiPulse";
+	else if (Howl.settings.pulse_mode == HOWL_PULSE_CONTINUOUS) m = "Непрерыв";
+	snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+		"Реж: %s", m);
 }
 
 static void hset_click_MODE(void) {
 	uint8_t next = (Howl.settings.pulse_mode + 1) % 3;
 	Howl.SetPulseMode((HowlPulseMode)next);
 	save_status_text = "Сохранить";
-	menu_howl_set.field.needUpdate = 1;
+	// field.exit = 1 triggers menu rebuild in while(!exit_requested)
 }
 
-static void hset_pre_CARRIER(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_CARRIER);
+// ── 2. Параметры режима Wavelet ──────────────────────────────────
+static void hset_pre_CARRIER_W(uint32_t index) {
+	int my_idx = param_to_item_index[HPARAM_CARRIER];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -58,16 +73,18 @@ static void hset_pre_CARRIER(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_CARRIER].text, sizeof(item_howl_set[INDEX_HSET_CARRIER].text),
-			"> Нес:%uHz <", Howl.settings.carrier_hz);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [W] Нес:%uHz <", Howl.settings.carrier_hz);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_CARRIER].text, sizeof(item_howl_set[INDEX_HSET_CARRIER].text),
-			"Несущ: %uHz", Howl.settings.carrier_hz);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[W] Несущ: %uHz", Howl.settings.carrier_hz);
 	}
 }
 
 static void hset_pre_CYCLES(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_CYCLES);
+	int my_idx = param_to_item_index[HPARAM_CYCLES];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -80,16 +97,18 @@ static void hset_pre_CYCLES(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_CYCLES].text, sizeof(item_howl_set[INDEX_HSET_CYCLES].text),
-			"> Пер: %u <", Howl.settings.wavelet_cycles);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [W] Пер: %u <", Howl.settings.wavelet_cycles);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_CYCLES].text, sizeof(item_howl_set[INDEX_HSET_CYCLES].text),
-			"Периоды: %u", Howl.settings.wavelet_cycles);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[W] Периоды: %u", Howl.settings.wavelet_cycles);
 	}
 }
 
 static void hset_pre_FADE(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_FADE);
+	int my_idx = param_to_item_index[HPARAM_FADE];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -102,16 +121,19 @@ static void hset_pre_FADE(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_FADE].text, sizeof(item_howl_set[INDEX_HSET_FADE].text),
-			"> Сглаж:%u <", Howl.settings.wavelet_fade);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [W] Сглаж:%u%% <", Howl.settings.wavelet_fade);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_FADE].text, sizeof(item_howl_set[INDEX_HSET_FADE].text),
-			"Сглаж: %u", Howl.settings.wavelet_fade);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[W] Сглаж: %u%%", Howl.settings.wavelet_fade);
 	}
 }
 
+// ── 3. Параметры режима MultiPulse ───────────────────────────────
 static void hset_pre_MP_WIDTH(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_MP_WIDTH);
+	int my_idx = param_to_item_index[HPARAM_MP_WIDTH];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -124,16 +146,44 @@ static void hset_pre_MP_WIDTH(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_MP_WIDTH].text, sizeof(item_howl_set[INDEX_HSET_MP_WIDTH].text),
-			"> MultiP:%uus <", Howl.settings.multipulse_width_us);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [MP] %uus <", Howl.settings.multipulse_width_us);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_MP_WIDTH].text, sizeof(item_howl_set[INDEX_HSET_MP_WIDTH].text),
-			"MultiP: %uus", Howl.settings.multipulse_width_us);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[MP] Длит: %uus", Howl.settings.multipulse_width_us);
 	}
 }
 
+// ── 4. Параметры режима Continuous ───────────────────────────────
+static void hset_pre_CARRIER_CW(uint32_t index) {
+	int my_idx = param_to_item_index[HPARAM_CARRIER];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
+	if (editing) {
+		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
+		Encoder.Left = 0;
+		Encoder.Right = 0;
+		if (delta) {
+			int v = (int)Howl.settings.carrier_hz + delta * 50;
+			if (v < 300) v = 300;
+			if (v > 3000) v = 3000;
+			Howl.settings.carrier_hz = (uint16_t)v;
+			save_status_text = "Сохранить";
+			menu_howl_set.field.needUpdate = 1;
+		}
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [CW] Нес:%uHz <", Howl.settings.carrier_hz);
+	} else {
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[CW] Несущ: %uHz", Howl.settings.carrier_hz);
+	}
+}
+
+// ── 5. Общие параметры мощности и безопасности ───────────────────
 static void hset_pre_LIMIT(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_LIMIT);
+	int my_idx = param_to_item_index[HPARAM_LIMIT];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -146,16 +196,18 @@ static void hset_pre_LIMIT(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_LIMIT].text, sizeof(item_howl_set[INDEX_HSET_LIMIT].text),
-			"> Лимит: %u <", Howl.settings.power_limit);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [Общ] Лим:%u <", Howl.settings.power_limit);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_LIMIT].text, sizeof(item_howl_set[INDEX_HSET_LIMIT].text),
-			"Лимит: %u", Howl.settings.power_limit);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[Общ] Лимит: %u", Howl.settings.power_limit);
 	}
 }
 
 static void hset_pre_STEP(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_STEP);
+	int my_idx = param_to_item_index[HPARAM_STEP];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -168,17 +220,20 @@ static void hset_pre_STEP(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_STEP].text, sizeof(item_howl_set[INDEX_HSET_STEP].text),
-			"> Шаг: %u <", Howl.settings.power_step);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [Общ] Шаг:%u <", Howl.settings.power_step);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_STEP].text, sizeof(item_howl_set[INDEX_HSET_STEP].text),
-			"Шаг: %u", Howl.settings.power_step);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[Общ] Шаг: %u", Howl.settings.power_step);
 	}
 }
 
+// ── 6. Общие параметры авто-нарастания ────────────────────────────
 static void hset_pre_AUTO_EN(uint32_t index) {
-	snprintf(item_howl_set[INDEX_HSET_AUTO_EN].text, sizeof(item_howl_set[INDEX_HSET_AUTO_EN].text),
-		"Авто: %s", Howl.settings.auto_inc_en ? "ВКЛ" : "ВЫКЛ");
+	int my_idx = param_to_item_index[HPARAM_AUTO_EN];
+	if (my_idx < 0) return;
+	snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+		"[Авт] Рост: %s", Howl.settings.auto_inc_en ? "ВКЛ" : "ВЫКЛ");
 }
 
 static void hset_click_AUTO_EN(void) {
@@ -188,7 +243,9 @@ static void hset_click_AUTO_EN(void) {
 }
 
 static void hset_pre_AUTO_STEP(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_AUTO_STEP);
+	int my_idx = param_to_item_index[HPARAM_AUTO_STEP];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -201,16 +258,18 @@ static void hset_pre_AUTO_STEP(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_AUTO_STEP].text, sizeof(item_howl_set[INDEX_HSET_AUTO_STEP].text),
-			"> Шаг:+%u <", Howl.settings.auto_inc_step);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [Авт] +%u <", Howl.settings.auto_inc_step);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_AUTO_STEP].text, sizeof(item_howl_set[INDEX_HSET_AUTO_STEP].text),
-			"Шаг: +%u", Howl.settings.auto_inc_step);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[Авт] Шаг: +%u", Howl.settings.auto_inc_step);
 	}
 }
 
 static void hset_pre_AUTO_INT(uint32_t index) {
-	bool editing = (menu_howl_set.field.encoder_block && menu_howl_set.index == INDEX_HSET_AUTO_INT);
+	int my_idx = param_to_item_index[HPARAM_AUTO_INT];
+	if (my_idx < 0) return;
+	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
 	if (editing) {
 		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
 		Encoder.Left = 0;
@@ -223,16 +282,19 @@ static void hset_pre_AUTO_INT(uint32_t index) {
 			save_status_text = "Сохранить";
 			menu_howl_set.field.needUpdate = 1;
 		}
-		snprintf(item_howl_set[INDEX_HSET_AUTO_INT].text, sizeof(item_howl_set[INDEX_HSET_AUTO_INT].text),
-			"> Пер:%us <", Howl.settings.auto_inc_interval_s);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"> [Авт] %us <", Howl.settings.auto_inc_interval_s);
 	} else {
-		snprintf(item_howl_set[INDEX_HSET_AUTO_INT].text, sizeof(item_howl_set[INDEX_HSET_AUTO_INT].text),
-			"Пер: %us", Howl.settings.auto_inc_interval_s);
+		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
+			"[Авт] Пер: %us", Howl.settings.auto_inc_interval_s);
 	}
 }
 
+// ── 7. Сохранение ────────────────────────────────────────────────
 static void hset_pre_SAVE(uint32_t index) {
-	snprintf(item_howl_set[INDEX_HSET_SAVE].text, sizeof(item_howl_set[INDEX_HSET_SAVE].text),
+	int my_idx = param_to_item_index[HPARAM_SAVE];
+	if (my_idx < 0) return;
+	snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
 		"%s", save_status_text);
 }
 
@@ -250,57 +312,166 @@ static void hset_param_click(void) {
 	menu_howl_set.field.needUpdate = 1;
 }
 
+static int setup_items_for_current_mode(void) {
+	for (int i = 0; i < HPARAM_MAX; i++) {
+		param_to_item_index[i] = -1;
+	}
+
+	int idx = 0;
+
+	// 0: Назад
+	param_to_item_index[HPARAM_BACK] = idx;
+	item_howl_set[idx].field.exit = 1;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = NULL;
+	item_howl_set[idx].callBackFunc_isClick = &hset_click_BACK;
+	snprintf(item_howl_set[idx].text, sizeof(item_howl_set[idx].text), "Назад");
+	idx++;
+
+	// 1: Режим
+	param_to_item_index[HPARAM_MODE] = idx;
+	item_howl_set[idx].field.exit = 1; // клик переключает режим и перезагружает список
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_MODE;
+	item_howl_set[idx].callBackFunc_isClick = &hset_click_MODE;
+	hset_pre_MODE(idx);
+	idx++;
+
+	// 2: Специфичные параметры выбранного режима
+	if (Howl.settings.pulse_mode == HOWL_PULSE_WAVELET) {
+		// Несущая частота
+		param_to_item_index[HPARAM_CARRIER] = idx;
+		item_howl_set[idx].field.exit = 0;
+		item_howl_set[idx].field.disable = 0;
+		item_howl_set[idx].text_color = -1;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_CARRIER_W;
+		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+		hset_pre_CARRIER_W(idx);
+		idx++;
+
+		// Периоды всплеска
+		param_to_item_index[HPARAM_CYCLES] = idx;
+		item_howl_set[idx].field.exit = 0;
+		item_howl_set[idx].field.disable = 0;
+		item_howl_set[idx].text_color = -1;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_CYCLES;
+		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+		hset_pre_CYCLES(idx);
+		idx++;
+
+		// Сглаживание огибающей
+		param_to_item_index[HPARAM_FADE] = idx;
+		item_howl_set[idx].field.exit = 0;
+		item_howl_set[idx].field.disable = 0;
+		item_howl_set[idx].text_color = -1;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_FADE;
+		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+		hset_pre_FADE(idx);
+		idx++;
+	} else if (Howl.settings.pulse_mode == HOWL_PULSE_MULTIPULSE) {
+		// Длительность импульса MultiPulse
+		param_to_item_index[HPARAM_MP_WIDTH] = idx;
+		item_howl_set[idx].field.exit = 0;
+		item_howl_set[idx].field.disable = 0;
+		item_howl_set[idx].text_color = -1;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_MP_WIDTH;
+		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+		hset_pre_MP_WIDTH(idx);
+		idx++;
+	} else { // HOWL_PULSE_CONTINUOUS
+		// Несущая частота Continuous
+		param_to_item_index[HPARAM_CARRIER] = idx;
+		item_howl_set[idx].field.exit = 0;
+		item_howl_set[idx].field.disable = 0;
+		item_howl_set[idx].text_color = -1;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_CARRIER_CW;
+		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+		hset_pre_CARRIER_CW(idx);
+		idx++;
+	}
+
+	// 3: Общие параметры мощности и безопасности
+	param_to_item_index[HPARAM_LIMIT] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_LIMIT;
+	item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+	hset_pre_LIMIT(idx);
+	idx++;
+
+	param_to_item_index[HPARAM_STEP] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_STEP;
+	item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+	hset_pre_STEP(idx);
+	idx++;
+
+	// 4: Общие параметры авто-нарастания
+	param_to_item_index[HPARAM_AUTO_EN] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_AUTO_EN;
+	item_howl_set[idx].callBackFunc_isClick = &hset_click_AUTO_EN;
+	hset_pre_AUTO_EN(idx);
+	idx++;
+
+	param_to_item_index[HPARAM_AUTO_STEP] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_AUTO_STEP;
+	item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+	hset_pre_AUTO_STEP(idx);
+	idx++;
+
+	param_to_item_index[HPARAM_AUTO_INT] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_AUTO_INT;
+	item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
+	hset_pre_AUTO_INT(idx);
+	idx++;
+
+	// 5: Сохранить
+	param_to_item_index[HPARAM_SAVE] = idx;
+	item_howl_set[idx].field.exit = 0;
+	item_howl_set[idx].field.disable = 0;
+	item_howl_set[idx].text_color = -1;
+	item_howl_set[idx].preCallBackFunc = &hset_pre_SAVE;
+	item_howl_set[idx].callBackFunc_isClick = &hset_click_SAVE;
+	hset_pre_SAVE(idx);
+	idx++;
+
+	return idx;
+}
+
 void PAGE_Howl_Settings(void) {
 	save_status_text = "Сохранить";
-
-	item_howl_set[INDEX_HSET_BACK].field.exit = 1;
-	snprintf(item_howl_set[INDEX_HSET_BACK].text, sizeof(item_howl_set[INDEX_HSET_BACK].text), "Назад");
-
-	item_howl_set[INDEX_HSET_MODE].preCallBackFunc = &hset_pre_MODE;
-	item_howl_set[INDEX_HSET_MODE].callBackFunc_isClick = &hset_click_MODE;
-
-	item_howl_set[INDEX_HSET_CARRIER].preCallBackFunc = &hset_pre_CARRIER;
-	item_howl_set[INDEX_HSET_CARRIER].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_CYCLES].preCallBackFunc = &hset_pre_CYCLES;
-	item_howl_set[INDEX_HSET_CYCLES].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_FADE].preCallBackFunc = &hset_pre_FADE;
-	item_howl_set[INDEX_HSET_FADE].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_MP_WIDTH].preCallBackFunc = &hset_pre_MP_WIDTH;
-	item_howl_set[INDEX_HSET_MP_WIDTH].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_LIMIT].preCallBackFunc = &hset_pre_LIMIT;
-	item_howl_set[INDEX_HSET_LIMIT].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_STEP].preCallBackFunc = &hset_pre_STEP;
-	item_howl_set[INDEX_HSET_STEP].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_AUTO_EN].preCallBackFunc = &hset_pre_AUTO_EN;
-	item_howl_set[INDEX_HSET_AUTO_EN].callBackFunc_isClick = &hset_click_AUTO_EN;
-
-	item_howl_set[INDEX_HSET_AUTO_STEP].preCallBackFunc = &hset_pre_AUTO_STEP;
-	item_howl_set[INDEX_HSET_AUTO_STEP].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_AUTO_INT].preCallBackFunc = &hset_pre_AUTO_INT;
-	item_howl_set[INDEX_HSET_AUTO_INT].callBackFunc_isClick = &hset_param_click;
-
-	item_howl_set[INDEX_HSET_SAVE].preCallBackFunc = &hset_pre_SAVE;
-	item_howl_set[INDEX_HSET_SAVE].callBackFunc_isClick = &hset_click_SAVE;
-
-	for (int i = 0; i < NUM_ITEM_HOWL_SET; i++) {
-		item_howl_set[i].text_color = -1;
-	}
+	exit_requested = false;
 
 	menu_howl_set.item_count = 6;
 	menu_howl_set.item_height = 36;
 	menu_howl_set.item_start_y = 0;
 	menu_howl_set.font = Roboto_Medium_en_ru_18;
 	menu_howl_set.field.verticalScroll = 1;
+	menu_howl_set.field.encoder_block = 0;
 	menu_howl_set.items = item_howl_set;
 	menu_howl_set.ColorBackground = COLOR_BACKGROUND;
 	menu_howl_set.preCallBackFunc = NULL;
+	menu_howl_set.index = 1; // Фокус по умолчанию на строке "Режим"
 
-	PAGE_Menu(&menu_howl_set, item_howl_set, NUM_ITEM_HOWL_SET);
+	while (!exit_requested) {
+		int num_items = setup_items_for_current_mode();
+		menu_howl_set.max_item = num_items - 1;
+		PAGE_Menu(&menu_howl_set, item_howl_set, num_items);
+	}
+
+	Font_Smooth_Load(menu_howl_set.font);
 }

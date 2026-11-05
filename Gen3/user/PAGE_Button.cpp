@@ -25,7 +25,7 @@ void PAGE_Menu(menu_typedef *menu, item_typedef *item, int NUM) {
 
 	volatile uint8_t i;
 
-	uint8_t index = 0;
+	uint8_t index = (menu->index < NUM) ? menu->index : 0;
 
 	int max_window_item;
 	int window_start;
