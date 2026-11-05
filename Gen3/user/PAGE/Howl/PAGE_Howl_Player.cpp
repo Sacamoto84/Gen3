@@ -125,10 +125,10 @@ static void hplay_pre_FILE(uint32_t index) {
 		const char* slash = strrchr(Howl.player.current_file, '/');
 		const char* name = slash ? (slash + 1) : Howl.player.current_file;
 		snprintf(item_howl_play[INDEX_HPLAY_FILE].text, sizeof(item_howl_play[INDEX_HPLAY_FILE].text),
-			"Файл: %s", name);
+			"%.19s", name);
 	} else {
 		snprintf(item_howl_play[INDEX_HPLAY_FILE].text, sizeof(item_howl_play[INDEX_HPLAY_FILE].text),
-			"Файл: [Выбрать]");
+			"Файл: [...]");
 	}
 }
 
@@ -139,7 +139,7 @@ static void hplay_click_FILE(void) {
 
 static void hplay_pre_STATE(uint32_t index) {
 	snprintf(item_howl_play[INDEX_HPLAY_STATE].text, sizeof(item_howl_play[INDEX_HPLAY_STATE].text),
-		"Статус: %s", Howl.player.is_playing ? "Воспр" : "Пауза");
+		"Плеер: %s", Howl.player.is_playing ? "PLAY" : "PAUSE");
 }
 
 static void hplay_click_STATE(void) {
@@ -156,9 +156,9 @@ static void hplay_pre_TIME(uint32_t index) {
 	uint32_t cur = Howl.player.GetCurrentSec();
 	uint32_t tot = Howl.player.GetTotalSec();
 	snprintf(item_howl_play[INDEX_HPLAY_TIME].text, sizeof(item_howl_play[INDEX_HPLAY_TIME].text),
-		"%02lu:%02lu / %02lu:%02lu",
-		(unsigned long)(cur / 60), (unsigned long)(cur % 60),
-		(unsigned long)(tot / 60), (unsigned long)(tot % 60));
+		"%02u:%02u / %02u:%02u",
+		(unsigned)((cur / 60) % 100), (unsigned)(cur % 60),
+		(unsigned)((tot / 60) % 100), (unsigned)(tot % 60));
 }
 
 static void hplay_pre_SPEED(uint32_t index) {
@@ -184,7 +184,7 @@ static void hplay_pre_SPEED(uint32_t index) {
 
 static void hplay_pre_LOOP(uint32_t index) {
 	snprintf(item_howl_play[INDEX_HPLAY_LOOP].text, sizeof(item_howl_play[INDEX_HPLAY_LOOP].text),
-		"Повтор: %s", Howl.player.is_loop ? "ВКЛ" : "ВЫКЛ");
+		"Цикл: %s", Howl.player.is_loop ? "ВКЛ" : "ВЫКЛ");
 }
 
 static void hplay_click_LOOP(void) {

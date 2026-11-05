@@ -68,10 +68,10 @@ static void hact_pre_INTENSITY(uint32_t index) {
 			menu_howl_act.field.needUpdate = 1;
 		}
 		snprintf(item_howl_act[INDEX_HACT_INTENSITY].text, sizeof(item_howl_act[INDEX_HACT_INTENSITY].text),
-			"> Интенс: %u%% <", (uint8_t)(Howl.activities.intensity_scale * 100.0f));
+			"> Инт:%u%% <", (uint8_t)(Howl.activities.intensity_scale * 100.0f));
 	} else {
 		snprintf(item_howl_act[INDEX_HACT_INTENSITY].text, sizeof(item_howl_act[INDEX_HACT_INTENSITY].text),
-			"Интенс: %u%%", (uint8_t)(Howl.activities.intensity_scale * 100.0f));
+			"Инт:%u%%", (uint8_t)(Howl.activities.intensity_scale * 100.0f));
 	}
 }
 
@@ -123,7 +123,7 @@ void PAGE_Howl_Act(void) {
 	item_howl_act[INDEX_HACT_SEED].preCallBackFunc = &hact_pre_SEED;
 	item_howl_act[INDEX_HACT_SEED].callBackFunc_isClick = &hact_param_click;
 
-	snprintf(item_howl_act[INDEX_HACT_RESET].text, sizeof(item_howl_act[INDEX_HACT_RESET].text), "Сброс ритма");
+	snprintf(item_howl_act[INDEX_HACT_RESET].text, sizeof(item_howl_act[INDEX_HACT_RESET].text), "Сброс");
 	item_howl_act[INDEX_HACT_RESET].preCallBackFunc = NULL;
 	item_howl_act[INDEX_HACT_RESET].callBackFunc_isClick = &hact_click_RESET;
 

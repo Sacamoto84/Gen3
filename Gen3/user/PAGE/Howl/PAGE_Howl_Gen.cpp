@@ -177,7 +177,7 @@ static void hgen_pre_FREQ_MAX(uint32_t index) {
 
 static void hgen_pre_AUTO_CHANGE(uint32_t index) {
 	snprintf(item_howl_gen[INDEX_HGEN_AUTO_CHANGE].text, sizeof(item_howl_gen[INDEX_HGEN_AUTO_CHANGE].text),
-		"Авто-смена: %s", Howl.wave_gen.amp_wave.auto_change_en ? "ВКЛ" : "ВЫКЛ");
+		"Авто: %s", Howl.wave_gen.amp_wave.auto_change_en ? "ВКЛ" : "ВЫКЛ");
 }
 
 static void hgen_click_AUTO_CHANGE(void) {
@@ -228,7 +228,7 @@ void PAGE_Howl_Gen(void) {
 	item_howl_gen[INDEX_HGEN_AUTO_CHANGE].preCallBackFunc = &hgen_pre_AUTO_CHANGE;
 	item_howl_gen[INDEX_HGEN_AUTO_CHANGE].callBackFunc_isClick = &hgen_click_AUTO_CHANGE;
 
-	snprintf(item_howl_gen[INDEX_HGEN_RANDOMIZE].text, sizeof(item_howl_gen[INDEX_HGEN_RANDOMIZE].text), "Рандомизация");
+	snprintf(item_howl_gen[INDEX_HGEN_RANDOMIZE].text, sizeof(item_howl_gen[INDEX_HGEN_RANDOMIZE].text), "Рандом");
 	item_howl_gen[INDEX_HGEN_RANDOMIZE].preCallBackFunc = NULL;
 	item_howl_gen[INDEX_HGEN_RANDOMIZE].callBackFunc_isClick = &hgen_click_RANDOMIZE;
 
