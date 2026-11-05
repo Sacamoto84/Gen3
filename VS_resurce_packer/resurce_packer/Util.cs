@@ -12,11 +12,15 @@ namespace resurce_packer
 
         UInt32 readInt32()
         {
+            byte[] data = resCollection[selectedIndex].img_byte_arr;
+            if (data == null || (UInt64)p + 4 > (UInt64)data.Length)
+                throw new InvalidDataException("Файл шрифта обрывается внутри 32-битного поля.");
+
             UInt32 res = 0;
-            res = (UInt32)resCollection[selectedIndex].img_byte_arr[p++] << 24;
-            res |= (UInt32)resCollection[selectedIndex].img_byte_arr[p++] << 16;
-            res |= (UInt32)resCollection[selectedIndex].img_byte_arr[p++] << 8;
-            res |= (UInt32)resCollection[selectedIndex].img_byte_arr[p++];
+            res = (UInt32)data[p++] << 24;
+            res |= (UInt32)data[p++] << 16;
+            res |= (UInt32)data[p++] << 8;
+            res |= (UInt32)data[p++];
             return res;
         }
 
@@ -52,11 +56,22 @@ namespace resurce_packer
 
         void Font_Smooth_Load()
         {
-            GliphCollection.Clear();
+            ClearGlyphCollection();
+
+            byte[] data = resCollection[selectedIndex].img_byte_arr;
+            if (data == null || data.Length < 24)
+                throw new InvalidDataException("Файл VLW слишком короткий: ожидается заголовок из 24 байт.");
 
             p = 0;
             p_start = 0;
-            gFont.gCount   = (UInt16)readInt32();      // glyph count in file
+            UInt32 glyphCount = readInt32();
+            if (glyphCount > UInt16.MaxValue)
+                throw new InvalidDataException("В VLW заявлено слишком много глифов.");
+
+            if ((UInt64)24 + (UInt64)glyphCount * 28 > (UInt64)data.Length)
+                throw new InvalidDataException("В VLW отсутствует часть таблицы глифов.");
+
+            gFont.gCount   = (UInt16)glyphCount;       // glyph count in file
             readInt32();                               // vlw encoder version - discard
             gFont.yAdvance = (UInt16)readInt32();      // Font size in points, not pixels
             readInt32();                               // discard
@@ -73,7 +88,6 @@ namespace resurce_packer
 
         void Font_Smooth_loadMetrics(UInt16 gCount)
         {
-            UInt32 headerPtr = 24;
             UInt32 bitmapPtr = 24 + (UInt32)gCount * 28;
 
             for (int i = 0; i < gCount; i++)
@@ -98,21 +112,24 @@ namespace resurce_packer
                     }
                 }
 
+                UInt32 bitmapLength = checked((UInt32)g.gWidth * (UInt32)g.gHeight);
+                if ((UInt64)bitmapPtr + bitmapLength > (UInt64)resCollection[selectedIndex].img_byte_arr.Length)
+                    throw new InvalidDataException("В VLW отсутствуют данные изображения одного из глифов.");
+
                 g.gBitmap = bitmapPtr;
-                headerPtr += 28;
-                bitmapPtr += (UInt32)(g.gWidth * g.gHeight);
+                bitmapPtr += bitmapLength;
                 GliphCollection.Add(g);
             }
 
             gFont.yAdvance = (UInt16)(gFont.maxAscent + gFont.maxDescent);
             gFont.spaceWidth = (UInt16)((gFont.ascent + gFont.descent) * 2 / 7); // Guess at space width
 
-            dataGridView1.Rows.Clear();
             foreach (Gliph g in GliphCollection)
             {
                 //Записываем в дата данные глифа в коллекцию
-                g.data = new byte[g.gHeight * g.gWidth];
-                Array.Copy(resCollection[selectedIndex].img_byte_arr, g.gBitmap, g.data, 0, g.gHeight * g.gWidth);
+                int glyphDataLength = checked((int)((UInt32)g.gHeight * (UInt32)g.gWidth));
+                g.data = new byte[glyphDataLength];
+                Array.Copy(resCollection[selectedIndex].img_byte_arr, (int)g.gBitmap, g.data, 0, glyphDataLength);
 
                 //Создаем картинку для каждого глифа и помещаем к коллекцию
                 g.bmp = Font_Smooth_drawGlyph(g.gUnicode);
@@ -126,9 +143,7 @@ namespace resurce_packer
             Int16 X = 2;
             Int16 Y = 5;
 
-            Bitmap bmp = new Bitmap(64, 64); ;
-            Graphics g = Graphics.FromImage(bmp);
-            g.Clear(Color.Blue);
+            Bitmap bmp = new Bitmap(64, 64);
 
             UInt32 p_gBitmap; //Указатель на графические данные
             Byte pixel;
@@ -151,66 +166,69 @@ namespace resurce_packer
 
             Color fg = Color.White;
             Color bg = Color.Blue;
-            Pen pixelBrush = new Pen(Color.White);
-
-            if (found) //Если нашли символ
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (Pen pixelBrush = new Pen(Color.White))
             {
-                if (X == 0) X -= GliphCollection[gNum].gdX;
-
-                p_gBitmap = p_start + GliphCollection[gNum].gBitmap; //Начало графических данных
-
-                Int16  xs = 0;
-                UInt32 dl = 0;
-
-                Int16 cy = (Int16)(Y + gFont.maxAscent - GliphCollection[gNum].gdY);
-                Int16 cx = (Int16)(X + GliphCollection[gNum].gdX);
-
-
-                for (int y = 0; y < GliphCollection[gNum].gHeight; y++)
+                g.Clear(Color.Blue);
+                if (found) //Если нашли символ
                 {
-                    for (int x = 0; x < GliphCollection[gNum].gWidth; x++)
+                    if (X == 0) X -= GliphCollection[gNum].gdX;
+
+                    p_gBitmap = p_start + GliphCollection[gNum].gBitmap; //Начало графических данных
+
+                    Int16  xs = 0;
+                    UInt32 dl = 0;
+
+                    Int16 cy = (Int16)(Y + gFont.maxAscent - GliphCollection[gNum].gdY);
+                    Int16 cx = (Int16)(X + GliphCollection[gNum].gdX);
+
+
+                    for (int y = 0; y < GliphCollection[gNum].gHeight; y++)
                     {
-                        pixel = resCollection[selectedIndex].img_byte_arr[p_gBitmap++]; //pbuffer[x]; //<//
-
-                        if (pixel > 0)
+                        for (int x = 0; x < GliphCollection[gNum].gWidth; x++)
                         {
-                            if (pixel != 0xFF)
-                            {
-                                if (dl > 0)
-                                {
-                                    if (dl == 1)
-                                        bmp.SetPixel(xs, y + cy, fg);
-                                    else
-                                        g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
+                            pixel = resCollection[selectedIndex].img_byte_arr[p_gBitmap++];
 
-                                    dl = 0;
-                                }
+                            if (pixel > 0)
+                            {
+                                if (pixel != 0xFF)
+                                {
+                                    if (dl > 0)
+                                    {
+                                        if (dl == 1)
+                                            bmp.SetPixel(xs, y + cy, fg);
+                                        else
+                                            g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
+
+                                        dl = 0;
+                                    }
 
                                 //if (getColor>0)
                                 //  bg = bmp.GetPixel(x + cx, y + cy);
 
-                                bmp.SetPixel(x + cx, y + cy, alphaBlend(pixel, fg, bg));
+                                    bmp.SetPixel(x + cx, y + cy, alphaBlend(pixel, fg, bg));
 
+                                }
+                                else
+                                { if (dl == 0) xs = (short)(x + cx); dl++; }
                             }
                             else
-                            { if (dl == 0) xs = (short)(x + cx); dl++; }
-                        }
-                        else
-                        {
-                            if (dl > 0)
                             {
-                                g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
-                                dl = 0;
+                                if (dl > 0)
+                                {
+                                    g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
+                                    dl = 0;
+                                }
                             }
                         }
+                        if (dl > 0)
+                        {
+                            g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
+                            dl = 0;
+                        }
                     }
-                    if (dl > 0)
-                    {
-                        g.DrawLine(pixelBrush, xs, y + cy, xs + dl, y + cy);
-                        dl = 0;
-                    }
+                    X += (short)(GliphCollection[gNum].gxAdvance);
                 }
-                X += (short)(GliphCollection[gNum].gxAdvance);
             }
 
             return bmp;
@@ -227,10 +245,9 @@ namespace resurce_packer
             byte bgG = bgc.G;
             byte bgB = bgc.B;
 
-            // Shift right 1 to drop rounding bit and shift right 8 to divide by 256
-            byte r = (byte)(((fgR * alpha) + (bgR * (255 - alpha))) >> 9);
-            byte g = (byte)(((fgG * alpha) + (bgG * (255 - alpha))) >> 9);
-            byte b = (byte)(((fgB * alpha) + (bgB * (255 - alpha))) >> 9);
+            byte r = (byte)(((fgR * alpha) + (bgR * (255 - alpha)) + 127) / 255);
+            byte g = (byte)(((fgG * alpha) + (bgG * (255 - alpha)) + 127) / 255);
+            byte b = (byte)(((fgB * alpha) + (bgB * (255 - alpha)) + 127) / 255);
 
             // Combine RGB565 colours into 16 bits
             return Color.FromArgb(r, g, b);
@@ -242,6 +259,10 @@ namespace resurce_packer
         /// </summary>
         private void convertGliphToImageByteArray()
         {
+            if (GliphCollection.Count > UInt16.MaxValue)
+                throw new InvalidOperationException("Слишком много глифов для формата VLW.");
+
+            gFont.gCount = (UInt16)GliphCollection.Count;
             //Очищаем текщий массив
             resCollection[selectedIndex].img_byte_arr = null;
 
@@ -288,10 +309,7 @@ namespace resurce_packer
         private bool seachUnicodeInArray(ushort index, ushort[] massiv)
         {
             foreach (ushort i in massiv)
-            {
                 if (index == i) return true;
-                if (index > 1105) return true;
-            }
             return false;
         }
 
@@ -317,8 +335,9 @@ namespace resurce_packer
         Image BytesToImage(byte[] value)
         {
             using (var ms = new MemoryStream(value))
+            using (var source = Image.FromStream(ms))
             {
-                return Image.FromStream(ms);
+                return new Bitmap(source);
             }
         }
 
@@ -331,39 +350,39 @@ namespace resurce_packer
         /// <returns>Массив байтов</returns>
         byte[] ImageToBytesBit(Image value, int bit)
         { 
+            if (bit != 16 && bit != 24 && bit != 32)
+                throw new ArgumentOutOfRangeException("bit", "Поддерживаются только 16, 24 и 32 bit.");
+
             List<byte> arr = new List<byte>();
-            Bitmap bmp = new Bitmap(value);
-            byte A = 0;
-            byte R = 0;
-            byte G = 0;
-            byte B = 0;
-            
-            for (int y = 0; y < bmp.Height; y++)
+            using (Bitmap bmp = new Bitmap(value))
             {
-                for (int x = 0; x < bmp.Width; x++)
+                for (int y = 0; y < bmp.Height; y++)
                 {
-                    Color Pixel = bmp.GetPixel(x, y);
-                    A = Pixel.A; R = Pixel.R; G = Pixel.G; B = Pixel.B;
-
-                    if (bit == 32)
+                    for (int x = 0; x < bmp.Width; x++)
                     {
-                        arr.Add(A);arr.Add(R);arr.Add(G);arr.Add(B);
+                        Color Pixel = bmp.GetPixel(x, y);
+                        byte A = Pixel.A;
+                        byte R = Pixel.R;
+                        byte G = Pixel.G;
+                        byte B = Pixel.B;
+
+                        if (bit == 32)
+                        {
+                            arr.Add(A);arr.Add(R);arr.Add(G);arr.Add(B);
+                        }
+
+                        if (bit == 24)
+                        {
+                            arr.Add(A);
+                            arr.AddRange(RGB565(R, G, B));
+                        }
+
+
+                        if (bit == 16)
+                        {
+                            arr.AddRange(RGB565(R, G, B));
+                        }
                     }
-
-                    if (bit == 24)
-                    {
-                        arr.Add(A); 
-                        arr.AddRange(RGB565(R, G, B));
-                    }
-
-
-                    if (bit == 16)
-                    {
-                        arr.AddRange(RGB565(R, G, B));
-                    }   
-                    
-
-
                 }
             }
 
@@ -399,6 +418,25 @@ namespace resurce_packer
             log.SelectionMode = SelectionMode.One;
             log.Items.Add(str);
             log.SelectedIndex = log.Items.Count - 1;
+        }
+
+        private void SetPreviewImage(Image image)
+        {
+            Image previous = pBox.Image;
+            pBox.Image = image;
+            pBox.BackColor = image == null ? Color.Magenta : SystemColors.Control;
+            if (previous != null)
+                previous.Dispose();
+        }
+
+        private void ClearGlyphCollection()
+        {
+            foreach (Gliph glyph in GliphCollection)
+                if (glyph.bmp != null)
+                    glyph.bmp.Dispose();
+
+            GliphCollection.Clear();
+            dataGridView1.Rows.Clear();
         }
 
 
