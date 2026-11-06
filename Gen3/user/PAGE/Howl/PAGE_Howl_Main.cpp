@@ -27,6 +27,83 @@ static const char* menu_item_titles[HOWL_MAIN_NUM_ITEMS] = {
 	"Настройки ->"
 };
 
+// ── КАРТОЧКА МОЩНОСТИ И ПУЛЬСА (Y: 28..96) ─────────────────────────────
+static void draw_dynamic_card(bool editing_power) {
+	char str[48];
+
+	// Очистка и заливка подложки карточки (Y: 28..96)
+	tft.RectangleFilled(0, 28, 240, 69, COLOR_BACKGROUND);
+	tft.RectangleFilled(4, 28, 232, 68, RGB565(25, 30, 45));
+
+	// Строка мощности
+	if (editing_power) {
+		snprintf(str, sizeof(str), "> Мощн: %u / %u <", Howl.settings.power_a, Howl.settings.power_limit);
+		Font_Smooth_drawStr(&tft, 10, 32, str, RGB565(255, 220, 50));
+	} else {
+		snprintf(str, sizeof(str), "Мощн: %u / %u  %s",
+			Howl.settings.power_a, Howl.settings.power_limit,
+			Howl.settings.auto_inc_en ? "Auto+" : "");
+		Font_Smooth_drawStr(&tft, 10, 32, str, RGB565(240, 240, 240));
+	}
+
+	// Строка частоты и типа
+	snprintf(str, sizeof(str), "%.1f Hz  Amp:%u%%  %s",
+		Howl.telemetry.current_freq_hz,
+		(uint8_t)(Howl.telemetry.current_amp * 100.0f),
+		Howl.telemetry.activity_name);
+	Font_Smooth_drawStr(&tft, 10, 52, str, RGB565(80, 230, 130));
+
+	// ── ДИНАМИЧЕСКИЕ БАРЫ ЧАСТОТЫ И АМПЛИТУДЫ ─────────────
+	const int bar_x = 10;
+	const int bar_w = 220;
+	const int bar_h = 8;
+	const int bar1_y = 73; // Верхний бар: Частота
+	const int bar2_y = 83; // Нижний бар: Амплитуда
+
+	// Цвет бара зависит от текущей частоты (как в Android приложении)
+	uint16_t bar_color;
+	if (Howl.telemetry.current_freq_hz < 25.0f) {
+		bar_color = RGB565(0, 190, 240);   // Голубой (глубокие сокращения)
+	} else if (Howl.telemetry.current_freq_hz < 60.0f) {
+		bar_color = RGB565(40, 220, 90);   // Ярко-зеленый (рабочая стимуляция)
+	} else {
+		bar_color = RGB565(250, 130, 30);  // Оранжевый/красный (вибрация/щекотка)
+	}
+
+	// Фон индикаторов
+	tft.RectangleFilled(bar_x, bar1_y, bar_w, bar_h, RGB565(12, 16, 24));
+	tft.RectangleFilled(bar_x, bar2_y, bar_w, bar_h, RGB565(12, 16, 24));
+
+	// Расчет заполнения верхнего бара (Частота: min_freq .. max_freq)
+	float f_min = Howl.settings.min_freq_hz;
+	float f_max = Howl.settings.max_freq_hz;
+	float f_cur = Howl.telemetry.current_freq_hz;
+	float f_norm = (f_max > f_min) ? ((f_cur - f_min) / (f_max - f_min)) : 0.0f;
+	if (f_norm < 0.0f) f_norm = 0.0f;
+	if (f_norm > 1.0f) f_norm = 1.0f;
+	int fill_freq_w = (int)(f_norm * (float)bar_w);
+	if (fill_freq_w < 2 && f_cur > 0.0f) fill_freq_w = 2;
+	if (fill_freq_w > bar_w) fill_freq_w = bar_w;
+
+	// Расчет заполнения нижнего бара (Амплитуда / Импульс: 0 .. 100%)
+	int fill_amp_w = (Howl.telemetry.meter_bar * bar_w) / 100;
+	if (fill_amp_w > bar_w) fill_amp_w = bar_w;
+
+	// Отрисовка активного заполнения
+	if (!Howl.settings.is_muted && Howl.settings.power_a > 0) {
+		if (fill_freq_w > 0) {
+			tft.RectangleFilled(bar_x, bar1_y, fill_freq_w, bar_h, bar_color);
+		}
+		if (fill_amp_w > 0) {
+			tft.RectangleFilled(bar_x, bar2_y, fill_amp_w, bar_h, bar_color);
+		}
+	}
+
+	// Рамки индикаторов
+	tft.Rectangle(bar_x, bar1_y, bar_w, bar_h, RGB565(70, 80, 100));
+	tft.Rectangle(bar_x, bar2_y, bar_w, bar_h, RGB565(70, 80, 100));
+}
+
 void PAGE_Howl_Main(void) {
 	// ════════════════════════════════════════════════════════════════
 	// ВХОД В HOWL РЕЖИМ: изоляция от Legacy генератора и скриптов
@@ -45,6 +122,11 @@ void PAGE_Howl_Main(void) {
 	const int window_size = 4;
 	bool editing_power = false;
 	uint32_t last_render_time = 0;
+	bool need_full_redraw = true;
+
+	uint16_t last_power_a = Howl.settings.power_a;
+	bool last_is_muted = Howl.settings.is_muted;
+	HowlSource last_source = Howl.source;
 
 	char str[48];
 
@@ -54,6 +136,17 @@ void PAGE_Howl_Main(void) {
 		// Обработка длительного нажатия: быстрый MUTE / UNMUTE (безопасность!)
 		if (button.isHolded()) {
 			Howl.ToggleMute();
+			need_full_redraw = true;
+		}
+
+		// Отслеживание внешних изменений параметров для полного обновления
+		if (Howl.settings.power_a != last_power_a ||
+		    Howl.settings.is_muted != last_is_muted ||
+		    Howl.source != last_source) {
+			need_full_redraw = true;
+			last_power_a = Howl.settings.power_a;
+			last_is_muted = Howl.settings.is_muted;
+			last_source = Howl.source;
 		}
 
 		// Опрос энкодера
@@ -64,6 +157,7 @@ void PAGE_Howl_Main(void) {
 			if (delta != 0) {
 				int next_p = (int)Howl.settings.power_a + delta * (int)Howl.settings.power_step;
 				Howl.SetPower(next_p);
+				need_full_redraw = true;
 			}
 		} else {
 			if (Encoder.Left) {
@@ -75,6 +169,7 @@ void PAGE_Howl_Main(void) {
 				} else if (index >= window_start + window_size) {
 					window_start = index - window_size + 1;
 				}
+				need_full_redraw = true;
 			}
 			if (Encoder.Right) {
 				Encoder.Right = 0;
@@ -85,6 +180,7 @@ void PAGE_Howl_Main(void) {
 				} else if (index < window_start) {
 					window_start = index;
 				}
+				need_full_redraw = true;
 			}
 		}
 
@@ -94,6 +190,7 @@ void PAGE_Howl_Main(void) {
 
 			if (editing_power) {
 				editing_power = false;
+				need_full_redraw = true;
 			} else {
 				switch (index) {
 					case 0: // Выход в Legacy режим
@@ -108,31 +205,37 @@ void PAGE_Howl_Main(void) {
 						{
 							uint8_t next_s = (Howl.source + 1) % 3;
 							Howl.SetSource((HowlSource)next_s);
+							need_full_redraw = true;
 						}
 						break;
 
 					case 2: // Редактирование мощности
 						editing_power = true;
+						need_full_redraw = true;
 						break;
 
 					case 3: // Волновой генератор
 						PAGE_Howl_Gen();
 						Font_Smooth_Load(Roboto_Medium_en_ru_18);
+						need_full_redraw = true;
 						break;
 
 					case 4: // Меню активностей
 						PAGE_Howl_Act();
 						Font_Smooth_Load(Roboto_Medium_en_ru_18);
+						need_full_redraw = true;
 						break;
 
 					case 5: // Плеер файлов
 						PAGE_Howl_Player();
 						Font_Smooth_Load(Roboto_Medium_en_ru_18);
+						need_full_redraw = true;
 						break;
 
 					case 6: // Настройки Howl
 						PAGE_Howl_Settings();
 						Font_Smooth_Load(Roboto_Medium_en_ru_18);
+						need_full_redraw = true;
 						break;
 				}
 			}
@@ -143,130 +246,69 @@ void PAGE_Howl_Main(void) {
 		if (now - last_render_time >= 40) {
 			last_render_time = now;
 
-			tft.Fill16(COLOR_BACKGROUND);
+			if (need_full_redraw) {
+				tft.Fill16(COLOR_BACKGROUND);
 
-			// ── ВЕРХНЯЯ ШАПКА (HUD Bar) ──────────────────────────────
-			tft.RectangleFilled(0, 0, 240, 24, RGB565(15, 25, 45));
+				// ── ВЕРХНЯЯ ШАПКА (HUD Bar) ──────────────────────────────
+				tft.RectangleFilled(0, 0, 240, 24, RGB565(15, 25, 45));
 
-			Font_Smooth_drawStr(&tft, 8, 4, (char*)"HOWL РЕЖИМ", RGB565(100, 200, 255));
+				Font_Smooth_drawStr(&tft, 8, 4, (char*)"HOWL РЕЖИМ", RGB565(100, 200, 255));
 
-			// Статус MUTE или Источник в правом углу шапки
-			if (Howl.settings.is_muted) {
-				tft.RectangleFilled(165, 3, 70, 18, RGB565(200, 20, 20));
-				Font_Smooth_drawStr(&tft, 175, 4, (char*)"MUTE", RGB565(255, 255, 255));
-			} else {
-				snprintf(str, sizeof(str), "[%s]", Howl.telemetry.source_name);
-				Font_Smooth_drawStr(&tft, 140, 4, str, RGB565(180, 220, 180));
-			}
-
-			// ── КАРТОЧКА МОЩНОСТИ И ПУЛЬСА (Y: 28..96) ─────────────
-			tft.RectangleFilled(4, 28, 232, 68, RGB565(25, 30, 45));
-
-			// Строка мощности
-			if (editing_power) {
-				snprintf(str, sizeof(str), "> Мощн: %u / %u <", Howl.settings.power_a, Howl.settings.power_limit);
-				Font_Smooth_drawStr(&tft, 10, 32, str, RGB565(255, 220, 50));
-			} else {
-				snprintf(str, sizeof(str), "Мощн: %u / %u  %s",
-					Howl.settings.power_a, Howl.settings.power_limit,
-					Howl.settings.auto_inc_en ? "Auto+" : "");
-				Font_Smooth_drawStr(&tft, 10, 32, str, RGB565(240, 240, 240));
-			}
-
-			// Строка частоты и типа
-			snprintf(str, sizeof(str), "%.1f Hz  Amp:%u%%  %s",
-				Howl.telemetry.current_freq_hz,
-				(uint8_t)(Howl.telemetry.current_amp * 100.0f),
-				Howl.telemetry.activity_name);
-			Font_Smooth_drawStr(&tft, 10, 52, str, RGB565(80, 230, 130));
-
-			// ── ДИНАМИЧЕСКИЕ БАРЫ ЧАСТОТЫ И АМПЛИТУДЫ ─────────────
-			const int bar_x = 10;
-			const int bar_w = 220;
-			const int bar_h = 8;
-			const int bar1_y = 73; // Верхний бар: Частота
-			const int bar2_y = 83; // Нижний бар: Амплитуда
-
-			// Цвет бара зависит от текущей частоты (как в Android приложении)
-			uint16_t bar_color;
-			if (Howl.telemetry.current_freq_hz < 25.0f) {
-				bar_color = RGB565(0, 190, 240);   // Голубой (глубокие сокращения)
-			} else if (Howl.telemetry.current_freq_hz < 60.0f) {
-				bar_color = RGB565(40, 220, 90);   // Ярко-зеленый (рабочая стимуляция)
-			} else {
-				bar_color = RGB565(250, 130, 30);  // Оранжевый/красный (вибрация/щекотка)
-			}
-
-			// Фон индикаторов
-			tft.RectangleFilled(bar_x, bar1_y, bar_w, bar_h, RGB565(12, 16, 24));
-			tft.RectangleFilled(bar_x, bar2_y, bar_w, bar_h, RGB565(12, 16, 24));
-
-			// Расчет заполнения верхнего бара (Частота: min_freq .. max_freq)
-			float f_min = Howl.settings.min_freq_hz;
-			float f_max = Howl.settings.max_freq_hz;
-			float f_cur = Howl.telemetry.current_freq_hz;
-			float f_norm = (f_max > f_min) ? ((f_cur - f_min) / (f_max - f_min)) : 0.0f;
-			if (f_norm < 0.0f) f_norm = 0.0f;
-			if (f_norm > 1.0f) f_norm = 1.0f;
-			int fill_freq_w = (int)(f_norm * (float)bar_w);
-			if (fill_freq_w < 2 && f_cur > 0.0f) fill_freq_w = 2;
-			if (fill_freq_w > bar_w) fill_freq_w = bar_w;
-
-			// Расчет заполнения нижнего бара (Амплитуда / Импульс: 0 .. 100%)
-			int fill_amp_w = (Howl.telemetry.meter_bar * bar_w) / 100;
-			if (fill_amp_w > bar_w) fill_amp_w = bar_w;
-
-			// Отрисовка активного заполнения
-			if (!Howl.settings.is_muted && Howl.settings.power_a > 0) {
-				if (fill_freq_w > 0) {
-					tft.RectangleFilled(bar_x, bar1_y, fill_freq_w, bar_h, bar_color);
-				}
-				if (fill_amp_w > 0) {
-					tft.RectangleFilled(bar_x, bar2_y, fill_amp_w, bar_h, bar_color);
-				}
-			}
-
-			// Рамки индикаторов
-			tft.Rectangle(bar_x, bar1_y, bar_w, bar_h, RGB565(70, 80, 100));
-			tft.Rectangle(bar_x, bar2_y, bar_w, bar_h, RGB565(70, 80, 100));
-
-			// ── МЕНЮ ВЫБОРА (Y: 102..238) ─────────────────────────
-			const int item_h = 34;
-			const int menu_y_start = 102;
-
-			for (int i = 0; i < window_size; i++) {
-				int item_idx = window_start + i;
-				if (item_idx >= HOWL_MAIN_NUM_ITEMS) break;
-
-				int y = menu_y_start + i * item_h;
-
-				// Подсветка выбранного пункта
-				if (item_idx == index) {
-					tft.RectangleFilled(0, y, 239, item_h - 2, COLOR_RECTAGLE);
-				}
-
-				// Текст пункта
-				if (item_idx == 1) {
-					snprintf(str, sizeof(str), "Источник: %s", Howl.telemetry.source_name);
-				} else if (item_idx == 2) {
-					snprintf(str, sizeof(str), "Мощность: %u", Howl.settings.power_a);
+				// Статус MUTE или Источник в правом углу шапки
+				if (Howl.settings.is_muted) {
+					tft.RectangleFilled(165, 3, 70, 18, RGB565(200, 20, 20));
+					Font_Smooth_drawStr(&tft, 175, 4, (char*)"MUTE", RGB565(255, 255, 255));
 				} else {
-					snprintf(str, sizeof(str), "%s", menu_item_titles[item_idx]);
+					snprintf(str, sizeof(str), "[%s]", Howl.telemetry.source_name);
+					Font_Smooth_drawStr(&tft, 140, 4, str, RGB565(180, 220, 180));
 				}
 
-				uint16_t text_color = (item_idx == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT;
-				Font_Smooth_drawStr(&tft, 12, y + 6, str, text_color);
-			}
+				// ── КАРТОЧКА МОЩНОСТИ И ПУЛЬСА (Y: 28..96) ─────────────
+				draw_dynamic_card(editing_power);
 
-			// Скролл-бар справа
-			if (HOWL_MAIN_NUM_ITEMS > window_size) {
-				tft.RectangleFilled(234, menu_y_start, 4, window_size * item_h - 2, RGB565(30, 35, 45));
-				int scroll_h = (window_size * item_h - 2) * window_size / HOWL_MAIN_NUM_ITEMS;
-				int scroll_y = menu_y_start + ((window_size * item_h - 2 - scroll_h) * window_start) / (HOWL_MAIN_NUM_ITEMS - window_size);
-				tft.RectangleFilled(234, scroll_y, 4, scroll_h, RGB565(180, 190, 210));
-			}
+				// ── МЕНЮ ВЫБОРА (Y: 102..238) ─────────────────────────
+				const int item_h = 34;
+				const int menu_y_start = 102;
 
-			tft.driver.ST7789_UpdateDMA16bitV3();
+				for (int i = 0; i < window_size; i++) {
+					int item_idx = window_start + i;
+					if (item_idx >= HOWL_MAIN_NUM_ITEMS) break;
+
+					int y = menu_y_start + i * item_h;
+
+					// Подсветка выбранного пункта
+					if (item_idx == index) {
+						tft.RectangleFilled(0, y, 239, item_h - 2, COLOR_RECTAGLE);
+					}
+
+					// Текст пункта
+					if (item_idx == 1) {
+						snprintf(str, sizeof(str), "Источник: %s", Howl.telemetry.source_name);
+					} else if (item_idx == 2) {
+						snprintf(str, sizeof(str), "Мощность: %u", Howl.settings.power_a);
+					} else {
+						snprintf(str, sizeof(str), "%s", menu_item_titles[item_idx]);
+					}
+
+					uint16_t text_color = (item_idx == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT;
+					Font_Smooth_drawStr(&tft, 12, y + 6, str, text_color);
+				}
+
+				// Скролл-бар справа
+				if (HOWL_MAIN_NUM_ITEMS > window_size) {
+					tft.RectangleFilled(234, menu_y_start, 4, window_size * item_h - 2, RGB565(30, 35, 45));
+					int scroll_h = (window_size * item_h - 2) * window_size / HOWL_MAIN_NUM_ITEMS;
+					int scroll_y = menu_y_start + ((window_size * item_h - 2 - scroll_h) * window_start) / (HOWL_MAIN_NUM_ITEMS - window_size);
+					tft.RectangleFilled(234, scroll_y, 4, scroll_h, RGB565(180, 190, 210));
+				}
+
+				tft.driver.ST7789_UpdateDMA16bitV3();
+				need_full_redraw = false;
+			} else {
+				// Частичное динамическое обновление: только строки карточки Y: 28..96
+				draw_dynamic_card(editing_power);
+				tft.driver.ST7789_UpdateDMA16bit_Lines(28, 96);
+			}
 		}
 	}
 }
