@@ -180,18 +180,12 @@ void PAGE_Howl_Main(void) {
 				Howl.telemetry.activity_name);
 			Font_Smooth_drawStr(&tft, 10, 52, str, RGB565(80, 230, 130));
 
-			// ── ДИНАМИЧЕСКИЙ 40 Гц БАР ИНТЕНСИВНОСТИ И ЧАСТОТЫ ────
+			// ── ДИНАМИЧЕСКИЕ БАРЫ ЧАСТОТЫ И АМПЛИТУДЫ ─────────────
 			const int bar_x = 10;
-			const int bar_y = 74;
 			const int bar_w = 220;
-			const int bar_h = 16;
-
-			// Фон индикатора
-			tft.RectangleFilled(bar_x, bar_y, bar_w, bar_h, RGB565(12, 16, 24));
-
-			// Заполнение бара пропорционально мгновенному импульсу
-			int fill_w = (Howl.telemetry.meter_bar * bar_w) / 100;
-			if (fill_w > bar_w) fill_w = bar_w;
+			const int bar_h = 8;
+			const int bar1_y = 73; // Верхний бар: Частота
+			const int bar2_y = 83; // Нижний бар: Амплитуда
 
 			// Цвет бара зависит от текущей частоты (как в Android приложении)
 			uint16_t bar_color;
@@ -203,10 +197,38 @@ void PAGE_Howl_Main(void) {
 				bar_color = RGB565(250, 130, 30);  // Оранжевый/красный (вибрация/щекотка)
 			}
 
-			if (fill_w > 0 && !Howl.settings.is_muted && Howl.settings.power_a > 0) {
-				tft.RectangleFilled(bar_x, bar_y, fill_w, bar_h, bar_color);
+			// Фон индикаторов
+			tft.RectangleFilled(bar_x, bar1_y, bar_w, bar_h, RGB565(12, 16, 24));
+			tft.RectangleFilled(bar_x, bar2_y, bar_w, bar_h, RGB565(12, 16, 24));
+
+			// Расчет заполнения верхнего бара (Частота: min_freq .. max_freq)
+			float f_min = Howl.settings.min_freq_hz;
+			float f_max = Howl.settings.max_freq_hz;
+			float f_cur = Howl.telemetry.current_freq_hz;
+			float f_norm = (f_max > f_min) ? ((f_cur - f_min) / (f_max - f_min)) : 0.0f;
+			if (f_norm < 0.0f) f_norm = 0.0f;
+			if (f_norm > 1.0f) f_norm = 1.0f;
+			int fill_freq_w = (int)(f_norm * (float)bar_w);
+			if (fill_freq_w < 2 && f_cur > 0.0f) fill_freq_w = 2;
+			if (fill_freq_w > bar_w) fill_freq_w = bar_w;
+
+			// Расчет заполнения нижнего бара (Амплитуда / Импульс: 0 .. 100%)
+			int fill_amp_w = (Howl.telemetry.meter_bar * bar_w) / 100;
+			if (fill_amp_w > bar_w) fill_amp_w = bar_w;
+
+			// Отрисовка активного заполнения
+			if (!Howl.settings.is_muted && Howl.settings.power_a > 0) {
+				if (fill_freq_w > 0) {
+					tft.RectangleFilled(bar_x, bar1_y, fill_freq_w, bar_h, bar_color);
+				}
+				if (fill_amp_w > 0) {
+					tft.RectangleFilled(bar_x, bar2_y, fill_amp_w, bar_h, bar_color);
+				}
 			}
-			tft.Rectangle(bar_x, bar_y, bar_w, bar_h, RGB565(70, 80, 100));
+
+			// Рамки индикаторов
+			tft.Rectangle(bar_x, bar1_y, bar_w, bar_h, RGB565(70, 80, 100));
+			tft.Rectangle(bar_x, bar2_y, bar_w, bar_h, RGB565(70, 80, 100));
 
 			// ── МЕНЮ ВЫБОРА (Y: 102..238) ─────────────────────────
 			const int item_h = 34;
