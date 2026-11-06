@@ -323,9 +323,10 @@ void HowlEngine::DMA_Render(uint16_t* out, uint16_t* const out_end) {
 
 	} else {
 		// ════════════════════════════════════════════════════════════════
-		// CONTINUOUS (непрерывный тон несущей)
+		// CONTINUOUS (непрерывный гармонический тон с динамической частотой)
 		// ════════════════════════════════════════════════════════════════
-		const uint32_t rC = convert_hz_to_dds(settings.carrier_hz);
+		const float continuous_fr = (current_target_freq_hz < 0.1f) ? 0.1f : current_target_freq_hz;
+		const uint32_t rC = convert_hz_to_dds(continuous_fr);
 		while (out < out_end) {
 			phase_carrier += rC;
 			float raw = (float)Gen.CH1.buffer_carrier[phase_carrier >> 22] - 2048.0f;

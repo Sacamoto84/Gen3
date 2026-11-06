@@ -57,7 +57,7 @@ static void hset_click_MODE(void) {
 }
 
 // ── 2. Параметры режима Wavelet ──────────────────────────────────
-static void hset_pre_CARRIER_W(uint32_t index) {
+static void hset_pre_CARRIER(uint32_t index) {
 	int my_idx = param_to_item_index[HPARAM_CARRIER];
 	if (my_idx < 0) return;
 	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
@@ -151,31 +151,6 @@ static void hset_pre_MP_WIDTH(uint32_t index) {
 	} else {
 		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
 			"[MP] Длит: %uus", Howl.settings.multipulse_width_us);
-	}
-}
-
-// ── 4. Параметры режима Continuous ───────────────────────────────
-static void hset_pre_CARRIER_CW(uint32_t index) {
-	int my_idx = param_to_item_index[HPARAM_CARRIER];
-	if (my_idx < 0) return;
-	bool editing = (menu_howl_set.field.encoder_block && (int)menu_howl_set.index == my_idx);
-	if (editing) {
-		int delta = (Encoder.Right ? 1 : 0) - (Encoder.Left ? 1 : 0);
-		Encoder.Left = 0;
-		Encoder.Right = 0;
-		if (delta) {
-			int v = (int)Howl.settings.carrier_hz + delta * 50;
-			if (v < 300) v = 300;
-			if (v > 3000) v = 3000;
-			Howl.settings.carrier_hz = (uint16_t)v;
-			save_status_text = "Сохранить";
-			menu_howl_set.field.needUpdate = 1;
-		}
-		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
-			"> [CW] Нес:%uHz <", Howl.settings.carrier_hz);
-	} else {
-		snprintf(item_howl_set[my_idx].text, sizeof(item_howl_set[my_idx].text),
-			"[CW] Несущ: %uHz", Howl.settings.carrier_hz);
 	}
 }
 
@@ -346,9 +321,9 @@ static int setup_items_for_current_mode(void) {
 		item_howl_set[idx].field.exit = 0;
 		item_howl_set[idx].field.disable = 0;
 		item_howl_set[idx].text_color = -1;
-		item_howl_set[idx].preCallBackFunc = &hset_pre_CARRIER_W;
+		item_howl_set[idx].preCallBackFunc = &hset_pre_CARRIER;
 		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
-		hset_pre_CARRIER_W(idx);
+		hset_pre_CARRIER(idx);
 		idx++;
 
 		// Периоды всплеска
@@ -381,15 +356,8 @@ static int setup_items_for_current_mode(void) {
 		hset_pre_MP_WIDTH(idx);
 		idx++;
 	} else { // HOWL_PULSE_CONTINUOUS
-		// Несущая частота Continuous
-		param_to_item_index[HPARAM_CARRIER] = idx;
-		item_howl_set[idx].field.exit = 0;
-		item_howl_set[idx].field.disable = 0;
-		item_howl_set[idx].text_color = -1;
-		item_howl_set[idx].preCallBackFunc = &hset_pre_CARRIER_CW;
-		item_howl_set[idx].callBackFunc_isClick = &hset_param_click;
-		hset_pre_CARRIER_CW(idx);
-		idx++;
+		// Непрерывный гармонический режим: частота модулируется динамически (5..100 Гц),
+		// поэтому импульсных параметров пачки нет
 	}
 
 	// 3: Общие параметры мощности и безопасности
