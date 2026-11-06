@@ -24,8 +24,9 @@ public:
 	float       max_val;
 	float       phase;
 	bool        auto_change_en;
+	bool        is_frequency;
 
-	void  Init(WaveShapeId shape, float speed, float min_v, float max_v);
+	void  Init(WaveShapeId shape, float speed, float min_v, float max_v, bool is_freq = false);
 	void  Reset();
 	float Step();
 	void  Randomize(bool is_freq);

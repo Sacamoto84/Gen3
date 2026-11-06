@@ -210,8 +210,17 @@ static void hplay_param_click(void) {
 	menu_howl_play.field.needUpdate = 1;
 }
 
+static uint32_t last_displayed_sec = 0xFFFFFFFF;
+
 static void hplay_pre_menu(void) {
 	Howl.Update();
+	if (Howl.player.is_playing) {
+		uint32_t cur = Howl.player.GetCurrentSec();
+		if (cur != last_displayed_sec) {
+			last_displayed_sec = cur;
+			menu_howl_play.field.needUpdate = 1;
+		}
+	}
 }
 
 void PAGE_Howl_Player(void) {

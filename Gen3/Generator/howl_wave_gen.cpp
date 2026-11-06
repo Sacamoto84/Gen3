@@ -183,13 +183,14 @@ const WaveShapeDef& HowlWaveGenerator::GetShapeDef(WaveShapeId id) {
 	return all_shapes[id];
 }
 
-void WaveManager::Init(WaveShapeId shape, float speed, float min_v, float max_v) {
+void WaveManager::Init(WaveShapeId shape, float speed, float min_v, float max_v, bool is_freq) {
 	shape_id = shape;
 	speed_hz = speed;
 	min_val = min_v;
 	max_val = max_v;
 	phase = 0.0f;
 	auto_change_en = false;
+	is_frequency = is_freq;
 }
 
 void WaveManager::Reset() {
@@ -292,7 +293,7 @@ float WaveManager::Step() {
 	if (phase >= 1.0f) {
 		phase -= 1.0f;
 		if (auto_change_en) {
-			AutoChangeStep(false);
+			AutoChangeStep(is_frequency);
 		}
 	}
 
@@ -317,8 +318,8 @@ void WaveManager::Randomize(bool is_freq) {
 }
 
 void HowlWaveGenerator::Init() {
-	amp_wave.Init(WAVE_SHAPE_CURVY_TRIANGLE, 0.20f, 0.10f, 0.90f);
-	freq_wave.Init(WAVE_SHAPE_CURVY_TRIANGLE, 0.12f, 0.10f, 0.75f);
+	amp_wave.Init(WAVE_SHAPE_CURVY_TRIANGLE, 0.20f, 0.10f, 0.90f, false);
+	freq_wave.Init(WAVE_SHAPE_CURVY_TRIANGLE, 0.12f, 0.10f, 0.75f, true);
 }
 
 void HowlWaveGenerator::Reset() {

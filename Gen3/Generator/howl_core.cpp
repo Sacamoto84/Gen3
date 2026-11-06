@@ -134,7 +134,12 @@ void HowlEngine::UpdateTelemetry() {
 		telemetry.activity_name = HowlActivities::GetActivityName(activities.active_id);
 	} else {
 		telemetry.source_name = "Плеер";
-		telemetry.activity_name = player.current_file[0] ? player.current_file : "Нет файла";
+		if (player.current_file[0]) {
+			const char* slash = strrchr(player.current_file, '/');
+			telemetry.activity_name = slash ? (slash + 1) : player.current_file;
+		} else {
+			telemetry.activity_name = "Нет файла";
+		}
 	}
 
 	switch (settings.pulse_mode) {
@@ -406,11 +411,30 @@ bool HowlEngine::Config_Load() {
 		else if (strncmp(line, "AUTO_INT=", 9) == 0) settings.auto_inc_interval_s = (uint16_t)atoi(&line[9]);
 	}
 
-	// Защита: текущая мощность не может превышать лимит безопасности
+	// Валидация диапазонов и защита от некорректных данных
+	if (settings.power_limit < 20) settings.power_limit = 20;
+	if (settings.power_limit > 200) settings.power_limit = 200;
+
 	if (settings.power_a > settings.power_limit) {
 		settings.power_a = settings.power_limit;
-		settings.power_b = settings.power_limit;
 	}
+	settings.power_b = settings.power_a;
+
+	if (settings.carrier_hz < 100) settings.carrier_hz = 100;
+	if (settings.carrier_hz > 5000) settings.carrier_hz = 5000;
+
+	if (settings.wavelet_cycles < 1) settings.wavelet_cycles = 1;
+	if (settings.wavelet_cycles > 20) settings.wavelet_cycles = 20;
+
+	if (settings.wavelet_fade > 100) settings.wavelet_fade = 50;
+
+	if (settings.multipulse_width_us < 10) settings.multipulse_width_us = 10;
+	if (settings.multipulse_width_us > 2000) settings.multipulse_width_us = 2000;
+
+	if (settings.pulse_mode > HOWL_PULSE_CONTINUOUS) settings.pulse_mode = HOWL_PULSE_WAVELET;
+
+	if (settings.auto_inc_step < 1) settings.auto_inc_step = 1;
+	if (settings.auto_inc_interval_s < 1) settings.auto_inc_interval_s = 5;
 
 	f_close(&f);
 	return true;

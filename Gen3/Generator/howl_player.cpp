@@ -1,4 +1,5 @@
 #include "howl_player.h"
+#include "main.h"
 #include <string.h>
 
 void HowlPlayer::Init() {
@@ -17,11 +18,14 @@ void HowlPlayer::Init() {
 }
 
 void HowlPlayer::CloseFile() {
-	if (is_loaded) {
-		f_close(&file);
-		is_loaded = false;
-	}
 	is_playing = false;
+	bool was_loaded = is_loaded;
+	is_loaded = false;
+	__DMB();
+
+	if (was_loaded) {
+		f_close(&file);
+	}
 	total_frames = 0;
 	current_frame = 0;
 	bank_start_frame[0] = 0;
@@ -33,6 +37,10 @@ void HowlPlayer::CloseFile() {
 bool HowlPlayer::FillBank(uint8_t b, uint32_t target_frame) {
 	if (!is_loaded || target_frame >= total_frames || b > 1) return false;
 
+	// Сбрасываем валидность банка перед чтением, чтобы ISR не прочитал недописанные данные
+	bank_valid_count[b] = 0;
+	__DMB();
+
 	uint32_t offset = 8 + target_frame * 16;
 	if (f_lseek(&file, offset) != FR_OK) return false;
 
@@ -41,9 +49,10 @@ bool HowlPlayer::FillBank(uint8_t b, uint32_t target_frame) {
 
 	UINT bytes_to_read = frames_to_read * 16;
 	UINT br = 0;
-	if (f_read(&file, buffer[b], bytes_to_read, &br) != FR_OK) return false;
+	if (f_read(&file, (void*)buffer[b], bytes_to_read, &br) != FR_OK) return false;
 
 	bank_start_frame[b] = target_frame;
+	__DMB();
 	bank_valid_count[b] = (uint8_t)(br / 16);
 	return bank_valid_count[b] > 0;
 }

@@ -53,6 +53,7 @@ static void hset_click_MODE(void) {
 	uint8_t next = (Howl.settings.pulse_mode + 1) % 3;
 	Howl.SetPulseMode((HowlPulseMode)next);
 	save_status_text = "Сохранить";
+	menu_howl_set.index = 1;
 	// field.exit = 1 triggers menu rebuild in while(!exit_requested)
 }
 
