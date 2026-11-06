@@ -65,6 +65,7 @@ static void File_Selector(void) {
 
 	while (1) {
 		button.tick();
+		Howl.Update();
 
 		if (Encoder.Left) {
 			Encoder.Left = 0;
@@ -202,6 +203,10 @@ static void hplay_param_click(void) {
 	menu_howl_play.field.needUpdate = 1;
 }
 
+static void hplay_pre_menu(void) {
+	Howl.Update();
+}
+
 void PAGE_Howl_Player(void) {
 	item_howl_play[INDEX_HPLAY_BACK].field.exit = 1;
 	snprintf(item_howl_play[INDEX_HPLAY_BACK].text, sizeof(item_howl_play[INDEX_HPLAY_BACK].text), "Назад");
@@ -236,7 +241,7 @@ void PAGE_Howl_Player(void) {
 	menu_howl_play.field.verticalScroll = 1;
 	menu_howl_play.items = item_howl_play;
 	menu_howl_play.ColorBackground = COLOR_BACKGROUND;
-	menu_howl_play.preCallBackFunc = NULL;
+	menu_howl_play.preCallBackFunc = &hplay_pre_menu;
 
 	PAGE_Menu(&menu_howl_play, item_howl_play, NUM_ITEM_HOWL_PLAY);
 }

@@ -132,6 +132,7 @@ void PAGE_Howl_Main(void) {
 
 	while (1) {
 		button.tick();
+		Howl.Update();
 
 		// Обработка длительного нажатия: быстрый MUTE / UNMUTE (безопасность!)
 		if (button.isHolded()) {

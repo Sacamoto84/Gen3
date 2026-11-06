@@ -23,6 +23,12 @@ private:
 	float    phase;
 	uint32_t rng_state;
 
+	// Состояние активности Chaos (без использования static переменных)
+	float    chaos_cur_amp;
+	float    chaos_cur_freq;
+	float    chaos_target_amp;
+	float    chaos_target_freq;
+
 	HowlPulse StepLick();
 	HowlPulse StepPenetration();
 	HowlPulse StepVibro();

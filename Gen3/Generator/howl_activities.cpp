@@ -36,6 +36,10 @@ void HowlActivities::Reset() {
 	sub_state = 0;
 	phase = 0.0f;
 	rng_state = 0x12345678 ^ million_seed;
+	chaos_cur_amp = 0.3f;
+	chaos_cur_freq = 0.3f;
+	chaos_target_amp = 0.5f;
+	chaos_target_freq = 0.5f;
 }
 
 void HowlActivities::SelectActivity(ActivityId id) {
@@ -159,20 +163,15 @@ HowlPulse HowlActivities::StepMilker() {
 }
 
 HowlPulse HowlActivities::StepChaos() {
-	static float cur_amp = 0.3f;
-	static float cur_freq = 0.3f;
-	static float target_amp = 0.5f;
-	static float target_freq = 0.5f;
-
 	if (tick_count % 15 == 0) {
-		target_amp = 0.1f + RandFloat() * 0.85f;
-		target_freq = 0.05f + RandFloat() * 0.90f;
+		chaos_target_amp = 0.1f + RandFloat() * 0.85f;
+		chaos_target_freq = 0.05f + RandFloat() * 0.90f;
 	}
 
-	cur_amp += (target_amp - cur_amp) * 0.15f * speed_scale;
-	cur_freq += (target_freq - cur_freq) * 0.15f * speed_scale;
+	chaos_cur_amp += (chaos_target_amp - chaos_cur_amp) * 0.15f * speed_scale;
+	chaos_cur_freq += (chaos_target_freq - chaos_cur_freq) * 0.15f * speed_scale;
 
-	return { cur_amp * intensity_scale, cur_freq, cur_amp * intensity_scale, cur_freq };
+	return { chaos_cur_amp * intensity_scale, chaos_cur_freq, chaos_cur_amp * intensity_scale, chaos_cur_freq };
 }
 
 HowlPulse HowlActivities::StepLuxuryHJ() {

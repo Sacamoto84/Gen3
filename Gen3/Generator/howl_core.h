@@ -20,6 +20,7 @@ public:
 	void Init();
 	void Start();
 	void Stop();
+	void Update();
 
 	void SetPower(int16_t p);
 	void SetPowerLimit(uint8_t limit);

@@ -107,6 +107,10 @@ static void hact_param_click(void) {
 	menu_howl_act.field.needUpdate = 1;
 }
 
+static void hact_pre_menu(void) {
+	Howl.Update();
+}
+
 void PAGE_Howl_Act(void) {
 	item_howl_act[INDEX_HACT_BACK].field.exit = 1;
 	snprintf(item_howl_act[INDEX_HACT_BACK].text, sizeof(item_howl_act[INDEX_HACT_BACK].text), "Назад");
@@ -138,7 +142,7 @@ void PAGE_Howl_Act(void) {
 	menu_howl_act.field.verticalScroll = 1;
 	menu_howl_act.items = item_howl_act;
 	menu_howl_act.ColorBackground = COLOR_BACKGROUND;
-	menu_howl_act.preCallBackFunc = NULL;
+	menu_howl_act.preCallBackFunc = &hact_pre_menu;
 
 	PAGE_Menu(&menu_howl_act, item_howl_act, NUM_ITEM_HOWL_ACT);
 }

@@ -420,6 +420,10 @@ static int setup_items_for_current_mode(void) {
 	return idx;
 }
 
+static void hset_pre_menu(void) {
+	Howl.Update();
+}
+
 void PAGE_Howl_Settings(void) {
 	save_status_text = "Сохранить";
 	exit_requested = false;
@@ -432,7 +436,7 @@ void PAGE_Howl_Settings(void) {
 	menu_howl_set.field.encoder_block = 0;
 	menu_howl_set.items = item_howl_set;
 	menu_howl_set.ColorBackground = COLOR_BACKGROUND;
-	menu_howl_set.preCallBackFunc = NULL;
+	menu_howl_set.preCallBackFunc = &hset_pre_menu;
 	menu_howl_set.index = 1; // Фокус по умолчанию на строке "Режим"
 
 	while (!exit_requested) {

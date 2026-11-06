@@ -4,7 +4,7 @@
 #include "howl_types.h"
 #include "fatfs.h"
 
-#define HOWL_PLAYER_BUFFER_FRAMES 16
+#define HOWL_PLAYER_BANK_FRAMES 32
 
 class HowlPlayer {
 public:
@@ -22,6 +22,11 @@ public:
 	void      Play();
 	void      Pause();
 	void      Stop();
+
+	// Вызывается в thread mode (UI loop) для неблокирующей подкачки с SD
+	void      Update();
+
+	// Вызывается из DMA ISR (только быстрое чтение из памяти)
 	HowlPulse Step();
 
 	uint32_t  GetCurrentSec() const;
@@ -29,12 +34,12 @@ public:
 
 private:
 	FIL       file;
-	HowlPulse buffer[HOWL_PLAYER_BUFFER_FRAMES];
-	uint32_t  buf_start_frame;
-	uint8_t   buf_valid_count;
+	HowlPulse buffer[2][HOWL_PLAYER_BANK_FRAMES];
+	uint32_t  bank_start_frame[2];
+	uint8_t   bank_valid_count[2];
 	float     subframe_accum;
 
-	bool      RefillBuffer(uint32_t target_frame);
+	bool      FillBank(uint8_t b, uint32_t target_frame);
 };
 
 #endif /* HOWL_PLAYER_H_ */

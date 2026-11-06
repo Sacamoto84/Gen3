@@ -197,6 +197,10 @@ static void hgen_param_click(void) {
 	menu_howl_gen.field.needUpdate = 1;
 }
 
+static void hgen_pre_menu(void) {
+	Howl.Update();
+}
+
 void PAGE_Howl_Gen(void) {
 	item_howl_gen[INDEX_HGEN_BACK].field.exit = 1;
 	snprintf(item_howl_gen[INDEX_HGEN_BACK].text, sizeof(item_howl_gen[INDEX_HGEN_BACK].text), "Назад");
@@ -243,7 +247,7 @@ void PAGE_Howl_Gen(void) {
 	menu_howl_gen.field.verticalScroll = 1;
 	menu_howl_gen.items = item_howl_gen;
 	menu_howl_gen.ColorBackground = COLOR_BACKGROUND;
-	menu_howl_gen.preCallBackFunc = NULL;
+	menu_howl_gen.preCallBackFunc = &hgen_pre_menu;
 
 	PAGE_Menu(&menu_howl_gen, item_howl_gen, NUM_ITEM_HOWL_GEN);
 }

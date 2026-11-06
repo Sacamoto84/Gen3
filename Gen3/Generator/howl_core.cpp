@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-HowlEngine Howl;
+HowlEngine Howl CCMRAM;
 
 void HowlEngine::Init() {
 	is_active = false;
@@ -69,6 +69,12 @@ void HowlEngine::Stop() {
 	is_active = false;
 	current_target_amp = 0.0f;
 	UpdateTelemetry();
+}
+
+void HowlEngine::Update() {
+	if (source == HOWL_SOURCE_PLAYER) {
+		player.Update();
+	}
 }
 
 void HowlEngine::SetPower(int16_t p) {

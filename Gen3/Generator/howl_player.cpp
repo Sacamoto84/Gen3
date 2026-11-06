@@ -9,8 +9,10 @@ void HowlPlayer::Init() {
 	current_file[0] = '\0';
 	total_frames = 0;
 	current_frame = 0;
-	buf_start_frame = 0;
-	buf_valid_count = 0;
+	bank_start_frame[0] = 0;
+	bank_start_frame[1] = 0;
+	bank_valid_count[0] = 0;
+	bank_valid_count[1] = 0;
 	subframe_accum = 0.0f;
 }
 
@@ -22,7 +24,28 @@ void HowlPlayer::CloseFile() {
 	is_playing = false;
 	total_frames = 0;
 	current_frame = 0;
-	buf_valid_count = 0;
+	bank_start_frame[0] = 0;
+	bank_start_frame[1] = 0;
+	bank_valid_count[0] = 0;
+	bank_valid_count[1] = 0;
+}
+
+bool HowlPlayer::FillBank(uint8_t b, uint32_t target_frame) {
+	if (!is_loaded || target_frame >= total_frames || b > 1) return false;
+
+	uint32_t offset = 8 + target_frame * 16;
+	if (f_lseek(&file, offset) != FR_OK) return false;
+
+	uint32_t frames_to_read = total_frames - target_frame;
+	if (frames_to_read > HOWL_PLAYER_BANK_FRAMES) frames_to_read = HOWL_PLAYER_BANK_FRAMES;
+
+	UINT bytes_to_read = frames_to_read * 16;
+	UINT br = 0;
+	if (f_read(&file, buffer[b], bytes_to_read, &br) != FR_OK) return false;
+
+	bank_start_frame[b] = target_frame;
+	bank_valid_count[b] = (uint8_t)(br / 16);
+	return bank_valid_count[b] > 0;
 }
 
 bool HowlPlayer::LoadFile(const char* filepath) {
@@ -57,7 +80,12 @@ bool HowlPlayer::LoadFile(const char* filepath) {
 	current_file[sizeof(current_file) - 1] = '\0';
 
 	is_loaded = true;
-	RefillBuffer(0);
+	FillBank(0, 0);
+	if (bank_valid_count[0] < total_frames) {
+		FillBank(1, bank_valid_count[0]);
+	} else {
+		bank_valid_count[1] = 0;
+	}
 	return true;
 }
 
@@ -73,25 +101,55 @@ void HowlPlayer::Stop() {
 	is_playing = false;
 	current_frame = 0;
 	subframe_accum = 0.0f;
-	if (is_loaded) RefillBuffer(0);
+	if (is_loaded) {
+		FillBank(0, 0);
+		if (bank_valid_count[0] < total_frames) {
+			FillBank(1, bank_valid_count[0]);
+		} else {
+			bank_valid_count[1] = 0;
+		}
+	}
 }
 
-bool HowlPlayer::RefillBuffer(uint32_t target_frame) {
-	if (!is_loaded || target_frame >= total_frames) return false;
+void HowlPlayer::Update() {
+	if (!is_loaded || !is_playing || total_frames == 0) return;
 
-	uint32_t offset = 8 + target_frame * 16;
-	if (f_lseek(&file, offset) != FR_OK) return false;
+	// Определяем активный банк (где сейчас находится current_frame)
+	uint8_t active_bank = 0xFF;
+	if (current_frame >= bank_start_frame[0] && current_frame < (bank_start_frame[0] + bank_valid_count[0])) {
+		active_bank = 0;
+	} else if (current_frame >= bank_start_frame[1] && current_frame < (bank_start_frame[1] + bank_valid_count[1])) {
+		active_bank = 1;
+	}
 
-	uint32_t frames_to_read = total_frames - target_frame;
-	if (frames_to_read > HOWL_PLAYER_BUFFER_FRAMES) frames_to_read = HOWL_PLAYER_BUFFER_FRAMES;
+	if (active_bank == 0xFF) {
+		// Текущий кадр выпал из обоих банков (например, переход/Seek или старт)
+		FillBank(0, current_frame);
+		if (bank_valid_count[0] > 0) {
+			uint32_t next = bank_start_frame[0] + bank_valid_count[0];
+			if (next < total_frames) {
+				FillBank(1, next);
+			} else if (is_loop) {
+				FillBank(1, 0);
+			} else {
+				bank_valid_count[1] = 0;
+			}
+		}
+		return;
+	}
 
-	UINT bytes_to_read = frames_to_read * 16;
-	UINT br = 0;
-	if (f_read(&file, buffer, bytes_to_read, &br) != FR_OK) return false;
+	// Заполняем альтернативный (фоновый) банк на опережение
+	uint8_t next_bank = active_bank ^ 1;
+	uint32_t needed_next_frame = bank_start_frame[active_bank] + bank_valid_count[active_bank];
+	if (needed_next_frame >= total_frames && is_loop) {
+		needed_next_frame = 0;
+	}
 
-	buf_start_frame = target_frame;
-	buf_valid_count = (uint8_t)(br / 16);
-	return buf_valid_count > 0;
+	if (needed_next_frame < total_frames) {
+		if (bank_start_frame[next_bank] != needed_next_frame || bank_valid_count[next_bank] == 0) {
+			FillBank(next_bank, needed_next_frame);
+		}
+	}
 }
 
 HowlPulse HowlPlayer::Step() {
@@ -114,15 +172,11 @@ HowlPulse HowlPlayer::Step() {
 		}
 	}
 
-	if (current_frame < buf_start_frame || current_frame >= (buf_start_frame + buf_valid_count)) {
-		if (!RefillBuffer(current_frame)) {
-			return { 0.0f, 0.0f, 0.0f, 0.0f };
-		}
+	if (current_frame >= bank_start_frame[0] && current_frame < (bank_start_frame[0] + bank_valid_count[0])) {
+		return buffer[0][current_frame - bank_start_frame[0]];
 	}
-
-	uint32_t local_idx = current_frame - buf_start_frame;
-	if (local_idx < buf_valid_count) {
-		return buffer[local_idx];
+	if (current_frame >= bank_start_frame[1] && current_frame < (bank_start_frame[1] + bank_valid_count[1])) {
+		return buffer[1][current_frame - bank_start_frame[1]];
 	}
 
 	return { 0.0f, 0.0f, 0.0f, 0.0f };
