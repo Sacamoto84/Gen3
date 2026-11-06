@@ -59,6 +59,7 @@ static void File_Selector(void) {
 	int window_start = 0;
 	int window_size = 5;
 	int index = 0;
+	bool need_redraw = true;
 	char str[48];
 
 	Font_Smooth_Load(Roboto_Medium_en_ru_18);
@@ -72,6 +73,7 @@ static void File_Selector(void) {
 			index--;
 			if (index < 0) index = 0;
 			if (index < window_start) window_start = index;
+			need_redraw = true;
 		}
 
 		if (Encoder.Right) {
@@ -79,28 +81,33 @@ static void File_Selector(void) {
 			index++;
 			if (index >= countFiles) index = countFiles - 1;
 			if (index >= window_start + window_size) window_start = index - window_size + 1;
+			need_redraw = true;
 		}
 
-		tft.Fill16(COLOR_BACKGROUND);
+		if (need_redraw) {
+			need_redraw = false;
 
-		tft.RectangleFilled(0, 0, 240, 24, RGB565(20, 30, 50));
-		Font_Smooth_drawStr(&tft, 8, 4, (char*)"ВЫБОР ФАЙЛА HOWL", RGB565(100, 200, 255));
+			tft.Fill16(COLOR_BACKGROUND);
 
-		for (int i = 0; i < window_size; i++) {
-			int item_idx = window_start + i;
-			if (item_idx >= countFiles) break;
+			tft.RectangleFilled(0, 0, 240, 24, RGB565(20, 30, 50));
+			Font_Smooth_drawStr(&tft, 8, 4, (char*)"ВЫБОР ФАЙЛА HOWL", RGB565(100, 200, 255));
 
-			int y = 30 + i * 40;
-			if (item_idx == index) {
-				tft.RectangleFilled(0, y, 239, 36, COLOR_RECTAGLE);
+			for (int i = 0; i < window_size; i++) {
+				int item_idx = window_start + i;
+				if (item_idx >= countFiles) break;
+
+				int y = 30 + i * 40;
+				if (item_idx == index) {
+					tft.RectangleFilled(0, y, 239, 36, COLOR_RECTAGLE);
+				}
+
+				snprintf(str, sizeof(str), "%s", sFiles[item_idx].buf);
+				uint16_t color = (item_idx == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT;
+				Font_Smooth_drawStr(&tft, 10, y + 8, str, color);
 			}
 
-			snprintf(str, sizeof(str), "%s", sFiles[item_idx].buf);
-			uint16_t color = (item_idx == index) ? COLOR_TEXT_SELECT : COLOR_TEXT_DEFAULT;
-			Font_Smooth_drawStr(&tft, 10, y + 8, str, color);
+			tft.driver.ST7789_UpdateDMA16bitV3();
 		}
-
-		tft.driver.ST7789_UpdateDMA16bitV3();
 
 		if (button.isClick()) {
 			button.isHolded();

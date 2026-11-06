@@ -67,6 +67,7 @@ void HowlEngine::Start() {
 
 void HowlEngine::Stop() {
 	is_active = false;
+	player.Pause();
 	current_target_amp = 0.0f;
 	UpdateTelemetry();
 }
@@ -343,37 +344,42 @@ void HowlEngine::DMA_Render(uint16_t* out, uint16_t* const out_end) {
 }
 
 bool HowlEngine::Config_Save() {
+	f_mkdir("/Config");
+
 	FIL f;
 	if (f_open(&f, "/Config/howl.ini", FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
 		return false;
 	}
 
-	char buf[64];
-	snprintf(buf, sizeof(buf), "MODE=%u\r\n", settings.pulse_mode);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "CARRIER=%u\r\n", settings.carrier_hz);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "CYCLES=%u\r\n", settings.wavelet_cycles);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "FADE=%u\r\n", settings.wavelet_fade);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "MP_WIDTH=%u\r\n", settings.multipulse_width_us);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "MP_INTRA=%u\r\n", settings.multipulse_intra_us);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "POWER=%u\r\n", settings.power_a);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "LIMIT=%u\r\n", settings.power_limit);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "AUTO_INC=%u\r\n", settings.auto_inc_en ? 1 : 0);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "AUTO_STEP=%u\r\n", settings.auto_inc_step);
-	f_puts(buf, &f);
-	snprintf(buf, sizeof(buf), "AUTO_INT=%u\r\n", settings.auto_inc_interval_s);
-	f_puts(buf, &f);
+	char buf[256];
+	int len = snprintf(buf, sizeof(buf),
+		"MODE=%u\r\n"
+		"CARRIER=%u\r\n"
+		"CYCLES=%u\r\n"
+		"FADE=%u\r\n"
+		"MP_WIDTH=%u\r\n"
+		"MP_INTRA=%u\r\n"
+		"POWER=%u\r\n"
+		"LIMIT=%u\r\n"
+		"AUTO_INC=%u\r\n"
+		"AUTO_STEP=%u\r\n"
+		"AUTO_INT=%u\r\n",
+		settings.pulse_mode,
+		settings.carrier_hz,
+		settings.wavelet_cycles,
+		settings.wavelet_fade,
+		settings.multipulse_width_us,
+		settings.multipulse_intra_us,
+		settings.power_a,
+		settings.power_limit,
+		settings.auto_inc_en ? 1 : 0,
+		settings.auto_inc_step,
+		settings.auto_inc_interval_s);
 
-	f_close(&f);
-	return true;
+	UINT written = 0;
+	bool ok = (f_write(&f, buf, (UINT)len, &written) == FR_OK) && (written == (UINT)len);
+	ok = (f_close(&f) == FR_OK) && ok;
+	return ok;
 }
 
 bool HowlEngine::Config_Load() {
@@ -398,6 +404,12 @@ bool HowlEngine::Config_Load() {
 		else if (strncmp(line, "AUTO_INC=", 9) == 0) settings.auto_inc_en = (atoi(&line[9]) != 0);
 		else if (strncmp(line, "AUTO_STEP=", 10) == 0) settings.auto_inc_step = (uint8_t)atoi(&line[10]);
 		else if (strncmp(line, "AUTO_INT=", 9) == 0) settings.auto_inc_interval_s = (uint16_t)atoi(&line[9]);
+	}
+
+	// Защита: текущая мощность не может превышать лимит безопасности
+	if (settings.power_a > settings.power_limit) {
+		settings.power_a = settings.power_limit;
+		settings.power_b = settings.power_limit;
 	}
 
 	f_close(&f);
