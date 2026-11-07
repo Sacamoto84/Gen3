@@ -63,8 +63,12 @@ target_include_directories(pico2_2 PRIVATE
         C:/Drivers/libs/logUART
 )
 
-# Add driver sources
+# Add driver and application sources
 target_sources(pico2_2 PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/scope_input.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/scope_adc.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/scope_dsp.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/scope_render.cpp
         C:/Drivers/Display/uTFT2/TFT.cpp
         C:/Drivers/Display/uTFT2/TFT_Primitive.cpp
         C:/Drivers/Display/uTFT2/Driver/ST7789.cpp
@@ -101,4 +105,3 @@ else()
         COMMENT "Memory footprint:"
     )
 endif()
-
