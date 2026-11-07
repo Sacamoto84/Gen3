@@ -1,5 +1,6 @@
 #include "scope_adc.h"
 #include "scope_config.h"
+#include "scope_input.h"
 #include "hardware/adc.h"
 #include "hardware/dma.h"
 #include "hardware/gpio.h"
@@ -31,7 +32,7 @@ void adc_capture_init() {
     channel_config_set_dreq(&adc_dma_cfg, DREQ_ADC);
 }
 
-// Captures `count` samples via DMA. Polls buttons so captures abort instantly on button press!
+// Captures `count` samples via DMA. Aborts instantly on encoder turn or button press!
 bool adc_capture_dma_poll(uint8_t* dest, uint32_t count, float clkdiv) {
     if (count > ADC_MAX_SAMPLES) count = ADC_MAX_SAMPLES;
     adc_run(false);
@@ -50,8 +51,7 @@ bool adc_capture_dma_poll(uint8_t* dest, uint32_t count, float clkdiv) {
     adc_run(true);
 
     while (dma_channel_is_busy(adc_dma_chan)) {
-        // If button pressed during capture, abort immediately!
-        if (!gpio_get(PIN_BTN_TIME_DOWN) || !gpio_get(PIN_BTN_TIME_UP)) {
+        if (encoder_has_activity()) {
             dma_channel_abort(adc_dma_chan);
             adc_run(false);
             adc_fifo_drain();
@@ -84,14 +84,14 @@ void adc_capture_dma_start(uint8_t* dest, uint32_t count, float clkdiv) {
     adc_run(true);
 }
 
-// Wait for active DMA capture to complete, polling buttons for instant abort
+// Wait for active DMA capture to complete, polling encoder/button for instant abort
 bool adc_capture_dma_wait() {
     while (dma_channel_is_busy(adc_dma_chan)) {
-        if (!gpio_get(PIN_BTN_TIME_DOWN) || !gpio_get(PIN_BTN_TIME_UP)) {
+        if (encoder_has_activity()) {
             dma_channel_abort(adc_dma_chan);
             adc_run(false);
             adc_fifo_drain();
-            return false; // Aborted by button press
+            return false; // Aborted by encoder or button
         }
         tight_loop_contents();
     }

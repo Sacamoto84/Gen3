@@ -17,6 +17,7 @@ extern volatile float g_render_freq;
 extern volatile bool g_render_trig;
 extern volatile bool g_render_is_env;
 extern volatile int g_render_tb_idx;
+extern volatile bool g_render_stopped;
 
 void draw_pixel(int x, int y, uint16_t color);
 void draw_line(int x0, int y0, int x1, int y1, uint16_t color);
@@ -25,6 +26,6 @@ void draw_grid();
 uint16_t get_grid_pixel(int x, int y);
 void init_grid_template();
 uint16_t tone_map_density(int col, int y, float density);
-void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env = false);
+void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env = false, bool is_stopped = false);
 
 void core1_entry();

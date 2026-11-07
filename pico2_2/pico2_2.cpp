@@ -88,14 +88,7 @@ const TimebaseConfig TIMEBASES[TIMEBASE_COUNT] = {
 };
 
 static int current_tb_idx = 2; // Default to 50us/div
-
-// Button state variables
-static uint32_t btn_down_press_time = 0;
-static uint32_t btn_up_press_time = 0;
-static uint32_t btn_down_last_repeat = 0;
-static uint32_t btn_up_last_repeat = 0;
-static bool btn_down_prev = true;
-static bool btn_up_prev = true;
+static bool scope_stopped = false;
 
 // ============================================================================
 // MAIN APPLICATION ENTRY POINT
@@ -141,14 +134,17 @@ int main() {
 
     timber.print("Initializing ADC on GP%d & DMA (128K Buffer)... ", PIN_ADC);
     adc_capture_init();
-    buttons_init();
+    timber.successful("OK");
+
+    timber.print("Initializing Rotary Encoder (GP%d/A, GP%d/B, GP%d/SW)... ", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
+    encoder_init();
     timber.successful("OK");
 
     timber.print("Launching Core 1 (Dedicated Display/GPU Engine)... ");
     multicore_launch_core1(core1_entry);
     timber.successful("OK");
 
-    timber.info("Oscilloscope ready! Buttons on GP%d (Down) and GP%d (Up)", PIN_BTN_TIME_DOWN, PIN_BTN_TIME_UP);
+    timber.info("Oscilloscope ready! Rotary Encoder on GP%d/GP%d, Button on GP%d (Run/Stop)", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
 
     float last_measured_freq = 0.0f;
     float last_measured_vpp = 0.0f;
@@ -167,10 +163,31 @@ int main() {
     uint32_t roll_last_trig_ms = 0;
 
     while (true) {
-        // 1. Check Button Inputs
-        if (check_button(PIN_BTN_TIME_DOWN, btn_down_prev, btn_down_press_time, btn_down_last_repeat)) {
-            if (current_tb_idx > 0) {
-                current_tb_idx--;
+        // 1. Check Encoder Button (Toggle Run / Stop)
+        if (encoder_button_pressed()) {
+            scope_stopped = !scope_stopped;
+            g_render_stopped = scope_stopped;
+            timber.info("Oscilloscope: %s", scope_stopped ? "STOPPED [HOLD]" : "RUNNING [LIVE]");
+
+            if (scope_stopped) {
+                // Immediate refresh of HUD with [STOP] indicator
+                g_render_tb_idx = current_tb_idx;
+                g_render_freq = last_measured_freq;
+                g_render_vpp = last_measured_vpp;
+                multicore_fifo_push_blocking(CMD_RENDER_SWEEP);
+                multicore_fifo_pop_blocking();
+            }
+        }
+
+        // 2. Check Rotary Encoder Step (Change Timebase)
+        int delta = encoder_get_delta();
+        if (delta != 0) {
+            int new_idx = current_tb_idx + delta;
+            if (new_idx < 0) new_idx = 0;
+            if (new_idx >= TIMEBASE_COUNT) new_idx = TIMEBASE_COUNT - 1;
+
+            if (new_idx != current_tb_idx) {
+                current_tb_idx = new_idx;
                 multicore_fifo_push_blocking(CMD_DRAW_GRID);
                 multicore_fifo_pop_blocking();
                 roll_head = SCOPE_W - 1;
@@ -185,22 +202,11 @@ int main() {
                 timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
             }
         }
-        if (check_button(PIN_BTN_TIME_UP, btn_up_prev, btn_up_press_time, btn_up_last_repeat)) {
-            if (current_tb_idx + 1 < TIMEBASE_COUNT) {
-                current_tb_idx++;
-                multicore_fifo_push_blocking(CMD_DRAW_GRID);
-                multicore_fifo_pop_blocking();
-                roll_head = SCOPE_W - 1;
-                memset(density_grid, 0, sizeof(density_grid));
-                last_roll_adc = 128;
-                roll_primed = false;
-                roll_abs_sample = 0;
-                roll_last_edge = 0;
-                roll_last_frac = 0.0f;
-                roll_armed = false;
-                roll_last_trig_ms = 0;
-                timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
-            }
+
+        // If stopped, pause acquisition and loop gently
+        if (scope_stopped) {
+            sleep_ms(15);
+            continue;
         }
 
         const TimebaseConfig &tb = TIMEBASES[current_tb_idx];
@@ -228,10 +234,10 @@ int main() {
             if (capture_count > ADC_MAX_SAMPLES) capture_count = ADC_MAX_SAMPLES;
             if (capture_count < 800) capture_count = 800;
 
-            // Capture contiguous samples via high-speed ADC DMA (aborts instantly if button pressed)
+            // Capture contiguous samples via high-speed ADC DMA (aborts instantly if encoder turned)
             bool finished = adc_capture_dma_poll(adc_raw_buffer, capture_count, tb.clkdiv);
             if (!finished) {
-                continue; // Button pressed, switch immediately!
+                continue; // Encoder turned, switch immediately!
             }
 
             // Find rising edge with hysteresis, centered at X=120
@@ -290,8 +296,6 @@ int main() {
                     if (y_top > y_bot) { int t = y_top; y_top = y_bot; y_bot = t; }
 
                     // Draw shaded column envelope:
-                    // Outer envelope boundaries: bright yellow (COLOR_TRACE)
-                    // Inner carrier excursion: soft amber glow (0x8400) for phosphor depth
                     if (y_bot - y_top <= 1) {
                         draw_pixel(col, y_top, COLOR_TRACE);
                         if (y_bot > y_top) draw_pixel(col, y_bot, COLOR_TRACE);
@@ -352,7 +356,7 @@ int main() {
 
             float capture_time_us = (float)num_cols * col_duration_us;
 
-            // Fix #1: Calculate total_samples from tb.sample_rate_hz dynamically!
+            // Calculate total_samples from tb.sample_rate_hz dynamically
             int total_samples = (int)(capture_time_us * (tb.sample_rate_hz / 1000000.0f));
             if (total_samples < 64) total_samples = 64;
             if (total_samples > (ADC_MAX_SAMPLES / 2)) total_samples = (ADC_MAX_SAMPLES / 2);
@@ -362,7 +366,7 @@ int main() {
                 adc_capture_dma_start(roll_buf_curr, total_samples, tb.clkdiv);
                 bool ok = adc_capture_dma_wait();
                 if (!ok) {
-                    continue; // Aborted by button press
+                    continue; // Aborted by encoder or button
                 }
                 roll_primed = true;
             }

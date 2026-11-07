@@ -22,9 +22,10 @@
 #define PIN_ADC   26  // GP26 (ADC0, Pin 31 on Pico): 0..3.3V, DC bias ~1.65V
 #define ADC_CHANNEL 0
 
-// Control Buttons (Active LOW with internal pull-up, connect button to GND)
-#define PIN_BTN_TIME_DOWN 14 // GP14 (Pin 19): Timebase - (Zoom IN, faster sweep)
-#define PIN_BTN_TIME_UP   15 // GP15 (Pin 20): Timebase + (Zoom OUT, slower sweep)
+// Rotary Encoder with Button (Upper Right Side: Pins 26, 27, 28=GND, 29)
+#define PIN_ENC_A   22  // GP22 (Pin 29): Encoder Phase A (CLK)
+#define PIN_ENC_B   21  // GP21 (Pin 27): Encoder Phase B (DT)
+#define PIN_ENC_SW  20  // GP20 (Pin 26): Encoder Button (SW, Active LOW with internal pull-up)
 
 // Display orientation: 90 or 270 for landscape (240 width x 135 height)
 #define DISPLAY_ROTATION  90

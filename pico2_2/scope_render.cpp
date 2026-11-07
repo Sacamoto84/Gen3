@@ -18,6 +18,7 @@ volatile float g_render_freq = 0.0f;
 volatile bool g_render_trig = false;
 volatile bool g_render_is_env = false;
 volatile int g_render_tb_idx = 2;
+volatile bool g_render_stopped = false;
 
 // ============================================================================
 // DRAWING & RETICLE FUNCTIONS
@@ -153,7 +154,7 @@ uint16_t tone_map_density(int col, int y, float density) {
 // ============================================================================
 // ON-SCREEN HUD STATUS BAR
 // ============================================================================
-void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env) {
+void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env, bool is_stopped) {
     tft.RectangleFilled(0, 0, SCOPE_W - 1, HUD_H - 2, COLOR_BLACK);
 
     // 1. Timebase label
@@ -164,8 +165,11 @@ void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, fl
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 
-    // 2. Mode badge: [ENV], [TRIG], [ROLL], [AUTO]
-    if (is_env && trig) {
+    // 2. Mode badge: [STOP], [ENV], [TRIG], [ROLL], [AUTO]
+    if (is_stopped) {
+        tft.SetFontColor(COLOR_RED, COLOR_BLACK);
+        snprintf(buf, sizeof(buf), "[STOP]");
+    } else if (is_env && trig) {
         tft.SetFontColor(COLOR_GREEN, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[ENV]");
     } else if (trig) {
@@ -220,6 +224,7 @@ void core1_entry() {
             int tb_idx = g_render_tb_idx;
             bool trig = g_render_trig;
             float freq = g_render_freq;
+            bool stopped = g_render_stopped;
 
             int cur_col = (head + 1) % SCOPE_W;
             for (int X = 0; X < SCOPE_W; X++) {
@@ -261,7 +266,7 @@ void core1_entry() {
                 }
             }
 
-            render_hud(TIMEBASES[tb_idx].label, trig, true, freq, vpp);
+            render_hud(TIMEBASES[tb_idx].label, trig, true, freq, vpp, false, stopped);
             draw_trigger_marker();
             tft.driver.ST7789_UpdateDMA16bitV3();
             multicore_fifo_push_blocking(1);
@@ -273,7 +278,7 @@ void core1_entry() {
         }
         else if (cmd == CMD_RENDER_SWEEP) {
             int tb_idx = g_render_tb_idx;
-            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp, g_render_is_env);
+            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp, g_render_is_env, g_render_stopped);
             draw_trigger_marker();
             tft.driver.ST7789_UpdateDMA16bitV3();
             multicore_fifo_push_blocking(1);
