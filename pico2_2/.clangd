@@ -1,0 +1,6 @@
+CompileFlags:
+  Add:
+    - -isystem
+    - C:/Users/Ivan/.pico-sdk/toolchain/15_2_Rel1/lib/gcc/arm-none-eabi/15.2.1/include
+    - -isystem
+    - C:/Users/Ivan/.pico-sdk/toolchain/15_2_Rel1/arm-none-eabi/include
