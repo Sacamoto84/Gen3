@@ -62,9 +62,9 @@
 // Frame buffer (240 * 135 * 2 bytes = 64,800 bytes)
 uint16_t LCD_Buffer16[LCD_W * LCD_H];
 
-// Continuous ADC DMA Buffer (65,536 samples = 128 KB)
-#define ADC_MAX_SAMPLES 65536
-uint16_t adc_raw_buffer[ADC_MAX_SAMPLES];
+// Continuous ADC DMA Buffer (131,072 samples = 128 KB in 8-bit mode)
+#define ADC_MAX_SAMPLES 131072
+uint8_t adc_raw_buffer[ADC_MAX_SAMPLES];
 int adc_dma_chan = -1;
 dma_channel_config adc_dma_cfg;
 
@@ -127,8 +127,8 @@ static const TimebaseConfig TIMEBASES[] = {
     { "1ms",    1000.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 6:   10ms window (60 FPS)
     { "2.5ms",  2500.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 7:   25ms window (35 FPS)
     { "5ms",    5000.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 8:   50ms window (20 FPS)
-    { "10ms",  10000.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 9:  100ms window (10 FPS)
-    { "25ms",  25000.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 10: 250ms window (4 FPS)
+    { "10ms",  10000.0f,     250000.0f,  191.0f, MODE_SWEEP }, // 9:  100ms window (Envelope/Carrier Trigger)
+    { "25ms",  25000.0f,     100000.0f,  479.0f, MODE_SWEEP }, // 10: 250ms window (Envelope/Carrier Trigger)
 
     // 2. Slow Sweeps: 60 FPS Continuous Gapless Peak-Detect Live Roll (AM/FM Modulation & Envelope)
     // Roll mode activates starting from 50ms/div (50ms, 100ms, 200ms, 500ms)
@@ -171,10 +171,10 @@ void draw_line(int x0, int y0, int x1, int y1, uint16_t color) {
     }
 }
 
-// Convert ADC raw reading (0..4095, centered at 2048 = 1.65V) to screen Y
+// Convert ADC 8-bit raw reading (0..255, centered at 128 = 1.65V) to screen Y
 static inline float adc_to_y(float adc_val) {
-    // 2048 is midpoint (1.65V). 50 pixels for 2048 counts (100 px peak-to-peak for 3.3V)
-    float y = (float)SCOPE_Y_MID - (adc_val - 2048.0f) * (50.0f / 2048.0f);
+    // 128 is midpoint (1.65V). 50 pixels for 128 counts (100 px peak-to-peak for 3.3V)
+    float y = (float)SCOPE_Y_MID - (adc_val - 128.0f) * (50.0f / 128.0f);
     if (y < (float)SCOPE_Y_MIN + 1.0f) y = (float)SCOPE_Y_MIN + 1.0f;
     if (y > (float)SCOPE_Y_MAX - 1.0f) y = (float)SCOPE_Y_MAX - 1.0f;
     return y;
@@ -321,21 +321,21 @@ void adc_capture_init() {
         true,    // Enable DMA request
         1,       // DREQ asserted when >= 1 sample in FIFO
         false,   // No error bit
-        false    // Full 16-bit word
+        true     // byte_shift: Shift bits [11:4] to [7:0] for 8-bit DMA transfers!
     );
 
     adc_set_clkdiv(0);
 
     adc_dma_chan = dma_claim_unused_channel(true);
     adc_dma_cfg = dma_channel_get_default_config(adc_dma_chan);
-    channel_config_set_transfer_data_size(&adc_dma_cfg, DMA_SIZE_16);
+    channel_config_set_transfer_data_size(&adc_dma_cfg, DMA_SIZE_8);
     channel_config_set_read_increment(&adc_dma_cfg, false);
     channel_config_set_write_increment(&adc_dma_cfg, true);
     channel_config_set_dreq(&adc_dma_cfg, DREQ_ADC);
 }
 
 // Captures `count` samples via DMA. Polls buttons so captures abort instantly on button press!
-bool adc_capture_dma_poll(uint16_t* dest, uint32_t count, float clkdiv) {
+bool adc_capture_dma_poll(uint8_t* dest, uint32_t count, float clkdiv) {
     if (count > ADC_MAX_SAMPLES) count = ADC_MAX_SAMPLES;
     adc_run(false);
     adc_fifo_drain();
@@ -345,7 +345,7 @@ bool adc_capture_dma_poll(uint16_t* dest, uint32_t count, float clkdiv) {
         adc_dma_chan,
         &adc_dma_cfg,
         dest,           // Destination buffer
-        &adc_hw->fifo,  // Source: ADC FIFO
+        &adc_hw->fifo,  // Source: ADC FIFO (low byte)
         count,          // Number of samples
         true            // Start immediately
     );
@@ -369,7 +369,7 @@ bool adc_capture_dma_poll(uint16_t* dest, uint32_t count, float clkdiv) {
 }
 
 // Asynchronous non-blocking DMA start for double-buffered continuous streaming
-void adc_capture_dma_start(uint16_t* dest, uint32_t count, float clkdiv) {
+void adc_capture_dma_start(uint8_t* dest, uint32_t count, float clkdiv) {
     if (count > (ADC_MAX_SAMPLES / 2)) count = ADC_MAX_SAMPLES / 2;
     adc_fifo_drain();
     adc_set_clkdiv(clkdiv);
@@ -378,7 +378,7 @@ void adc_capture_dma_start(uint16_t* dest, uint32_t count, float clkdiv) {
         adc_dma_chan,
         &adc_dma_cfg,
         dest,           // Destination buffer
-        &adc_hw->fifo,  // Source: ADC FIFO
+        &adc_hw->fifo,  // Source: ADC FIFO (low byte)
         count,          // Number of samples
         true            // Start immediately
     );
@@ -404,6 +404,7 @@ bool adc_capture_dma_wait() {
 
 // ============================================================================
 // TRIGGER SYNCHRONIZATION ALIGNED TO SCREEN CENTER (X = 120)
+// Supports both Classic Carrier Edge Trigger & Envelope Trigger (AM Demodulation)
 // ============================================================================
 struct TriggerResult {
     int trigger_index;
@@ -411,42 +412,146 @@ struct TriggerResult {
     float frequency_hz;
     float vpp_volts;
     float vmid_volts;
+    bool is_envelope; // true if locked to modulation envelope!
 };
 
-TriggerResult find_trigger_centered(const uint16_t* samples, int count, int pre_trigger_samples, float sample_rate_hz) {
-    TriggerResult res = { 0, false, 0.0f, 0.0f, 0.0f };
+TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_trigger_samples, float sample_rate_hz) {
+    TriggerResult res = { 0, false, 0.0f, 0.0f, 0.0f, false };
     if (count < pre_trigger_samples + 100) return res;
 
-    // 1. Calculate min and max across buffer
-    uint16_t v_min = samples[0];
-    uint16_t v_max = samples[0];
+    // 1. Calculate min, max, swing, and DC midpoint across buffer
+    uint8_t v_min = samples[0];
+    uint8_t v_max = samples[0];
     for (int i = 1; i < count; i++) {
         if (samples[i] < v_min) v_min = samples[i];
         if (samples[i] > v_max) v_max = samples[i];
     }
 
-    uint16_t swing = (v_max - v_min) / 2;
-    res.vpp_volts = (float)(v_max - v_min) * (3.30f / 4096.0f);
-    res.vmid_volts = (float)((v_max + v_min) / 2) * (3.30f / 4096.0f);
+    uint16_t total_swing = v_max - v_min;
+    res.vpp_volts = (float)total_swing * (3.30f / 256.0f);
+    res.vmid_volts = (float)((v_max + v_min) / 2) * (3.30f / 256.0f);
 
-    // If signal swing is too small (< 20 counts ~ 16 mV), flat/noise -> Free-run auto
-    if (swing < 20) {
+    // If signal swing is too small (< 2 counts ~ 26 mV in 8-bit), flat/noise -> Free-run auto
+    if (total_swing < 2) {
         res.trigger_index = pre_trigger_samples;
         res.triggered = false;
         res.frequency_hz = 0.0f;
+        res.is_envelope = false;
         return res;
     }
 
-    // Midpoint and arm level with 25% hysteresis
-    int level = (v_min + v_max) / 2;
-    int arm_level = level - (int)(swing * 0.25f);
+    int mid = (v_min + v_max) / 2;
 
-    // Pre-trigger margin: search starts after pre_trigger_samples so X=0..119 has valid history!
+    // 2. ENVELOPE TRIGGER DETECTOR (for AM / modulated signals on slow sweeps)
+    // Active when pre_trigger_samples >= 1000 (>= 1ms/div sweeps)
+    if (pre_trigger_samples >= 1000 && count >= 3000) {
+        // Window W ~ 1.0 ms to filter out carrier frequencies >= 500 Hz
+        int W = (int)(sample_rate_hz * 0.0010f);
+        if (W < 48) W = 48;
+        if (W > 512) W = 512;
+
+        // Downsample step S ~ 125..160 us per envelope point
+        int S = (int)(sample_rate_hz * 0.000130f);
+        if (S < 8) S = 8;
+        if (count / S >= 4000) {
+            S = (count / 3800) + 1;
+        }
+
+        uint32_t run_sum = 0;
+        for (int i = 0; i < W; i++) {
+            run_sum += abs((int)samples[i] - mid);
+        }
+
+        static uint8_t env_buf[4096];
+        int env_count = 0;
+        uint8_t env_min = 255;
+        uint8_t env_max = 0;
+
+        for (int i = W; i < count; i++) {
+            run_sum += abs((int)samples[i] - mid);
+            run_sum -= abs((int)samples[i - W] - mid);
+
+            if ((i % S) == 0 && env_count < 4096) {
+                uint8_t val = (uint8_t)(run_sum / W);
+                env_buf[env_count++] = val;
+                if (val < env_min) env_min = val;
+                if (val > env_max) env_max = val;
+            }
+        }
+
+        uint16_t env_swing = (env_max > env_min) ? (env_max - env_min) : 0;
+
+        // Check if significant AM modulation exists:
+        // Modulation depth >= 3 counts and >= 12% of total signal swing
+        if (env_swing >= 3 && (env_swing * 8 >= total_swing)) {
+            int env_level = (int)env_min + (int)(env_swing / 2);
+            int env_arm = env_level - (int)(env_swing * 0.20f); // 20% hysteresis
+            if (env_arm >= env_level) env_arm = env_level - 1;
+
+            int start_k = pre_trigger_samples / S;
+            int end_k = env_count - (pre_trigger_samples / S) - 2;
+            if (end_k <= start_k) end_k = env_count - 2;
+
+            int arm_start_k = (start_k > 20) ? (start_k - 20) : 0;
+            bool armed = false;
+            int first_edge_k = -1;
+            int second_edge_k = -1;
+            float frac1 = 0.0f;
+            float frac2 = 0.0f;
+
+            for (int k = arm_start_k; k < env_count; k++) {
+                int val = env_buf[k];
+                if (val < env_arm) {
+                    armed = true;
+                } else if (armed && val >= env_level) {
+                    int prev = env_buf[k - 1];
+                    float frac = (float)(env_level - prev) / (float)(val - prev + 1e-5f);
+                    if (first_edge_k < 0) {
+                        if (k >= start_k && k < end_k) {
+                            first_edge_k = k;
+                            frac1 = frac;
+                            armed = false; // re-arm to find second edge
+                        }
+                    } else {
+                        second_edge_k = k;
+                        frac2 = frac;
+                        break; // period found!
+                    }
+                }
+            }
+
+            if (first_edge_k >= 0) {
+                // Found envelope trigger!
+                int trig_samp = W + (int)(((float)first_edge_k + frac1) * (float)S) - (W / 2);
+                if (trig_samp < pre_trigger_samples) trig_samp = pre_trigger_samples;
+                if (trig_samp > count - pre_trigger_samples) trig_samp = count - pre_trigger_samples;
+
+                res.trigger_index = trig_samp;
+                res.triggered = true;
+                res.is_envelope = true;
+
+                if (second_edge_k > first_edge_k) {
+                    float period_k = ((float)(second_edge_k - first_edge_k) + (frac2 - frac1));
+                    float period_samples = period_k * (float)S;
+                    if (period_samples > 1.0f) {
+                        res.frequency_hz = sample_rate_hz / period_samples;
+                    }
+                }
+
+                return res; // Locked to AM modulation envelope!
+            }
+        }
+    }
+
+    // 3. CLASSIC CARRIER / EDGE TRIGGER (Fallback for unmodulated signals or fast sweeps)
+    int swing = total_swing / 2;
+    int level = mid;
+    int arm_level = level - (int)(swing * 0.25f);
+    if (arm_level >= level) arm_level = level - 1;
+
     int start_search = pre_trigger_samples;
     int end_search = count - pre_trigger_samples - 10;
-    if (end_search <= start_search) {
-        end_search = count - 10;
-    }
+    if (end_search <= start_search) end_search = count - 10;
 
     bool armed = false;
     int first_edge = -1;
@@ -454,27 +559,24 @@ TriggerResult find_trigger_centered(const uint16_t* samples, int count, int pre_
     float frac1 = 0.0f;
     float frac2 = 0.0f;
 
-    // Scan for hysteresis arming starting a bit before start_search
     int arm_start = (start_search > 40) ? (start_search - 40) : 0;
-    for (int i = arm_start; i < end_search; i++) {
+    for (int i = arm_start; i < count - 1; i++) {
         int val = samples[i];
         if (val < arm_level) {
             armed = true;
         } else if (armed && val >= level) {
-            if (i >= start_search) {
-                // Rising edge detected with valid pre-trigger!
-                int prev = samples[i - 1];
-                float frac = (float)(level - prev) / (float)(val - prev + 1e-5f);
-
-                if (first_edge < 0) {
+            int prev = samples[i - 1];
+            float frac = (float)(level - prev) / (float)(val - prev + 1e-5f);
+            if (first_edge < 0) {
+                if (i >= start_search && i < end_search) {
                     first_edge = i;
                     frac1 = frac;
-                    armed = false; // Re-arm to find second edge for frequency measurement
-                } else {
-                    second_edge = i;
-                    frac2 = frac;
-                    break; // Period found!
+                    armed = false;
                 }
+            } else {
+                second_edge = i;
+                frac2 = frac;
+                break;
             }
         }
     }
@@ -482,6 +584,7 @@ TriggerResult find_trigger_centered(const uint16_t* samples, int count, int pre_
     if (first_edge >= 0) {
         res.trigger_index = first_edge;
         res.triggered = true;
+        res.is_envelope = false;
 
         if (second_edge > first_edge) {
             float period_samples = (float)(second_edge - first_edge) + (frac2 - frac1);
@@ -490,10 +593,10 @@ TriggerResult find_trigger_centered(const uint16_t* samples, int count, int pre_
             }
         }
     } else {
-        // Fallback: Auto trigger centered
         res.trigger_index = pre_trigger_samples;
         res.triggered = false;
         res.frequency_hz = 0.0f;
+        res.is_envelope = false;
     }
 
     return res;
@@ -543,7 +646,7 @@ bool check_button(uint pin, bool &prev, uint32_t &press_time, uint32_t &last_rep
 // ============================================================================
 // ON-SCREEN HUD STATUS BAR
 // ============================================================================
-void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp) {
+void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env = false) {
     // Clear top HUD background area
     tft.RectangleFilled(0, 0, SCOPE_W - 1, HUD_H - 2, COLOR_BLACK);
 
@@ -555,13 +658,16 @@ void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, fl
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 
-    // 2. Mode badge: [TRIG], [AUTO], [ROLL]
-    if (is_roll) {
-        tft.SetFontColor(COLOR_CYAN, COLOR_BLACK);
-        snprintf(buf, sizeof(buf), "[ROLL]");
+    // 2. Mode badge: [ENV], [TRIG], [ROLL], [AUTO]
+    if (is_env && trig) {
+        tft.SetFontColor(COLOR_GREEN, COLOR_BLACK);
+        snprintf(buf, sizeof(buf), "[ENV]");
     } else if (trig) {
         tft.SetFontColor(COLOR_GREEN, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[TRIG]");
+    } else if (is_roll) {
+        tft.SetFontColor(COLOR_CYAN, COLOR_BLACK);
+        snprintf(buf, sizeof(buf), "[ROLL]");
     } else {
         tft.SetFontColor(COLOR_RED, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[AUTO]");
@@ -573,8 +679,10 @@ void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, fl
     // 3. Measured Frequency
     if (freq_hz >= 1000.0f) {
         snprintf(buf, sizeof(buf), "%5.2fkHz", freq_hz / 1000.0f);
-    } else if (freq_hz > 0.0f) {
+    } else if (freq_hz >= 100.0f) {
         snprintf(buf, sizeof(buf), "%4.0fHz", freq_hz);
+    } else if (freq_hz > 0.0f) {
+        snprintf(buf, sizeof(buf), "%4.1fHz", freq_hz); // e.g. 12.0Hz!
     } else {
         snprintf(buf, sizeof(buf), "----Hz");
     }
@@ -605,6 +713,7 @@ static volatile int g_render_roll_head = SCOPE_W - 1;
 static volatile float g_render_vpp = 0.0f;
 static volatile float g_render_freq = 0.0f;
 static volatile bool g_render_trig = false;
+static volatile bool g_render_is_env = false;
 static volatile int g_render_tb_idx = 2;
 
 void core1_entry() {
@@ -618,6 +727,8 @@ void core1_entry() {
             int head = g_render_roll_head;
             float vpp = g_render_vpp;
             int tb_idx = g_render_tb_idx;
+            bool trig = g_render_trig;
+            float freq = g_render_freq;
 
             // 1. Precompute column mapping for strip-chart
             int cur_col = (head + 1) % SCOPE_W;
@@ -664,7 +775,7 @@ void core1_entry() {
             }
 
             // 3. Render HUD & Trigger Marker
-            render_hud(TIMEBASES[tb_idx].label, false, true, 0.0f, vpp);
+            render_hud(TIMEBASES[tb_idx].label, trig, true, freq, vpp);
             draw_trigger_marker();
 
             // 4. Refresh display via hardware DMA over 75 MHz SPI (6.9 ms)
@@ -680,7 +791,7 @@ void core1_entry() {
         }
         else if (cmd == CMD_RENDER_SWEEP) {
             int tb_idx = g_render_tb_idx;
-            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp);
+            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp, g_render_is_env);
             draw_trigger_marker();
             tft.driver.ST7789_UpdateDMA16bitV3();
             multicore_fifo_push_blocking(1);
@@ -745,11 +856,17 @@ int main() {
     float last_measured_vpp = 0.0f;
 
     int roll_head = SCOPE_W - 1;
-    uint16_t last_roll_adc = 2048;
+    uint8_t last_roll_adc = 128;
     memset(density_grid, 0, sizeof(density_grid));
-    uint16_t* roll_buf_curr = &adc_raw_buffer[0];
-    uint16_t* roll_buf_next = &adc_raw_buffer[ADC_MAX_SAMPLES / 2];
+    uint8_t* roll_buf_curr = &adc_raw_buffer[0];
+    uint8_t* roll_buf_next = &adc_raw_buffer[ADC_MAX_SAMPLES / 2];
     bool roll_primed = false;
+
+    uint32_t roll_abs_sample = 0;
+    uint32_t roll_last_edge = 0;
+    float roll_last_frac = 0.0f;
+    bool roll_armed = false;
+    uint32_t roll_last_trig_ms = 0;
 
     while (true) {
         // 1. Check Button Inputs
@@ -760,8 +877,13 @@ int main() {
                 multicore_fifo_pop_blocking();
                 roll_head = SCOPE_W - 1;
                 memset(density_grid, 0, sizeof(density_grid));
-                last_roll_adc = 2048;
+                last_roll_adc = 128;
                 roll_primed = false;
+                roll_abs_sample = 0;
+                roll_last_edge = 0;
+                roll_last_frac = 0.0f;
+                roll_armed = false;
+                roll_last_trig_ms = 0;
                 timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
             }
         }
@@ -772,8 +894,13 @@ int main() {
                 multicore_fifo_pop_blocking();
                 roll_head = SCOPE_W - 1;
                 memset(density_grid, 0, sizeof(density_grid));
-                last_roll_adc = 2048;
+                last_roll_adc = 128;
                 roll_primed = false;
+                roll_abs_sample = 0;
+                roll_last_edge = 0;
+                roll_last_frac = 0.0f;
+                roll_armed = false;
+                roll_last_trig_ms = 0;
                 timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
             }
         }
@@ -793,9 +920,12 @@ int main() {
             // Half-window for 120 pixels of pre-trigger:
             int pre_trigger_samples = (int)ceilf((float)SCOPE_X_MID * step_samples);
 
-            // Search reserve for trigger edge (up to 2500 samples, fitted to available DMA buffer):
-            int search_samples = ADC_MAX_SAMPLES - (2 * pre_trigger_samples) - 36;
-            if (search_samples > 2500) search_samples = 2500;
+            // Search reserve for trigger edge:
+            // Allow up to 1.5x window_samples so at least one full cycle of slow modulation (e.g. 12 Hz) is captured!
+            int max_avail_search = ADC_MAX_SAMPLES - (2 * pre_trigger_samples) - 64;
+            int search_samples = (int)(window_samples * 1.5f);
+            if (search_samples < 1500) search_samples = 1500;
+            if (search_samples > max_avail_search) search_samples = max_avail_search;
             if (search_samples < 500) search_samples = 500;
             int capture_count = pre_trigger_samples + search_samples + pre_trigger_samples;
             if (capture_count > ADC_MAX_SAMPLES) capture_count = ADC_MAX_SAMPLES;
@@ -851,8 +981,8 @@ int main() {
                     if (s_start < 0) s_start = 0;
                     if (s_end >= capture_count) s_end = capture_count - 1;
 
-                    uint16_t c_min = adc_raw_buffer[s_start];
-                    uint16_t c_max = adc_raw_buffer[s_start];
+                    uint8_t c_min = adc_raw_buffer[s_start];
+                    uint8_t c_max = adc_raw_buffer[s_start];
                     for (int s = s_start + 1; s <= s_end; s++) {
                         if (adc_raw_buffer[s] < c_min) c_min = adc_raw_buffer[s];
                         if (adc_raw_buffer[s] > c_max) c_max = adc_raw_buffer[s];
@@ -862,9 +992,18 @@ int main() {
                     int y_bot = (int)roundf(adc_to_y((float)c_min));
                     if (y_top > y_bot) { int t = y_top; y_top = y_bot; y_bot = t; }
 
-                    // Draw solid column envelope
-                    for (int y = y_top; y <= y_bot; y++) {
-                        draw_pixel(col, y, COLOR_TRACE);
+                    // Draw shaded column envelope:
+                    // Outer envelope boundaries: bright yellow (COLOR_TRACE)
+                    // Inner carrier excursion: soft amber glow (0x8400) for phosphor depth
+                    if (y_bot - y_top <= 1) {
+                        draw_pixel(col, y_top, COLOR_TRACE);
+                        if (y_bot > y_top) draw_pixel(col, y_bot, COLOR_TRACE);
+                    } else {
+                        draw_pixel(col, y_top, COLOR_TRACE);
+                        draw_pixel(col, y_bot, COLOR_TRACE);
+                        for (int y = y_top + 1; y < y_bot; y++) {
+                            LCD_Buffer16[y * SCOPE_W + col] = 0x8400;
+                        }
                     }
 
                     // Seamless connection with previous column to eliminate gaps
@@ -892,6 +1031,7 @@ int main() {
             // Delegate HUD rendering and SPI display transmission to Core 1!
             g_render_tb_idx = current_tb_idx;
             g_render_trig = trig.triggered;
+            g_render_is_env = trig.is_envelope;
             g_render_freq = last_measured_freq;
             g_render_vpp = last_measured_vpp;
             multicore_fifo_push_blocking(CMD_RENDER_SWEEP);
@@ -938,13 +1078,54 @@ int main() {
             adc_capture_dma_start(roll_buf_next, total_samples, tb.clkdiv);
 
             // Track min and max across all samples in this frame for instant Vpp measurement
-            uint16_t f_min = roll_buf_curr[0];
-            uint16_t f_max = roll_buf_curr[0];
+            uint8_t f_min = roll_buf_curr[0];
+            uint8_t f_max = roll_buf_curr[0];
             for (int s = 1; s < total_samples; s++) {
                 if (roll_buf_curr[s] < f_min) f_min = roll_buf_curr[s];
                 if (roll_buf_curr[s] > f_max) f_max = roll_buf_curr[s];
             }
-            last_measured_vpp = (float)(f_max - f_min) * (3.30f / 4096.0f);
+            last_measured_vpp = (float)(f_max - f_min) * (3.30f / 256.0f);
+
+            // Frequency and trigger detection across continuous roll stream
+            uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+            uint16_t swing = f_max - f_min;
+
+            if (swing >= 2) { // Signal above noise (~26 mV in 8-bit)
+                int mid_level = (int)f_min + (int)(swing / 2);
+                int arm_level = mid_level - (int)(swing * 0.20f);
+                if (arm_level >= mid_level) arm_level = mid_level - 1;
+
+                for (int s = 0; s < total_samples; s++) {
+                    int val = roll_buf_curr[s];
+                    if (val < arm_level) {
+                        roll_armed = true;
+                    } else if (roll_armed && val >= mid_level) {
+                        int prev = (s > 0) ? roll_buf_curr[s - 1] : last_roll_adc;
+                        float frac = (float)(mid_level - prev) / (float)(val - prev + 1e-5f);
+                        uint32_t current_edge = roll_abs_sample + (uint32_t)s;
+
+                        if (roll_last_edge > 0 && current_edge > roll_last_edge) {
+                            float period_samples = (float)(current_edge - roll_last_edge) + (frac - roll_last_frac);
+                            if (period_samples > 2.0f) {
+                                float f = tb.sample_rate_hz / period_samples;
+                                if (f >= 1.0f && f <= 100000.0f) {
+                                    last_measured_freq = f;
+                                    roll_last_trig_ms = now_ms;
+                                }
+                            }
+                        }
+
+                        roll_last_edge = current_edge;
+                        roll_last_frac = frac;
+                        roll_armed = false;
+                    }
+                }
+            }
+
+            roll_abs_sample += total_samples;
+
+            bool trig_found = (now_ms - roll_last_trig_ms < 600) && (swing >= 2);
+            float display_freq = trig_found ? last_measured_freq : 0.0f;
 
             // Distribute samples evenly across the num_cols columns:
             float samples_per_c = (float)total_samples / (float)num_cols;
@@ -968,8 +1149,8 @@ int main() {
 
                 // Rasterize continuous dwell-time path into density_grid[roll_head]
                 for (int s = s_start; s < s_end; s++) {
-                    uint16_t prev_raw = (s == 0) ? last_roll_adc : roll_buf_curr[s - 1];
-                    uint16_t cur_raw  = roll_buf_curr[s];
+                    uint8_t prev_raw = (s == 0) ? last_roll_adc : roll_buf_curr[s - 1];
+                    uint8_t cur_raw  = roll_buf_curr[s];
 
                     float b1 = adc_to_bin((float)prev_raw);
                     float b2 = adc_to_bin((float)cur_raw);
@@ -1003,6 +1184,8 @@ int main() {
             // Delegate tone-mapping, HUD rendering, and SPI display transmission to Core 1!
             g_render_roll_head = roll_head;
             g_render_vpp = last_measured_vpp;
+            g_render_freq = display_freq;
+            g_render_trig = trig_found;
             g_render_tb_idx = current_tb_idx;
             multicore_fifo_push_blocking(CMD_RENDER_ROLL);
 
@@ -1019,7 +1202,7 @@ int main() {
             multicore_fifo_pop_blocking();
 
             // Ping-pong swap buffer pointers
-            uint16_t* tmp = roll_buf_curr;
+            uint8_t* tmp = roll_buf_curr;
             roll_buf_curr = roll_buf_next;
             roll_buf_next = tmp;
         }
