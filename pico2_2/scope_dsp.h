@@ -15,8 +15,8 @@ struct TriggerResult {
 
 // Convert ADC 8-bit raw reading (0..255, centered at 128 = 1.65V) to screen Y
 static inline float adc_to_y(float adc_val) {
-    // 128 is midpoint (1.65V). 50 pixels for 128 counts (100 px peak-to-peak for 3.3V)
-    float y = (float)SCOPE_Y_MID - (adc_val - 128.0f) * (50.0f / 128.0f);
+    // 128 is AC midpoint (1.65V). 55.0 pixels for 128 counts (+10% amplitude gain relative to midpoint)
+    float y = (float)SCOPE_Y_MID - (adc_val - 128.0f) * (55.0f / 128.0f);
     if (y < (float)SCOPE_Y_MIN + 1.0f) y = (float)SCOPE_Y_MIN + 1.0f;
     if (y > (float)SCOPE_Y_MAX - 1.0f) y = (float)SCOPE_Y_MAX - 1.0f;
     return y;
@@ -31,4 +31,4 @@ static inline float adc_to_bin(float adc_val) {
     return b;
 }
 
-TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_trigger_samples, float sample_rate_hz);
+TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_trigger_samples, float sample_rate_hz, int manual_trig_level = -1);

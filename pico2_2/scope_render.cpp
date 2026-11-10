@@ -17,8 +17,14 @@ volatile float g_render_vpp = 0.0f;
 volatile float g_render_freq = 0.0f;
 volatile bool g_render_trig = false;
 volatile bool g_render_is_env = false;
-volatile int g_render_tb_idx = 2;
+volatile int g_render_tb_idx = 8; // Default to 5ms/div
 volatile bool g_render_stopped = false;
+
+// Trigger level rendering globals
+volatile int g_render_trig_level_y = -1;
+volatile bool g_render_is_adjusting_trig = false;
+volatile float g_render_trig_volts = 1.65f;
+volatile bool g_render_manual_trig = false;
 
 // ============================================================================
 // DRAWING & RETICLE FUNCTIONS
@@ -66,6 +72,43 @@ void draw_trigger_marker() {
     LCD_Buffer16[(SCOPE_Y_MIN + 2) * SCOPE_W + 120] = COLOR_YELLOW;
 }
 
+// Draw horizontal trigger level line across the grid with right-side triangle marker: ▶
+void draw_trigger_level_indicator(int y_trig, bool is_adjusting) {
+    if (y_trig < SCOPE_Y_MIN + 1 || y_trig > SCOPE_Y_MAX - 1) return;
+
+    uint16_t line_color = is_adjusting ? COLOR_CYAN : 0x03E0; // Bright cyan if adjusting, dark cyan if passive
+
+    // Dotted horizontal line across the grid
+    for (int x = 0; x < SCOPE_W - 8; x += 6) {
+        LCD_Buffer16[y_trig * SCOPE_W + x]     = line_color;
+        LCD_Buffer16[y_trig * SCOPE_W + x + 1] = line_color;
+    }
+
+    // Right-side indicator arrow pointing left: ▶ at X = 234..239
+    int rx = SCOPE_W - 6;
+    uint16_t marker_color = is_adjusting ? COLOR_YELLOW : COLOR_CYAN;
+
+    LCD_Buffer16[y_trig * SCOPE_W + rx]     = marker_color;
+    LCD_Buffer16[y_trig * SCOPE_W + rx + 1] = marker_color;
+    LCD_Buffer16[y_trig * SCOPE_W + rx + 2] = marker_color;
+    LCD_Buffer16[y_trig * SCOPE_W + rx + 3] = marker_color;
+
+    if (y_trig - 1 >= SCOPE_Y_MIN) {
+        LCD_Buffer16[(y_trig - 1) * SCOPE_W + rx + 1] = marker_color;
+        LCD_Buffer16[(y_trig - 1) * SCOPE_W + rx + 2] = marker_color;
+    }
+    if (y_trig + 1 <= SCOPE_Y_MAX) {
+        LCD_Buffer16[(y_trig + 1) * SCOPE_W + rx + 1] = marker_color;
+        LCD_Buffer16[(y_trig + 1) * SCOPE_W + rx + 2] = marker_color;
+    }
+    if (y_trig - 2 >= SCOPE_Y_MIN) {
+        LCD_Buffer16[(y_trig - 2) * SCOPE_W + rx + 2] = marker_color;
+    }
+    if (y_trig + 2 <= SCOPE_Y_MAX) {
+        LCD_Buffer16[(y_trig + 2) * SCOPE_W + rx + 2] = marker_color;
+    }
+}
+
 // Draw classic DSO reticle grid
 void draw_grid() {
     // 1. Clear scope viewport to pure black
@@ -108,7 +151,7 @@ void draw_grid() {
     draw_trigger_marker();
 }
 
-// Single-pixel background grid lookup (used to restore background behind envelope)
+// Single-pixel background grid lookup
 uint16_t get_grid_pixel(int x, int y) {
     if (y == SCOPE_Y_MID && ((x % 4) == 0 || (x % 24) == 0)) return COLOR_AXIS;
     if (x == SCOPE_X_MID && (((y - SCOPE_Y_MIN) % 4) == 0 || ((y - SCOPE_Y_MID) % 25) == 0)) return COLOR_AXIS;
@@ -154,21 +197,30 @@ uint16_t tone_map_density(int col, int y, float density) {
 // ============================================================================
 // ON-SCREEN HUD STATUS BAR
 // ============================================================================
-void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp, bool is_env, bool is_stopped) {
+void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, float vpp,
+                bool is_env, bool is_stopped,
+                bool is_adjusting_trig, float trig_volts) {
     tft.RectangleFilled(0, 0, SCOPE_W - 1, HUD_H - 2, COLOR_BLACK);
 
-    // 1. Timebase label
+    // 1. Timebase label: X = 2
     char buf[32];
     snprintf(buf, sizeof(buf), "%s/d", tb_label);
     tft.SetFontColor(COLOR_YELLOW, COLOR_BLACK);
-    tft.uTFT.CurrentX = 4;
+    tft.uTFT.CurrentX = 2;
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 
-    // 2. Mode badge: [STOP], [ENV], [TRIG], [ROLL], [AUTO]
+    // 2. Mode badge: X = 50
+    // [STOP], [TRG:1.65V], [M-TRG], [ENV], [TRIG], [ROLL], [AUTO]
     if (is_stopped) {
         tft.SetFontColor(COLOR_RED, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[STOP]");
+    } else if (is_adjusting_trig) {
+        tft.SetFontColor(COLOR_CYAN, COLOR_BLACK);
+        snprintf(buf, sizeof(buf), "[T:%4.2fV]", trig_volts);
+    } else if (g_render_manual_trig) {
+        tft.SetFontColor(trig ? COLOR_GREEN : COLOR_RED, COLOR_BLACK);
+        snprintf(buf, sizeof(buf), trig ? "[M-TRG]" : "[M-WAIT]");
     } else if (is_env && trig) {
         tft.SetFontColor(COLOR_GREEN, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[ENV]");
@@ -182,11 +234,11 @@ void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, fl
         tft.SetFontColor(COLOR_RED, COLOR_BLACK);
         snprintf(buf, sizeof(buf), "[AUTO]");
     }
-    tft.uTFT.CurrentX = 58;
+    tft.uTFT.CurrentX = 50;
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 
-    // 3. Measured Frequency
+    // 3. Measured Frequency: X = 122
     if (freq_hz >= 1000.0f) {
         snprintf(buf, sizeof(buf), "%5.2fkHz", freq_hz / 1000.0f);
     } else if (freq_hz >= 100.0f) {
@@ -197,14 +249,14 @@ void render_hud(const char* tb_label, bool trig, bool is_roll, float freq_hz, fl
         snprintf(buf, sizeof(buf), "----Hz");
     }
     tft.SetFontColor(COLOR_CYAN, COLOR_BLACK);
-    tft.uTFT.CurrentX = 114;
+    tft.uTFT.CurrentX = 122;
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 
-    // 4. Measured Peak-to-Peak Voltage
+    // 4. Measured Vpp: X = 180
     snprintf(buf, sizeof(buf), "%4.2fVpp", vpp);
     tft.SetFontColor(COLOR_WHITE, COLOR_BLACK);
-    tft.uTFT.CurrentX = 176;
+    tft.uTFT.CurrentX = 180;
     tft.uTFT.CurrentY = 3;
     FontClassicPuts(&tft, buf, &Font_7x10, 0);
 }
@@ -266,7 +318,12 @@ void core1_entry() {
                 }
             }
 
-            render_hud(TIMEBASES[tb_idx].label, trig, true, freq, vpp, false, stopped);
+            if (g_render_trig_level_y >= 0) {
+                draw_trigger_level_indicator(g_render_trig_level_y, g_render_is_adjusting_trig);
+            }
+
+            render_hud(TIMEBASES[tb_idx].label, trig, true, freq, vpp, false, stopped,
+                       g_render_is_adjusting_trig, g_render_trig_volts);
             draw_trigger_marker();
             tft.driver.ST7789_UpdateDMA16bitV3();
             multicore_fifo_push_blocking(1);
@@ -278,7 +335,16 @@ void core1_entry() {
         }
         else if (cmd == CMD_RENDER_SWEEP) {
             int tb_idx = g_render_tb_idx;
-            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp, g_render_is_env, g_render_stopped);
+
+            // Draw horizontal trigger level line if manual trigger active or adjusting
+            if (g_render_trig_level_y >= 0) {
+                draw_trigger_level_indicator(g_render_trig_level_y, g_render_is_adjusting_trig);
+            }
+
+            render_hud(TIMEBASES[tb_idx].label, g_render_trig, false, g_render_freq, g_render_vpp,
+                       g_render_is_env, g_render_stopped,
+                       g_render_is_adjusting_trig, g_render_trig_volts);
+
             draw_trigger_marker();
             tft.driver.ST7789_UpdateDMA16bitV3();
             multicore_fifo_push_blocking(1);

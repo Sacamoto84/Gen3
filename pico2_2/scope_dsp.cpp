@@ -2,7 +2,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_trigger_samples, float sample_rate_hz) {
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_trigger_samples, float sample_rate_hz, int manual_trig_level) {
     TriggerResult res = { 0, false, 0.0f, 0.0f, 0.0f, false };
     if (count < pre_trigger_samples + 100) return res;
 
@@ -29,9 +33,8 @@ TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_t
 
     int mid = (v_min + v_max) / 2;
 
-    // 2. ENVELOPE TRIGGER DETECTOR (for AM / modulated signals on slow sweeps)
-    // Active when pre_trigger_samples >= 1000 (>= 1ms/div sweeps)
-    if (pre_trigger_samples >= 1000 && count >= 3000) {
+    // 2. ENVELOPE TRIGGER DETECTOR (Only in AUTO mode on slow sweeps >= 1ms/div)
+    if (manual_trig_level < 0 && pre_trigger_samples >= 1000 && count >= 3000) {
         // Window W ~ 1.0 ms to filter out carrier frequencies >= 500 Hz
         int W = (int)(sample_rate_hz * 0.0010f);
         if (W < 48) W = 48;
@@ -108,7 +111,6 @@ TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_t
             }
 
             if (first_edge_k >= 0) {
-                // Found envelope trigger!
                 int trig_samp = W + (int)(((float)first_edge_k + frac1) * (float)S) - (W / 2);
                 if (trig_samp < pre_trigger_samples) trig_samp = pre_trigger_samples;
                 if (trig_samp > count - pre_trigger_samples) trig_samp = count - pre_trigger_samples;
@@ -130,11 +132,34 @@ TriggerResult find_trigger_centered(const uint8_t* samples, int count, int pre_t
         }
     }
 
-    // 3. CLASSIC CARRIER / EDGE TRIGGER (Fallback for unmodulated signals or fast sweeps)
-    int swing = total_swing / 2;
-    int level = mid;
-    int arm_level = level - (int)(swing * 0.25f);
-    if (arm_level >= level) arm_level = level - 1;
+    // 3. CARRIER / EDGE TRIGGER (Manual Level or Auto Midpoint)
+    int level;
+    int arm_level;
+
+    if (manual_trig_level >= 0) {
+        level = manual_trig_level;
+        // Check if manual level is reachable within current signal swing
+        if (level < (int)v_min + 1 || level > (int)v_max - 1) {
+            // Signal doesn't cross manual trigger level -> Free-run auto
+            res.trigger_index = pre_trigger_samples;
+            res.triggered = false;
+            res.frequency_hz = 0.0f;
+            res.is_envelope = false;
+            return res;
+        }
+        int hyst = (int)((float)total_swing * 0.15f);
+        if (hyst < 2) hyst = 2;
+        if (hyst > 16) hyst = 16;
+        arm_level = level - hyst;
+        if (arm_level < 0) arm_level = 0;
+    } else {
+        int swing = total_swing / 2;
+        level = mid;
+        int hyst = (int)(swing * 0.25f);
+        if (hyst < 2) hyst = 2;
+        arm_level = level - hyst;
+        if (arm_level >= level) arm_level = level - 1;
+    }
 
     int start_search = pre_trigger_samples;
     int end_search = count - pre_trigger_samples - 10;

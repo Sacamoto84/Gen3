@@ -45,7 +45,7 @@ pico_set_binary_type(pico2_2 copy_to_ram)
 pico_override_flash_size(pico2_2 "2 * 1024 * 1024")
 
 # Generate PIO header
-pico_generate_pio_header(pico2_2 ${CMAKE_CURRENT_LIST_DIR}/blink.pio)
+pico_generate_pio_header(pico2_2 ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(pico2_2 1)

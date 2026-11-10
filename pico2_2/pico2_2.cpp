@@ -31,6 +31,11 @@ float density_grid[SCOPE_W][SCOPE_Y_BINS];
 // Precomputed background reticle grid for fast 1-cycle lookup during scrolling
 uint16_t grid_template[SCOPE_Y_BINS][SCOPE_W];
 
+// State Variables for Controls & Modes
+EncoderMode g_enc_mode = ENC_MODE_TIMEBASE;
+bool g_manual_trig = false;
+int g_trig_level_adc = 128; // Default 128 = 1.65V (midpoint)
+
 // ST7789 display configuration
 TFT_LCD_t LCD_0 = {
     .TFT_WIDTH = LCD_W,
@@ -56,8 +61,8 @@ TFT_LCD_t LCD_0 = {
     .ROTATE_DELTA = {
         LCD_W, LCD_H, 52, 40,   // 0 deg
         LCD_H, LCD_W, 40, 52,   // 90 deg
-        LCD_W, LCD_H, 52, 40,   // 180 deg
-        LCD_H, LCD_W, 40, 52    // 270 deg
+        LCD_W, LCD_H, 53, 40,   // 180 deg
+        LCD_H, LCD_W, 40, 53    // 270 deg
     }
 };
 
@@ -87,7 +92,7 @@ const TimebaseConfig TIMEBASES[TIMEBASE_COUNT] = {
     { "500ms",500000.0f,     250000.0f,  191.0f, MODE_ROLL  }  // 14: 5.0s window  (48 FPS live roll)
 };
 
-static int current_tb_idx = 2; // Default to 50us/div
+static int current_tb_idx = 8; // Default to 5ms/div
 static bool scope_stopped = false;
 
 // ============================================================================
@@ -136,7 +141,7 @@ int main() {
     adc_capture_init();
     timber.successful("OK");
 
-    timber.print("Initializing Rotary Encoder (GP%d/A, GP%d/B, GP%d/SW)... ", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
+    timber.print("Initializing PIO Hardware Encoder (GP%d/GP%d) & uButton (GP%d)... ", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
     encoder_init();
     timber.successful("OK");
 
@@ -144,10 +149,12 @@ int main() {
     multicore_launch_core1(core1_entry);
     timber.successful("OK");
 
-    timber.info("Oscilloscope ready! Rotary Encoder on GP%d/GP%d, Button on GP%d (Run/Stop)", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
+    timber.info("Oscilloscope ready! PIO Encoder on GP%d/GP%d, Button on GP%d", PIN_ENC_A, PIN_ENC_B, PIN_ENC_SW);
+    timber.info("Controls: 1-Click=Run/Stop | 2-Click=Timebase/Trig Level | Hold=Reset");
 
     float last_measured_freq = 0.0f;
     float last_measured_vpp = 0.0f;
+    float last_measured_vmid = 1.65f;
 
     int roll_head = SCOPE_W - 1;
     uint8_t last_roll_adc = 128;
@@ -161,35 +168,72 @@ int main() {
     float roll_last_frac = 0.0f;
     bool roll_armed = false;
     uint32_t roll_last_trig_ms = 0;
+    static bool stopped_before_seq = false;
 
     while (true) {
-        // 1. Check Encoder Button (Toggle Run / Stop)
-        if (encoder_button_pressed()) {
+        // 1. Process Button via AlexGyver uButton State Machine
+        encoder_btn_tick();
+
+        if (enc_btn.press()) {
+            // INSTANT ACTION ON PRESS (Leading Edge):
+            // Remember state before this click sequence if this is the first press
+            if (enc_btn.getClicks() == 0) {
+                stopped_before_seq = scope_stopped;
+            }
+
+            // Instant Toggle Run / Stop (Freeze)
             scope_stopped = !scope_stopped;
             g_render_stopped = scope_stopped;
-            timber.info("Oscilloscope: %s", scope_stopped ? "STOPPED [HOLD]" : "RUNNING [LIVE]");
+            timber.info("Oscilloscope: %s (Press)", scope_stopped ? "STOPPED [HOLD]" : "RUNNING [LIVE]");
 
             if (scope_stopped) {
                 // Immediate refresh of HUD with [STOP] indicator
                 g_render_tb_idx = current_tb_idx;
                 g_render_freq = last_measured_freq;
                 g_render_vpp = last_measured_vpp;
+                g_render_is_adjusting_trig = (g_enc_mode == ENC_MODE_TRIG_LEVEL);
+                g_render_manual_trig = g_manual_trig;
+                g_render_trig_volts = (float)g_trig_level_adc * (3.30f / 256.0f);
+                g_render_trig_level_y = (g_manual_trig || g_enc_mode == ENC_MODE_TRIG_LEVEL)
+                                        ? (int)roundf(adc_to_y((float)g_trig_level_adc)) : -1;
                 multicore_fifo_push_blocking(CMD_RENDER_SWEEP);
                 multicore_fifo_pop_blocking();
             }
-        }
+        } else if (enc_btn.hasClicks()) {
+            uint8_t clicks = enc_btn.getClicks();
+            if (clicks == 2) {
+                // Double Click: Toggle Timebase Mode vs Manual Trigger Level Mode
+                // Restore Run/Stop state to what it was before the double-click started!
+                scope_stopped = stopped_before_seq;
+                g_render_stopped = scope_stopped;
 
-        // 2. Check Rotary Encoder Step (Change Timebase)
-        int delta = encoder_get_delta();
-        if (delta != 0) {
-            int new_idx = current_tb_idx + delta;
-            if (new_idx < 0) new_idx = 0;
-            if (new_idx >= TIMEBASE_COUNT) new_idx = TIMEBASE_COUNT - 1;
+                g_enc_mode = (g_enc_mode == ENC_MODE_TIMEBASE) ? ENC_MODE_TRIG_LEVEL : ENC_MODE_TIMEBASE;
+                if (g_enc_mode == ENC_MODE_TRIG_LEVEL) {
+                    if (!g_manual_trig) {
+                        // Prime manual trigger level at current signal DC midpoint
+                        g_trig_level_adc = (int)roundf(last_measured_vmid / (3.30f / 256.0f));
+                        if (g_trig_level_adc < 15) g_trig_level_adc = 128;
+                        if (g_trig_level_adc > 240) g_trig_level_adc = 128;
+                        g_manual_trig = true;
+                    }
+                    timber.info("Encoder Mode: TRIGGER LEVEL [ADC %d, %.2fV]", g_trig_level_adc, (float)g_trig_level_adc * (3.30f / 256.0f));
+                } else {
+                    timber.info("Encoder Mode: TIMEBASE");
+                }
+            }
+        } else if (enc_btn.hold()) {
+            // Unfreeze and resume running immediately when hold occurs (no black screen, no waiting for button release!)
+            scope_stopped = false;
+            g_render_stopped = false;
 
-            if (new_idx != current_tb_idx) {
-                current_tb_idx = new_idx;
-                multicore_fifo_push_blocking(CMD_DRAW_GRID);
-                multicore_fifo_pop_blocking();
+            if (g_manual_trig) {
+                // If in manual trigger mode, long press resets trigger back to AUTO!
+                g_manual_trig = false;
+                g_enc_mode = ENC_MODE_TIMEBASE;
+                timber.info("Trigger Level reset to AUTO DC midpoint");
+            } else {
+                // Long Press (Hold): Reset to default 5ms/div
+                current_tb_idx = 8; // 5ms
                 roll_head = SCOPE_W - 1;
                 memset(density_grid, 0, sizeof(density_grid));
                 last_roll_adc = 128;
@@ -199,7 +243,44 @@ int main() {
                 roll_last_frac = 0.0f;
                 roll_armed = false;
                 roll_last_trig_ms = 0;
-                timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
+                timber.info("Reset to default timebase: %s/div", TIMEBASES[current_tb_idx].label);
+            }
+        }
+
+        // 2. Process Hardware PIO Rotary Encoder Step
+        int delta = encoder_get_delta();
+        if (delta != 0) {
+            if (g_enc_mode == ENC_MODE_TRIG_LEVEL) {
+                // Adjust manual trigger level
+                g_manual_trig = true;
+                g_trig_level_adc += delta * 2; // 2 ADC counts per step (~26 mV)
+                if (g_trig_level_adc < 10) g_trig_level_adc = 10;
+                if (g_trig_level_adc > 245) g_trig_level_adc = 245;
+                timber.info("Manual Trig Level: %.2fV (ADC %d)", (float)g_trig_level_adc * (3.30f / 256.0f), g_trig_level_adc);
+            } else {
+                // Adjust Timebase
+                int new_idx = current_tb_idx + delta;
+                if (new_idx < 0) new_idx = 0;
+                if (new_idx >= TIMEBASE_COUNT) new_idx = TIMEBASE_COUNT - 1;
+
+                if (new_idx != current_tb_idx) {
+                    current_tb_idx = new_idx;
+                    scope_stopped = false; // Auto-unfreeze on timebase adjustment
+                    g_render_stopped = false;
+
+                    multicore_fifo_push_blocking(CMD_DRAW_GRID);
+                    multicore_fifo_pop_blocking();
+                    roll_head = SCOPE_W - 1;
+                    memset(density_grid, 0, sizeof(density_grid));
+                    last_roll_adc = 128;
+                    roll_primed = false;
+                    roll_abs_sample = 0;
+                    roll_last_edge = 0;
+                    roll_last_frac = 0.0f;
+                    roll_armed = false;
+                    roll_last_trig_ms = 0;
+                    timber.info("Timebase changed to: %s/div", TIMEBASES[current_tb_idx].label);
+                }
             }
         }
 
@@ -240,13 +321,15 @@ int main() {
                 continue; // Encoder turned, switch immediately!
             }
 
-            // Find rising edge with hysteresis, centered at X=120
-            TriggerResult trig = find_trigger_centered(adc_raw_buffer, capture_count, pre_trigger_samples, tb.sample_rate_hz);
+            // Find rising edge with hysteresis, centered at X=120 (supports manual trigger level!)
+            TriggerResult trig = find_trigger_centered(adc_raw_buffer, capture_count, pre_trigger_samples, tb.sample_rate_hz, g_manual_trig ? g_trig_level_adc : -1);
             if (trig.triggered) {
                 last_measured_freq = trig.frequency_hz;
                 last_measured_vpp = trig.vpp_volts;
+                last_measured_vmid = trig.vmid_volts;
             } else {
                 last_measured_vpp = trig.vpp_volts;
+                last_measured_vmid = trig.vmid_volts;
             }
 
             // Draw clean DSO reticle grid
@@ -282,6 +365,7 @@ int main() {
                     int s_start = (int)pos;
                     int s_end = (int)(pos + step_samples);
                     if (s_start < 0) s_start = 0;
+                    if (s_start >= capture_count) s_start = capture_count - 1;
                     if (s_end >= capture_count) s_end = capture_count - 1;
 
                     uint8_t c_min = adc_raw_buffer[s_start];
@@ -335,6 +419,11 @@ int main() {
             g_render_is_env = trig.is_envelope;
             g_render_freq = last_measured_freq;
             g_render_vpp = last_measured_vpp;
+            g_render_is_adjusting_trig = (g_enc_mode == ENC_MODE_TRIG_LEVEL);
+            g_render_manual_trig = g_manual_trig;
+            g_render_trig_volts = (float)g_trig_level_adc * (3.30f / 256.0f);
+            g_render_trig_level_y = (g_manual_trig || g_enc_mode == ENC_MODE_TRIG_LEVEL)
+                                    ? (int)roundf(adc_to_y((float)g_trig_level_adc)) : -1;
             multicore_fifo_push_blocking(CMD_RENDER_SWEEP);
             multicore_fifo_pop_blocking();
 
@@ -382,6 +471,7 @@ int main() {
                 if (roll_buf_curr[s] > f_max) f_max = roll_buf_curr[s];
             }
             last_measured_vpp = (float)(f_max - f_min) * (3.30f / 256.0f);
+            last_measured_vmid = (float)((f_max + f_min) / 2) * (3.30f / 256.0f);
 
             // Frequency and trigger detection across continuous roll stream
             uint32_t now_ms = to_ms_since_boot(get_absolute_time());
@@ -478,6 +568,11 @@ int main() {
             g_render_freq = display_freq;
             g_render_trig = trig_found;
             g_render_tb_idx = current_tb_idx;
+            g_render_is_adjusting_trig = (g_enc_mode == ENC_MODE_TRIG_LEVEL);
+            g_render_manual_trig = g_manual_trig;
+            g_render_trig_volts = (float)g_trig_level_adc * (3.30f / 256.0f);
+            g_render_trig_level_y = (g_manual_trig || g_enc_mode == ENC_MODE_TRIG_LEVEL)
+                                    ? (int)roundf(adc_to_y((float)g_trig_level_adc)) : -1;
             multicore_fifo_push_blocking(CMD_RENDER_ROLL);
 
             // Wait for background ADC DMA capture of next frame (16.6 ms)

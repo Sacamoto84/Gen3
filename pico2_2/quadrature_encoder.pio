@@ -1,0 +1,96 @@
+;
+; Hardware Quadrature Encoder with Digital Debounce Filter
+; For Raspberry Pi Pico / Pico 2 (RP2040 / RP2350)
+;
+
+.program quadrature_encoder
+.origin 0
+
+; 00 state
+    JMP update    ; read 00
+    JMP decrement ; read 01
+    JMP increment ; read 10
+    JMP update    ; read 11
+
+; 01 state
+    JMP increment ; read 00
+    JMP update    ; read 01
+    JMP update    ; read 10
+    JMP decrement ; read 11
+
+; 10 state
+    JMP decrement ; read 00
+    JMP update    ; read 01
+    JMP update    ; read 10
+    JMP increment ; read 11
+
+; 11 state
+    JMP update    ; read 00
+    JMP increment ; read 01
+decrement:
+    JMP Y--, update ; read 10
+
+.wrap_target
+update:
+    MOV ISR, Y      ; read 11
+    PUSH noblock
+
+sample_pins:
+    OUT ISR, 2
+    IN PINS, 2
+    MOV OSR, ISR
+    MOV PC, ISR
+
+increment:
+    MOV Y, ~Y
+    JMP Y--, increment_cont
+increment_cont:
+    MOV Y, ~Y
+.wrap
+
+% c-sdk {
+
+#include "hardware/clocks.h"
+#include "hardware/gpio.h"
+
+static inline void quadrature_encoder_program_init(PIO pio, uint sm, uint pin, int max_step_rate)
+{
+    pio_sm_set_consecutive_pindirs(pio, sm, pin, 2, false);
+    pio_gpio_init(pio, pin);
+    pio_gpio_init(pio, pin + 1);
+
+    gpio_pull_up(pin);
+    gpio_pull_up(pin + 1);
+
+    pio_sm_config c = quadrature_encoder_program_get_default_config(0);
+
+    sm_config_set_in_pins(&c, pin);
+    sm_config_set_jmp_pin(&c, pin);
+    sm_config_set_in_shift(&c, false, false, 32);
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_NONE);
+
+    if (max_step_rate == 0) {
+        sm_config_set_clkdiv(&c, 1.0f);
+    } else {
+        // State machine loop takes at most 10 cycles
+        // Setting clkdiv acts as a hardware digital low-pass debounce filter
+        float div = (float)clock_get_hz(clk_sys) / (10.0f * (float)max_step_rate);
+        if (div < 1.0f) div = 1.0f;
+        if (div > 65535.0f) div = 65535.0f;
+        sm_config_set_clkdiv(&c, div);
+    }
+
+    pio_sm_init(pio, sm, 0, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static inline int32_t quadrature_encoder_get_count(PIO pio, uint sm)
+{
+    static int32_t last_val = 0;
+    while (!pio_sm_is_rx_fifo_empty(pio, sm)) {
+        last_val = (int32_t)pio_sm_get(pio, sm);
+    }
+    return last_val;
+}
+
+%}

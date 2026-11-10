@@ -28,7 +28,7 @@
 #define PIN_ENC_SW  20  // GP20 (Pin 26): Encoder Button (SW, Active LOW with internal pull-up)
 
 // Display orientation: 90 or 270 for landscape (240 width x 135 height)
-#define DISPLAY_ROTATION  90
+#define DISPLAY_ROTATION  270
 
 // Display Dimensions in Landscape
 #define LCD_W 135
@@ -55,6 +55,15 @@
 #define ADC_MAX_SAMPLES 131072
 
 // ============================================================================
+// MODES & CONTROL ENUMS
+// ============================================================================
+// Encoder Control Mode
+enum EncoderMode {
+    ENC_MODE_TIMEBASE = 0,   // Knob changes Timebase (default)
+    ENC_MODE_TRIG_LEVEL = 1  // Knob changes Manual Trigger Level
+};
+
+// ============================================================================
 // TIMEBASE TYPES & TABLES
 // ============================================================================
 enum ScopeMode {
@@ -78,6 +87,11 @@ extern uint16_t LCD_Buffer16[LCD_W * LCD_H];
 extern uint8_t adc_raw_buffer[ADC_MAX_SAMPLES];
 extern float density_grid[SCOPE_W][SCOPE_Y_BINS];
 extern uint16_t grid_template[SCOPE_Y_BINS][SCOPE_W];
+
+// Shared State Variables
+extern EncoderMode g_enc_mode;
+extern bool g_manual_trig;
+extern int g_trig_level_adc;
 
 // Display driver instances
 extern TFT_LCD_t LCD_0;
